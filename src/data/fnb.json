@@ -1,0 +1,17 @@
+[
+   { "name": "bayernets GmbH", "abkuerzung": "bayernets" },
+   { "name": "Ferngas Netzgesellschaft mbH", "abkuerzung": "Ferngas" },
+   { "name": "Fluxys Deutschland GmbH", "abkuerzung": "Fluxys D" },
+   { "name": "Fluxys TENP GmbH", "abkuerzung": "Fluxys TENP" },
+   { "name": "GASCADE Gastransport GmbH", "abkuerzung": "GASCADE" },
+   { "name": "Gastransport Nord GmbH", "abkuerzung": "GTG" },
+   { "name": "Gasunie Deutschland Transport Services GmbH", "abkuerzung": "GUD" },
+   { "name": "Lubmin-Brandov Gastransport GmbH", "abkuerzung": "LBTG" },
+   { "name": "NaTran Deutschland GmbH", "abkuerzung": "NaTran" },
+   { "name": "NEL Gastransport GmbH", "abkuerzung": "NEL" },
+   { "name": "Nowega GmbH", "abkuerzung": "Nowega" },
+   { "name": "ONTRAS Gastransport GmbH", "abkuerzung": "ONTRAS" },
+   { "name": "Open Grid Europe GmbH", "abkuerzung": "OGE" },
+   { "name": "terranets bw GmbH", "abkuerzung": "tnbw" },
+   { "name": "Thyssengas GmbH", "abkuerzung": "TG" }
+]

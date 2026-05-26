@@ -1,0 +1,181 @@
+{
+   "id": {
+      "label": "NEP-ID",
+      "description": "Eindeutige NEP-ID der Maßnahme, z. B. H2-024-01.",
+      "type": "string",
+      "sourceFields": ["ID"]
+   },
+   "kurzel": {
+      "label": "Basis-NEP-ID",
+      "description": "NEP-ID ohne Versionskennung, z. B. H2-024.",
+      "type": "string",
+      "sourceFields": ["Kürzel"]
+   },
+   "version": {
+      "label": "Version",
+      "description": "Versionskennung zur Basis-NEP-ID, z. B. 01, 01a oder 01b.",
+      "type": "string",
+      "sourceFields": ["Versionsnummer"]
+   },
+   "name": {
+      "label": "Bezeichnung",
+      "description": "Bezeichnung der Ausbaumaßnahme, meist mit Start- und Endpunkt oder Anlagenbezug.",
+      "type": "string",
+      "sourceFields": ["Name der Ausbaumaßnahme"]
+   },
+   "leitungstyp": {
+      "label": "Leitungstyp",
+      "description": "Art der Leitung: Umstellung einer bestehenden Leitung auf Wasserstoff oder Neubau.",
+      "type": "enum",
+      "values": ["Umstellung", "Neubau"],
+      "sourceFields": ["Typ", "Leitungsart"]
+   },
+   "startnetz": {
+      "label": "Startnetzmaßnahme",
+      "description": "Wasserstoff-Kernnetzmaßnahme, die im NEP 2025 als Startnetzmaßnahme geführt wird. Die angezeigte planerische Inbetriebnahme kann davon abweichen.",
+      "type": "boolean",
+      "sourceFields": ["Startnetzmaßnahme", "Startnetz"]
+   },
+   "netzausbauvorschlag": {
+      "label": "Teil des Netzausbauvorschlags",
+      "description": "Maßnahme, die Teil des Netzausbauvorschlags Wasserstoff im NEP-Entwurf ist.",
+      "type": "boolean",
+      "sourceFields": ["Netzausbauvorschlag der Netzbetreiber", "Netzausbau"]
+   },
+   "standardAnzeige": {
+      "label": "Standardanzeige",
+      "description": "Standardmäßig auf der Karte angezeigte Maßnahme: Startnetzmaßnahme oder Teil des Netzausbauvorschlags.",
+      "type": "boolean",
+      "sourceFields": ["Startnetzmaßnahme", "Netzausbauvorschlag der Netzbetreiber"]
+   },
+   "szenario1": {
+      "label": "Szenario 1 (2037)",
+      "description": "Im Wasserstoff-Modellierungsergebnis für Szenario 1 im Betrachtungsjahr 2037 enthaltene Maßnahme.",
+      "type": "boolean",
+      "sourceFields": ["Szenario 1 2037", "Szenario 1"]
+   },
+   "szenario2": {
+      "label": "Szenario 2 (2037)",
+      "description": "Im Wasserstoff-Modellierungsergebnis für Szenario 2 im Betrachtungsjahr 2037 enthaltene Maßnahme.",
+      "type": "boolean",
+      "sourceFields": ["Szenario 2 2037", "Szenario 2"]
+   },
+   "szenario3": {
+      "label": "Szenario 3 (2037)",
+      "description": "Im Wasserstoff-Modellierungsergebnis für Szenario 3 im Betrachtungsjahr 2037 enthaltene Maßnahme.",
+      "type": "boolean",
+      "sourceFields": ["Szenario 3 2037", "Szenario 3"]
+   },
+   "ibnJahr": {
+      "label": "Inbetriebnahmejahr",
+      "description": "Jahr der planerischen Inbetriebnahme; enthalten ist nur das Jahr, nicht das vollständige Datum.",
+      "type": "number",
+      "sourceFields": ["IBN"]
+   },
+   "inbetriebnahmeBis": {
+      "label": "Planerische Inbetriebnahme bis",
+      "description": "Planerisches Zieldatum, bis zu dem die Maßnahme in Betrieb genommen werden soll.",
+      "type": "date",
+      "sourceFields": ["Planerische Inbetriebnahme bis"]
+   },
+   "laengeKm": {
+      "label": "Leitungslänge",
+      "description": "Geplante Länge der Leitung in Kilometern.",
+      "type": "number",
+      "unit": "km",
+      "sourceFields": ["Geplante Länge in km"]
+   },
+   "dnMm": {
+      "label": "Nenndurchmesser (DN)",
+      "description": "Nenndurchmesser (DN) der Leitung in Millimetern.",
+      "type": "number",
+      "unit": "mm",
+      "sourceFields": ["Nenndurchmesser (DN) in mm"]
+   },
+   "dpBar": {
+      "label": "Druckstufe",
+      "description": "Druckstufe (DP) der Leitung in bar.",
+      "type": "number",
+      "unit": "bar",
+      "sourceFields": ["Druckstufe (DP) in bar"]
+   },
+   "bundeslaender": {
+      "label": "Bundesländer",
+      "description": "Bundesländer, die von der Maßnahme berührt werden. Mehrere Angaben werden als Liste angezeigt.",
+      "type": "string[]",
+      "sourceFields": ["Bundesländer (Bundesland durch \" / \" getrennt)"]
+   },
+   "beschreibung": {
+      "label": "Beschreibung",
+      "description": "Freitextbeschreibung der Maßnahme mit Hintergrund, Zweck, Trassenbezug oder Einordnung in das Wasserstofftransportnetz.",
+      "type": "string",
+      "sourceFields": ["Beschreibung"]
+   },
+   "bedarfsabdeckung": {
+      "label": "Bedarfsabdeckung",
+      "description": "Netzwirkung der Maßnahme, z. B. Versorgung angebundener Regionen und Verbrauchsschwerpunkte, Importkorridore, Einspeisepunkte oder Abtransport von Wasserstoff.",
+      "type": "string",
+      "sourceFields": ["Auswirkung auf Bedarfsabdeckung (Weitere Angaben)"]
+   },
+   "kostenMioEur": {
+      "label": "Maßnahmenkosten",
+      "description": "Angegebene Maßnahmenkosten in Millionen Euro.",
+      "type": "number",
+      "unit": "Mio. EUR",
+      "sourceFields": ["Kosten in Mio EUR"]
+   },
+   "erdgasverstaerkendeMassnahmen": {
+      "label": "Erdgasverstärkende Maßnahmen",
+      "description": "IDs oder Bezeichnungen zugehöriger erdgasverstärkender Maßnahmen im Zusammenhang mit der Wasserstoff-Maßnahme.",
+      "type": "string",
+      "sourceFields": ["Ids zugehöriger erdgasverstärkender Maßnahmen (durch \" / \" getrennt)"]
+   },
+   "finalInvestmentDecision": {
+      "label": "Final Investment Decision (FID)",
+      "description": "Vorliegende Final Investment Decision (FID) zur Maßnahme. Leere Werte bedeuten keine Angabe in den Daten.",
+      "type": "boolean|null",
+      "sourceFields": ["Final Investment Decision"]
+   },
+   "durchfuehrendeNetzbetreiber": {
+      "label": "Durchführende Netzbetreiber",
+      "description": "Als durchführende Netzbetreiber angegebene Unternehmen. Mehrere Angaben werden als Liste angezeigt.",
+      "type": "string[]",
+      "sourceFields": ["Durchführende Netzbetreiber"]
+   },
+   "ansprechpartner": {
+      "label": "Ansprechpartner",
+      "description": "Unternehmen oder Netzbetreiber für Rückfragen zur Maßnahme; dies ist keine Aussage zur Umsetzungsverantwortung.",
+      "type": "string[]",
+      "sourceFields": ["Ansprechpartner"]
+   },
+   "ogeBeteiligung": {
+      "label": "OGE-Bezug",
+      "description": "OGE ist als Ansprechpartner oder durchführender Netzbetreiber zur Maßnahme genannt.",
+      "type": "boolean",
+      "sourceFields": ["Ansprechpartner", "Durchführende Netzbetreiber"]
+   },
+   "projektstatus": {
+      "label": "Projektstatus",
+      "description": "Angegebener Planungs- oder Umsetzungsstand der Maßnahme, z. B. Projektidee, Entwurfsplanung, Genehmigungsplanung oder Bau.",
+      "type": "string",
+      "sourceFields": ["Aktueller Projektstatus"]
+   },
+   "kernnetzAntragsId": {
+      "label": "Kernnetz-ID",
+      "description": "Kernnetz-ID der Maßnahme, z. B. KLU024-01, KLN061-01 oder AND099-01. Bei reinen NEP-Maßnahmen bleibt das Feld leer.",
+      "type": "string",
+      "sourceFields": ["Antrags-ID Kernnetz"]
+   },
+   "entsogTyndpProjektNr": {
+      "label": "ENTSOG-TYNDP-Projektnummer",
+      "description": "Projektnummer im Ten-Year Network Development Plan (TYNDP) von ENTSOG.",
+      "type": "string",
+      "sourceFields": ["ENTSOG TYNDP Projektnummer"]
+   },
+   "sonstiges": {
+      "label": "Sonstiges",
+      "description": "Ergänzende Hinweise, die in keinem anderen strukturierten Feld abgebildet sind.",
+      "type": "string",
+      "sourceFields": ["Sonstiges"]
+   }
+}
