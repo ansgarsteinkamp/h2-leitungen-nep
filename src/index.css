@@ -153,38 +153,42 @@
    --font-ui:
       "Montserrat", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
       "Noto Color Emoji";
-   --background: #f7fafc;
+   --background: #ffffff;
    --foreground: #013c74;
    --card: #ffffff;
    --card-foreground: #013c74;
    --popover: #ffffff;
    --popover-foreground: #013c74;
-   --primary: #004373;
+   --primary: #35aeb5;
    --primary-foreground: #ffffff;
    --label-accent: #d01d74;
    --secondary: #045f69;
    --secondary-foreground: #ffffff;
-   --muted: #edf4f8;
+   --muted: #f2fbfa;
    --muted-foreground: #3f5f72;
-   --map-background: #eaf2f6;
-   --accent: #dcecf3;
+   --map-background: #ffffff;
+   --accent: #d2eae6;
    --accent-foreground: #013c74;
    --destructive: #b42318;
    --destructive-foreground: #ffffff;
-   --border: #b8cad6;
-   --input: #6f8999;
+   --border: #9ed8d7;
+   --input: #76c7c9;
    --field: #ffffff;
-   --ring: #d01d74;
-   --map-pipeline-neubau: #d01d74;
-   --map-pipeline-umstellung: #f09bc1;
-   --map-pipeline-selection-halo-neubau: #d01d74;
-   --map-pipeline-selection-halo-umstellung: #bc4f84;
+   --ring: #35aeb5;
+   --map-pipeline-oge: #52a436;
+   --map-pipeline-no-oge: #d2eae6;
+   --map-pipeline-selection-halo-oge: #3f8429;
+   --map-pipeline-selection-halo-no-oge: #75b8af;
+   --map-pipeline-symbol-oge: #52a436;
+   --map-pipeline-symbol-no-oge: #bedfd9;
    --map-pipeline-fallback: #004373;
    --map-pipeline-selection-halo-fallback: #004373;
-   --map-country-context-stroke: #93a9b8;
-   --map-country-context-fill: #ccd9e1;
-   --map-country-germany-stroke: #004373;
+   --map-country-context-stroke: #9ed8d7;
+   --map-country-context-fill: #f6fcfc;
+   --map-country-germany-stroke: #f0efa9;
    --map-country-germany-fill: #ffffff;
+   --map-legend-background: #f6fcfc;
+   --map-zoom-control-background: #d9f0f1;
    --radius: 0.5rem;
    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
@@ -223,16 +227,20 @@
    --input: #52514a;
    --field: #30302e;
    --ring: #d97757;
-   --map-pipeline-neubau: #d97757;
-   --map-pipeline-umstellung: #86b7a7;
-   --map-pipeline-selection-halo-neubau: #d97757;
-   --map-pipeline-selection-halo-umstellung: #86b7a7;
+   --map-pipeline-oge: #d97757;
+   --map-pipeline-no-oge: #86b7a7;
+   --map-pipeline-selection-halo-oge: #d97757;
+   --map-pipeline-selection-halo-no-oge: #86b7a7;
+   --map-pipeline-symbol-oge: #d97757;
+   --map-pipeline-symbol-no-oge: #86b7a7;
    --map-pipeline-fallback: #e5e5e2;
    --map-pipeline-selection-halo-fallback: #faf9f5;
    --map-country-context-stroke: #74746a;
    --map-country-context-fill: #30302e;
    --map-country-germany-stroke: #faf9f5;
    --map-country-germany-fill: #22221f;
+   --map-legend-background: rgb(27 27 25 / 0.9);
+   --map-zoom-control-background: #1a1915;
 }
 
 @theme inline {
@@ -339,17 +347,13 @@
 }
 
 .light .country-boundary {
-   stroke-opacity: 0.5;
-   stroke-width: 0.9px;
+   stroke-opacity: 0.54;
+   stroke-width: 0.95px;
 }
 
 .light .country-boundary-germany {
-   stroke-opacity: 0.58;
-   stroke-width: 1.05px;
-}
-
-.light .pipeline-nonstandard {
-   stroke-opacity: 0.78;
+   stroke-opacity: 1;
+   stroke-width: 8px;
 }
 
 .pipeline-selection-halo {
@@ -365,12 +369,12 @@
    0%,
    100% {
       opacity: 0.28;
-      stroke-width: 13px;
+      stroke-width: 12px;
    }
 
    50% {
       opacity: 0.72;
-      stroke-width: 22px;
+      stroke-width: 20px;
    }
 }
 
@@ -378,12 +382,12 @@
    0%,
    100% {
       opacity: 0.18;
-      stroke-width: 11px;
+      stroke-width: 10px;
    }
 
    50% {
       opacity: 0.38;
-      stroke-width: 17px;
+      stroke-width: 15px;
    }
 }
 

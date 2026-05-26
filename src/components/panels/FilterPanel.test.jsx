@@ -203,18 +203,30 @@ describe("FilterPanel", () => {
       expect(screen.getByRole("switch", { name: "Nur OGE-Bezug" })).toHaveProperty("checked", true);
    });
 
-   it("omits the line type swatch for the all option", () => {
+   it("uses line type symbols without implying a single OGE participation color", () => {
       renderFilterPanel({
          options: {
             ...options,
             lineTypes: [
                { value: ALL_VALUE, label: "Alle" },
-               { value: "Neubau", label: "Neubau" }
+               { value: "Neubau", label: "Neubau" },
+               { value: "Umstellung", label: "Umstellung" }
             ]
          }
       });
 
       expect(getSegmentButton("Leitungstyp", "Alle").querySelector("span[style]")).toBeNull();
-      expect(getSegmentButton("Leitungstyp", "Neubau").querySelector("span[style]")).toBeTruthy();
+
+      const neubauStyles = [...getSegmentButton("Leitungstyp", "Neubau").querySelectorAll("span[style]")].map(item =>
+         item.getAttribute("style")
+      );
+      const umstellungStyles = [...getSegmentButton("Leitungstyp", "Umstellung").querySelectorAll("span[style]")].map(
+         item => item.getAttribute("style")
+      );
+
+      expect(neubauStyles).toHaveLength(2);
+      expect(umstellungStyles).toHaveLength(2);
+      expect(neubauStyles.every(style => style.includes("repeating-linear-gradient"))).toBe(true);
+      expect(umstellungStyles.every(style => style.includes("repeating-linear-gradient"))).toBe(false);
    });
 });

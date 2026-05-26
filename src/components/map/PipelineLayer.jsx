@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GeoJSON, Pane, useMap } from "react-leaflet";
 
 import { pipelineMeta, pipelineTitle } from "@/lib/domain/formatters";
 import { createPipelineDataKey } from "@/components/map/mapDataKey";
 import { getPipelineStyle, getSelectionHaloStyle } from "@/components/map/pipelineStyle";
+import { getPipelineParticipationKey } from "@/components/theme/pipelineTheme";
 
 const MAP_TOOLTIP_OPTIONS = {
    className: "map-tooltip",
@@ -30,6 +31,21 @@ const bringToFront = layer => {
    }
 };
 
+const createPipelineSubset = (pipelines, predicate) => ({
+   ...pipelines,
+   features: pipelines.features.filter(predicate)
+});
+
+const createPipelineFeatureCollection = (pipelines, features) => ({
+   ...pipelines,
+   features
+});
+
+const isOgePipeline = feature => getPipelineParticipationKey(feature) === "oge";
+
+const sortPipelinesByDisplayPriority = features =>
+   [...features].sort((left, right) => Number(isOgePipeline(left)) - Number(isOgePipeline(right)));
+
 const makeLayerInert = layer => {
    const element = layer.getElement();
    if (element) {
@@ -40,20 +56,39 @@ const makeLayerInert = layer => {
 
 export default function PipelineLayer({ onSelectPipeline, pipelines, selectedPipelineId }) {
    const map = useMap();
-   const geoJsonRef = useRef(null);
+   const ogeGeoJsonRef = useRef(null);
+   const otherGeoJsonRef = useRef(null);
+   const [hoveredPipelineId, setHoveredPipelineId] = useState(null);
    const hoveredPipelineIdRef = useRef(null);
    const openTooltipLayerRef = useRef(null);
    const previousPipelinesRef = useRef(pipelines);
    const selectedPipelineIdRef = useRef(selectedPipelineId);
    const pipelineDataKey = useMemo(() => createPipelineDataKey(pipelines), [pipelines]);
+   const ogePipelineData = useMemo(() => createPipelineSubset(pipelines, isOgePipeline), [pipelines]);
+   const otherPipelineData = useMemo(
+      () => createPipelineSubset(pipelines, feature => !isOgePipeline(feature)),
+      [pipelines]
+   );
    const selectedPipeline = useMemo(() => {
       if (!selectedPipelineId) return null;
       return pipelines.features.find(feature => feature.properties.id === selectedPipelineId) ?? null;
    }, [pipelines, selectedPipelineId]);
    const selectedPipelineData = useMemo(() => {
       if (!selectedPipeline) return null;
-      return { ...pipelines, features: [selectedPipeline] };
+      return createPipelineFeatureCollection(pipelines, [selectedPipeline]);
    }, [pipelines, selectedPipeline]);
+   const activePipelineData = useMemo(() => {
+      const activeIds = [selectedPipelineId, hoveredPipelineId].filter(Boolean);
+      if (activeIds.length === 0) return null;
+
+      const activeIdSet = new Set(activeIds);
+      const activeFeatures = sortPipelinesByDisplayPriority(
+         pipelines.features.filter(feature => activeIdSet.has(feature.properties.id))
+      );
+      if (activeFeatures.length === 0) return null;
+
+      return createPipelineFeatureCollection(pipelines, activeFeatures);
+   }, [hoveredPipelineId, pipelines, selectedPipelineId]);
 
    const closeOpenTooltip = useCallback(() => {
       openTooltipLayerRef.current?.closeTooltip();
@@ -67,23 +102,28 @@ export default function PipelineLayer({ onSelectPipeline, pipelines, selectedPip
       }
    }, []);
 
+   const eachPipelineLayer = useCallback(callback => {
+      otherGeoJsonRef.current?.eachLayer(callback);
+      ogeGeoJsonRef.current?.eachLayer(callback);
+   }, []);
+
    const bringSelectedPipelineToFront = useCallback(() => {
       const selectedPipelineId = selectedPipelineIdRef.current;
       if (!selectedPipelineId) return;
 
-      geoJsonRef.current?.eachLayer(layer => {
+      eachPipelineLayer(layer => {
          if (layer.feature?.properties.id === selectedPipelineId) {
             bringToFront(layer);
          }
       });
-   }, []);
+   }, [eachPipelineLayer]);
 
    const refreshPipelineStyles = useCallback(
       (activeSelectedPipelineId, activeHoveredPipelineId = null, { bringActiveLayersForward = true } = {}) => {
          let selectedLayer = null;
          let hoveredLayer = null;
 
-         geoJsonRef.current?.eachLayer(layer => {
+         eachPipelineLayer(layer => {
             const feature = layer.feature;
             if (!feature) return;
 
@@ -99,12 +139,13 @@ export default function PipelineLayer({ onSelectPipeline, pipelines, selectedPip
          if (selectedLayer) bringToFront(selectedLayer);
          if (hoveredLayer) bringToFront(hoveredLayer);
       },
-      []
+      [eachPipelineLayer]
    );
 
    useEffect(() => {
       const closeTooltipOnMapMove = () => {
          hoveredPipelineIdRef.current = null;
+         setHoveredPipelineId(null);
          closeOpenTooltip();
          refreshPipelineStyles(selectedPipelineIdRef.current);
       };
@@ -120,6 +161,7 @@ export default function PipelineLayer({ onSelectPipeline, pipelines, selectedPip
       if (previousPipelinesRef.current !== pipelines) {
          closeOpenTooltip();
          hoveredPipelineIdRef.current = null;
+         setHoveredPipelineId(null);
          previousPipelinesRef.current = pipelines;
       }
 
@@ -144,12 +186,14 @@ export default function PipelineLayer({ onSelectPipeline, pipelines, selectedPip
          }
          openTooltipLayerRef.current = event.target;
          hoveredPipelineIdRef.current = pipelineId;
+         setHoveredPipelineId(pipelineId);
          event.target.setStyle(getPipelineStyle(feature, selectedPipelineIdRef.current, pipelineId));
          bringToFront(event.target);
       };
 
       const hidePipelineTooltip = event => {
          hoveredPipelineIdRef.current = null;
+         setHoveredPipelineId(null);
          clearLayerTooltip(event.target);
          event.target.setStyle(getPipelineStyle(feature, selectedPipelineIdRef.current));
 
@@ -183,13 +227,33 @@ export default function PipelineLayer({ onSelectPipeline, pipelines, selectedPip
          ) : null}
          <Pane name="pipelines" style={{ zIndex: 420 }}>
             <GeoJSON
-               key={pipelineDataKey}
-               ref={geoJsonRef}
-               data={pipelines}
+               key={`pipelines-other:${pipelineDataKey}`}
+               ref={otherGeoJsonRef}
+               data={otherPipelineData}
                onEachFeature={bindPipeline}
                style={feature => getPipelineStyle(feature, selectedPipelineId)}
             />
          </Pane>
+         <Pane name="pipelines-oge" style={{ zIndex: 430 }}>
+            <GeoJSON
+               key={`pipelines-oge:${pipelineDataKey}`}
+               ref={ogeGeoJsonRef}
+               data={ogePipelineData}
+               onEachFeature={bindPipeline}
+               style={feature => getPipelineStyle(feature, selectedPipelineId)}
+            />
+         </Pane>
+         {/* Leaflet can only reorder paths within one pane, so active paths get a small top overlay. */}
+         {activePipelineData ? (
+            <Pane name="pipeline-active-overlay" style={{ zIndex: 440 }}>
+               <GeoJSON
+                  key={`pipeline-active:${pipelineDataKey}:${selectedPipelineId ?? ""}:${hoveredPipelineId ?? ""}`}
+                  data={activePipelineData}
+                  interactive={false}
+                  style={feature => getPipelineStyle(feature, selectedPipelineId, hoveredPipelineId)}
+               />
+            </Pane>
+         ) : null}
       </>
    );
 }

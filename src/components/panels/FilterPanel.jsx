@@ -3,7 +3,8 @@ import { Check, Euro, RotateCcw, Route, Ruler } from "lucide-react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { HelpTooltip } from "@/components/ui/help-tooltip";
-import { getLineTypeColor } from "@/components/theme/pipelineTheme";
+import { PipelineLineSymbolStack } from "@/components/ui/pipeline-line-symbol";
+import { PIPELINE_SYMBOL_COLORS } from "@/components/theme/pipelineTheme";
 import { ALL_VALUE, SCENARIO_FILTER_NETWORK_VIEWS } from "@/lib/domain/constants";
 import { metricCostLabel, metricIntegerLabel, metricLengthLabel } from "@/lib/domain/formatters";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,7 @@ const WRAPPING_CHIP_SEGMENT_PROPS = {
    optionLayoutClassName: "flex flex-wrap items-start gap-2",
    optionTextClassName: "whitespace-nowrap"
 };
+const LINE_TYPE_SYMBOL_COLORS = [PIPELINE_SYMBOL_COLORS.oge, PIPELINE_SYMBOL_COLORS.noOge];
 
 function shouldShowScenarioMarkerFilter(networkView) {
    return SCENARIO_FILTER_NETWORK_VIEWS.includes(networkView);
@@ -138,18 +140,18 @@ function SegmentGroup({
          <div className={optionLayoutClassName ?? DEFAULT_SEGMENT_LAYOUT_CLASS} role="group" aria-label={label}>
             {options.map(option => {
                const active = value === option.value;
-               const color = swatches && option.value !== ALL_VALUE ? getLineTypeColor(option.value) : null;
+               const symbolLineType = swatches && option.value !== ALL_VALUE ? option.value : null;
 
                return (
                   <SegmentButton
                      active={active}
-                     color={color}
                      groupLabel={label}
                      key={option.value}
                      onChange={onChange}
                      option={option}
                      optionButtonClassName={optionButtonClassName}
                      optionTextClassName={optionTextClassName}
+                     symbolLineType={symbolLineType}
                   />
                );
             })}
@@ -158,7 +160,15 @@ function SegmentGroup({
    );
 }
 
-function SegmentButton({ active, color, groupLabel, option, onChange, optionButtonClassName, optionTextClassName }) {
+function SegmentButton({
+   active,
+   groupLabel,
+   option,
+   onChange,
+   optionButtonClassName,
+   optionTextClassName,
+   symbolLineType
+}) {
    return (
       <button
          aria-label={`${groupLabel}: ${option.label}`}
@@ -174,10 +184,14 @@ function SegmentButton({ active, color, groupLabel, option, onChange, optionButt
          type="button"
       >
          {active ? <Check aria-hidden="true" className="size-3" /> : null}
-         {color && <span aria-hidden="true" className="size-2.5 rounded-full" style={{ background: color }} />}
+         {symbolLineType ? <LineTypeSymbol lineType={symbolLineType} /> : null}
          <span className={cn("min-w-0", optionTextClassName ?? "truncate")}>{option.label}</span>
       </button>
    );
+}
+
+function LineTypeSymbol({ lineType }) {
+   return <PipelineLineSymbolStack colors={LINE_TYPE_SYMBOL_COLORS} lineType={lineType} />;
 }
 
 function SelectField({ className, description, label, options, value, onChange }) {

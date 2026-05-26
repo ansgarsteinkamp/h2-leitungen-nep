@@ -27,14 +27,14 @@ export default function MapZoomControls() {
 
    return (
       <div
-         className="absolute top-3 left-3 z-500 grid border border-border bg-accent"
+         className="absolute top-3 left-3 z-500 grid border border-border bg-[var(--map-zoom-control-background)]"
          ref={controlRef}
          role="group"
          aria-label="Kartenzoom"
       >
          <button
             aria-label="Karte vergrößern"
-            className="grid size-8 place-items-center border-0 border-b border-border bg-accent text-accent-foreground transition-colors hover:bg-primary/20 hover:text-secondary focus-visible:ring-3 focus-visible:ring-ring/65 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-ring/50"
+            className="grid size-8 place-items-center border-0 border-b border-border bg-[var(--map-zoom-control-background)] text-accent-foreground transition-colors hover:bg-primary/20 hover:text-secondary focus-visible:ring-3 focus-visible:ring-ring/65 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-ring/50"
             disabled={zoom >= map.getMaxZoom()}
             onClick={event => {
                event.preventDefault();
@@ -47,7 +47,7 @@ export default function MapZoomControls() {
          </button>
          <button
             aria-label="Karte verkleinern"
-            className="grid size-8 place-items-center border-0 bg-accent text-accent-foreground transition-colors hover:bg-primary/20 hover:text-secondary focus-visible:ring-3 focus-visible:ring-ring/65 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-ring/50"
+            className="grid size-8 place-items-center border-0 bg-[var(--map-zoom-control-background)] text-accent-foreground transition-colors hover:bg-primary/20 hover:text-secondary focus-visible:ring-3 focus-visible:ring-ring/65 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-ring/50"
             disabled={zoom <= map.getMinZoom()}
             onClick={event => {
                event.preventDefault();
