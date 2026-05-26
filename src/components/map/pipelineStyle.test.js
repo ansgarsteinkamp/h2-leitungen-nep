@@ -135,7 +135,7 @@ describe("map theme tokens", () => {
       expect(rootTheme.get("--map-country-context-stroke")).toBe("#9ed8d7");
       expect(rootTheme.get("--map-country-germany-stroke")).toBe("#f0efa9");
       expect(rootTheme.get("--map-legend-background")).toBe("#f6fcfc");
-      expect(rootTheme.get("--map-zoom-control-background")).toBe("#d9f0f1");
+      expect(rootTheme.get("--map-zoom-control-background")).toBe("#d2eae6");
       expect(darkTheme.get("--map-legend-background")).toBe("rgb(27 27 25 / 0.9)");
       expect(darkTheme.get("--map-pipeline-oge")).toBe(darkTheme.get("--map-pipeline-selection-halo-oge"));
       expect(darkTheme.get("--map-pipeline-no-oge")).toBe(darkTheme.get("--map-pipeline-selection-halo-no-oge"));

@@ -181,14 +181,14 @@
    --map-pipeline-selection-halo-no-oge: #75b8af;
    --map-pipeline-symbol-oge: #52a436;
    --map-pipeline-symbol-no-oge: #bedfd9;
-   --map-pipeline-fallback: #004373;
-   --map-pipeline-selection-halo-fallback: #004373;
+   --map-pipeline-fallback: #013c74;
+   --map-pipeline-selection-halo-fallback: #013c74;
    --map-country-context-stroke: #9ed8d7;
    --map-country-context-fill: #f6fcfc;
    --map-country-germany-stroke: #f0efa9;
    --map-country-germany-fill: #ffffff;
    --map-legend-background: #f6fcfc;
-   --map-zoom-control-background: #d9f0f1;
+   --map-zoom-control-background: #d2eae6;
    --radius: 0.5rem;
    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
