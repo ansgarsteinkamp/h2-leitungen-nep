@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import CountryLayers from "@/components/map/CountryLayers";
 import MapCameraEffects from "@/components/map/MapCameraEffects";
 import MapLegend from "@/components/map/MapLegend";
@@ -15,6 +17,9 @@ export default function NetworkMap({
    searchBounds,
    selection
 }) {
+   const [hiddenLegendResetKey, setHiddenLegendResetKey] = useState(null);
+   const isLegendVisible = hiddenLegendResetKey !== resetViewKey;
+
    return (
       <MapViewport>
          <MapCameraEffects
@@ -30,7 +35,7 @@ export default function NetworkMap({
             pipelines={filteredPipelines}
             selectedPipelineId={selection?.item?.properties?.id}
          />
-         <MapLegend />
+         {isLegendVisible ? <MapLegend onHide={() => setHiddenLegendResetKey(resetViewKey)} /> : null}
       </MapViewport>
    );
 }

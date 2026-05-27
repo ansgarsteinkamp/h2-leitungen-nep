@@ -4,7 +4,7 @@ import { useMap } from "react-leaflet";
 import { INITIAL_BOUNDS } from "@/lib/domain/constants";
 import { featureToLatLngs } from "@/lib/domain/coordinates";
 
-const INITIAL_CAMERA_PADDING = [56, 56];
+const INITIAL_CAMERA_PADDING = [48, 48];
 const SEARCH_CAMERA_PADDING = [48, 48];
 const SEARCH_MAX_FIT_ZOOM = 8;
 const SELECTION_CAMERA_PADDING = [80, 80];
@@ -55,7 +55,7 @@ export default function MapCameraEffects({ resetViewKey, searchActive, searchBou
       }
 
       if (!searchBounds.length) {
-         if (searchCleared || selectionCleared) {
+         if (searchCleared || selectionCleared || (searchActive && searchBoundsChanged)) {
             map.fitBounds(INITIAL_BOUNDS, { animate: true, padding: INITIAL_CAMERA_PADDING });
          }
          return;

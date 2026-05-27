@@ -54,7 +54,6 @@ export default function PipelineWorkspace({ countries, pipelineCollection }) {
       const previousTrigger = lastSelectionTriggerRef.current;
 
       selection.clearSelection();
-      setResetViewKey(value => value + 1);
       restoreSelectionFocus(previousResultId, previousTrigger);
    };
 

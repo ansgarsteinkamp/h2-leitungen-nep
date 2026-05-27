@@ -188,7 +188,6 @@
    --map-country-germany-stroke: #f0efa9;
    --map-country-germany-fill: #ffffff;
    --map-legend-background: #f6fcfc;
-   --map-zoom-control-background: #d2eae6;
    --radius: 0.5rem;
    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
@@ -240,7 +239,6 @@
    --map-country-germany-stroke: #faf9f5;
    --map-country-germany-fill: #22221f;
    --map-legend-background: rgb(27 27 25 / 0.9);
-   --map-zoom-control-background: #1a1915;
 }
 
 @theme inline {

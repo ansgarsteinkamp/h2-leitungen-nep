@@ -46,6 +46,6 @@ export const MEASURE_TYPE_OPTIONS = [
 ];
 
 export const INITIAL_BOUNDS = [
-   [47.2, 5.5],
-   [55.1, 14.6]
+   [47.35, 5.85],
+   [54.95, 14.35]
 ];

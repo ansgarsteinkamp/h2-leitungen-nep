@@ -1,7 +1,9 @@
 import "leaflet/dist/leaflet.css";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { MapContainer, useMap } from "react-leaflet";
+
+import MapDownloadButton from "@/components/map/MapDownloadButton";
 
 const requestFrame = callback => {
    if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
@@ -76,12 +78,16 @@ function MapResizeInvalidator() {
 }
 
 export default function MapViewport({ children }) {
+   const exportTargetRef = useRef(null);
+
    return (
       <section
          aria-label={MAP_LABEL}
          className="relative h-full min-h-110 overflow-hidden border border-border bg-muted/75 min-[1360px]:min-h-155 max-lg:h-auto max-lg:min-h-[58vh] max-sm:min-h-[54vh]"
+         ref={exportTargetRef}
          role="region"
       >
+         <MapDownloadButton targetRef={exportTargetRef} />
          <MapContainer
             attributionControl={false}
             center={[51.1, 10.3]}

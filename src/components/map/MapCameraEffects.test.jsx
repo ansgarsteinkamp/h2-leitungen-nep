@@ -78,7 +78,24 @@ describe("MapCameraEffects", () => {
       rerender(<MapCameraEffects resetViewKey={0} searchActive={false} searchBounds={[]} selection={null} />);
 
       expect(mockMap.fitBounds).toHaveBeenCalledTimes(1);
-      expect(mockMap.fitBounds).toHaveBeenCalledWith(INITIAL_BOUNDS, { animate: true, padding: [56, 56] });
+      expect(mockMap.fitBounds).toHaveBeenCalledWith(INITIAL_BOUNDS, { animate: true, padding: [48, 48] });
+   });
+
+   it("returns to the initial view when active search bounds become empty", () => {
+      const searchBounds = [
+         [51, 7],
+         [52, 8]
+      ];
+      const { rerender } = render(
+         <MapCameraEffects resetViewKey={0} searchActive searchBounds={searchBounds} selection={null} />
+      );
+
+      mockMap.fitBounds.mockClear();
+
+      rerender(<MapCameraEffects resetViewKey={0} searchActive searchBounds={[]} selection={null} />);
+
+      expect(mockMap.fitBounds).toHaveBeenCalledTimes(1);
+      expect(mockMap.fitBounds).toHaveBeenCalledWith(INITIAL_BOUNDS, { animate: true, padding: [48, 48] });
    });
 
    it("lets an explicit reset take precedence over active search bounds", () => {
@@ -95,6 +112,6 @@ describe("MapCameraEffects", () => {
       rerender(<MapCameraEffects resetViewKey={1} searchActive searchBounds={searchBounds} selection={null} />);
 
       expect(mockMap.fitBounds).toHaveBeenCalledTimes(1);
-      expect(mockMap.fitBounds).toHaveBeenCalledWith(INITIAL_BOUNDS, { padding: [56, 56] });
+      expect(mockMap.fitBounds).toHaveBeenCalledWith(INITIAL_BOUNDS, { padding: [48, 48] });
    });
 });
