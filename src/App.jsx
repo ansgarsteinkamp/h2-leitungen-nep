@@ -73,7 +73,7 @@ export default function App() {
             accept={PIPELINE_FILE_ACCEPT}
             heading="Interaktive Karte der H₂-Leitungen aus dem NEP 2025"
             isProcessing={isProcessing}
-            label="quelldaten.geojson hier ablegen oder auswählen"
+            label="quelldaten_v2.geojson hier ablegen oder auswählen"
             maxFiles={1}
             maxSize={MAX_UPLOAD_SIZE}
             onFilesAccepted={handleFilesAccepted}

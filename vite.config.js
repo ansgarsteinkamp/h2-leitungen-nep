@@ -16,7 +16,7 @@ export default defineConfig({
       fs: {
          strict: true,
          allow: [fileURLToPath(new URL(".", import.meta.url))],
-         deny: ["quelldaten.geojson", "**/quelldaten.geojson"]
+         deny: ["quelldaten.geojson", "**/quelldaten.geojson", "quelldaten_v2.geojson", "**/quelldaten_v2.geojson"]
       }
    }
 });
