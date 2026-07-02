@@ -9,6 +9,12 @@ import { initialPipelineFilters } from "@/hooks/usePipelineFilters";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import FilterPanel from "./FilterPanel";
 
+globalThis.ResizeObserver ??= class ResizeObserver {
+   observe() {}
+   unobserve() {}
+   disconnect() {}
+};
+
 afterEach(() => {
    cleanup();
 });
@@ -16,7 +22,7 @@ afterEach(() => {
 const options = {
    lineTypes: [{ value: ALL_VALUE, label: "Alle" }],
    operators: [{ value: ALL_VALUE, label: "Alle genannten Unternehmen" }],
-   years: [{ value: ALL_VALUE, label: "Alle Jahre" }]
+   years: [2030, 2035, 2037]
 };
 
 const metrics = { costMioEur: 0, count: 0, lengthKm: 0 };
@@ -30,7 +36,8 @@ function renderFilterPanel({
    onResetFilters = vi.fn(),
    options: filterOptions = options,
    scenarioOptions = SCENARIO_OPTIONS,
-   setFilter = vi.fn()
+   setFilter = vi.fn(),
+   setYearRange = vi.fn()
 } = {}) {
    render(
       <TooltipProvider>
@@ -45,6 +52,7 @@ function renderFilterPanel({
             options={filterOptions}
             scenarioOptions={scenarioOptions}
             setFilter={setFilter}
+            setYearRange={setYearRange}
          />
       </TooltipProvider>
    );
@@ -52,7 +60,8 @@ function renderFilterPanel({
    return {
       onHighlightOgeExecutingOperatorChange,
       onResetFilters,
-      setFilter
+      setFilter,
+      setYearRange
    };
 }
 
@@ -229,6 +238,32 @@ describe("FilterPanel", () => {
       fireEvent.click(screen.getByRole("button", { name: "Filter und Karte zurücksetzen" }));
 
       expect(onResetFilters).toHaveBeenCalledOnce();
+   });
+
+   it("renders commissioning years as an accessible range slider", () => {
+      const setYearRange = vi.fn();
+
+      renderFilterPanel({
+         filters: { yearFrom: 2032, yearTo: 2035 },
+         options: {
+            ...options,
+            years: [2030, 2032, 2035, 2037]
+         },
+         setYearRange
+      });
+
+      const yearFromSlider = screen.getByRole("slider", { name: "Inbetriebnahmejahr von" });
+      const yearToSlider = screen.getByRole("slider", { name: "Inbetriebnahmejahr bis" });
+
+      expect(screen.getByText("2032 bis 2035")).toBeTruthy();
+      expect(yearFromSlider.getAttribute("aria-valuemin")).toBe("2030");
+      expect(yearFromSlider.getAttribute("aria-valuemax")).toBe("2037");
+      expect(yearFromSlider.getAttribute("aria-valuenow")).toBe("2032");
+      expect(yearToSlider.getAttribute("aria-valuenow")).toBe("2035");
+
+      fireEvent.keyDown(yearFromSlider, { key: "ArrowRight" });
+
+      expect(setYearRange).toHaveBeenCalledWith([2033, 2035]);
    });
 
    it("keeps the OGE help tooltip trigger separate from the switch", () => {

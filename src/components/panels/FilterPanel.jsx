@@ -4,6 +4,7 @@ import { Check, Euro, RotateCcw, Route, Ruler } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { HelpTooltip } from "@/components/ui/help-tooltip";
 import { PipelineLineSymbolStack } from "@/components/ui/pipeline-line-symbol";
+import { Slider } from "@/components/ui/slider";
 import { PIPELINE_SYMBOL_COLORS } from "@/components/theme/pipelineTheme";
 import { ALL_VALUE, SCENARIO_FILTER_NETWORK_VIEWS } from "@/lib/domain/constants";
 import { metricCostLabel, metricIntegerLabel, metricLengthLabel } from "@/lib/domain/formatters";
@@ -264,6 +265,64 @@ function SwitchRow({ active, description, label, onChange }) {
    );
 }
 
+function isNumericYear(value) {
+   return Number.isFinite(Number(value));
+}
+
+function YearRangeFilter({ filters, options, setYearRange }) {
+   const labelId = useId();
+   const years = options.years ?? [];
+   const minYear = years[0];
+   const maxYear = years[years.length - 1];
+
+   if (!isNumericYear(minYear) || !isNumericYear(maxYear)) {
+      return (
+         <div className="grid gap-2">
+            <FilterLabel id={labelId} label="Inbetriebnahmejahr" />
+            <p className="text-xs text-muted-foreground">Keine Jahresangaben verfügbar</p>
+         </div>
+      );
+   }
+
+   const yearFrom = isNumericYear(filters.yearFrom) ? Number(filters.yearFrom) : minYear;
+   const yearTo = isNumericYear(filters.yearTo) ? Number(filters.yearTo) : maxYear;
+   const selectedFrom = Math.min(yearFrom, yearTo);
+   const selectedTo = Math.max(yearFrom, yearTo);
+   const selectedLabel = selectedFrom === selectedTo ? String(selectedFrom) : `${selectedFrom} bis ${selectedTo}`;
+   const disabled = minYear === maxYear;
+
+   return (
+      <div className="grid gap-3">
+         <div className="flex min-w-0 items-center justify-between gap-3">
+            <FilterLabel id={labelId} label="Inbetriebnahmejahr" />
+            <output
+               aria-label="Ausgewählter Bereich Inbetriebnahmejahr"
+               aria-live="polite"
+               className="shrink-0 rounded-md border border-border bg-field px-2.5 py-1 text-[0.72rem] font-medium text-card-foreground"
+            >
+               {selectedLabel}
+            </output>
+         </div>
+         <Slider
+            aria-labelledby={labelId}
+            className="py-1"
+            disabled={disabled}
+            max={maxYear}
+            min={minYear}
+            minStepsBetweenThumbs={0}
+            onValueChange={setYearRange}
+            step={1}
+            thumbAriaLabels={["Inbetriebnahmejahr von", "Inbetriebnahmejahr bis"]}
+            value={[selectedFrom, selectedTo]}
+         />
+         <div className="flex items-center justify-between text-[0.66rem] font-medium text-muted-foreground">
+            <span>{minYear}</span>
+            <span>{maxYear}</span>
+         </div>
+      </div>
+   );
+}
+
 function OperatorFilterGroup({
    filters,
    highlightOgeExecutingOperator,
@@ -304,6 +363,7 @@ function FilterControls({
    onHighlightOgeExecutingOperatorChange,
    onResetFilters,
    options,
+   setYearRange,
    scenarioOptions,
    setFilter
 }) {
@@ -360,12 +420,7 @@ function FilterControls({
          ))}
 
          <section className={FILTER_SECTION_CLASS} aria-label="Inbetriebnahmejahr">
-            <SelectField
-               label="Inbetriebnahmejahr"
-               onChange={value => setFilter("year", value)}
-               options={options.years}
-               value={filters.year}
-            />
+            <YearRangeFilter filters={filters} options={options} setYearRange={setYearRange} />
          </section>
 
          <OperatorFilterGroup
@@ -403,7 +458,8 @@ export default function FilterPanel({
    networkViewOptions,
    options,
    scenarioOptions,
-   setFilter
+   setFilter,
+   setYearRange
 }) {
    return (
       <aside
@@ -423,6 +479,7 @@ export default function FilterPanel({
             options={options}
             scenarioOptions={scenarioOptions}
             setFilter={setFilter}
+            setYearRange={setYearRange}
          />
       </aside>
    );

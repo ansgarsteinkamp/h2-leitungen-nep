@@ -6,6 +6,12 @@ const collator = new Intl.Collator("de", { numeric: true, sensitivity: "base" })
 const nonEmpty = value => value !== null && value !== undefined && String(value).trim() !== "";
 
 const sortedValues = values => [...values].filter(nonEmpty).sort(collator.compare);
+const sortedYears = values =>
+   [...values]
+      .filter(nonEmpty)
+      .map(Number)
+      .filter(Number.isFinite)
+      .sort((a, b) => a - b);
 
 export function getFeatureOperators(feature) {
    return getPipelineParticipants(feature);
@@ -28,6 +34,6 @@ export function buildFilterOptions(collection) {
    return {
       lineTypes: [{ value: ALL_VALUE, label: "Alle" }, ...sortedValues(lineTypes).map(option)],
       operators: [{ value: ALL_VALUE, label: "Alle genannten Unternehmen" }, ...sortedValues(operators).map(option)],
-      years: [{ value: ALL_VALUE, label: "Alle Jahre" }, ...sortedValues(years).map(option)]
+      years: sortedYears(years)
    };
 }

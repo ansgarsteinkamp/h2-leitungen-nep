@@ -100,6 +100,7 @@ export default function PipelineWorkspace({ countries, pipelineCollection }) {
                options={filters.options}
                scenarioOptions={filters.scenarioOptions}
                setFilter={filters.setFilter}
+               setYearRange={filters.setYearRange}
             />
 
             <div className="col-start-2 row-start-1 flex min-h-0 flex-col self-stretch min-[1360px]:col-auto min-[1360px]:row-auto max-lg:col-start-auto max-lg:row-start-auto max-lg:order-2">

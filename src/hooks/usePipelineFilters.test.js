@@ -75,6 +75,10 @@ function resetFilters(result) {
    act(() => result.current.resetFilters());
 }
 
+function setYearRange(result, value) {
+   act(() => result.current.setYearRange(value));
+}
+
 const networkViewFeatures = [
    pipeline("startnetz", { startnetz: true }),
    pipeline("scenario-standard", { netzausbauvorschlag: true, szenario1: true }),
@@ -182,10 +186,38 @@ describe("filterPipelines", () => {
                measureType: ALL_VALUE,
                operator: "Open Grid Europe GmbH",
                scenario: "szenario1",
-               year: "2035"
+               yearFrom: 2035,
+               yearTo: 2035
             }
          )
       ).toEqual(["A"]);
+   });
+
+   it("filters commissioning years as an inclusive range", () => {
+      expect(
+         filterIds(
+            [
+               pipeline("A", { ibnJahr: 2030, startnetz: true }),
+               pipeline("B", { ibnJahr: 2032, startnetz: true }),
+               pipeline("C", { ibnJahr: 2035, startnetz: true }),
+               pipeline("D", { ibnJahr: 2037, startnetz: true })
+            ],
+            {
+               yearFrom: 2032,
+               yearTo: 2035
+            }
+         )
+      ).toEqual(["B", "C"]);
+   });
+
+   it("keeps features without commissioning year only in the unfiltered year range", () => {
+      const features = [
+         pipeline("with-year", { ibnJahr: 2030, startnetz: true }),
+         pipeline("without-year", { ibnJahr: null, startnetz: true })
+      ];
+
+      expect(filterIds(features)).toEqual(["with-year", "without-year"]);
+      expect(filterIds(features, { yearFrom: 2030, yearTo: 2030 })).toEqual(["with-year"]);
    });
 
    it.each([
@@ -459,7 +491,10 @@ describe("filterPipelines", () => {
    it("resets every filter back to the initial state", () => {
       const { result } = renderHook(() =>
          usePipelineFilters(
-            collection([pipeline("startnetz", { startnetz: true }), pipeline("scenario-1", { szenario1: true })])
+            collection([
+               pipeline("startnetz", { ibnJahr: 2030, startnetz: true }),
+               pipeline("scenario-1", { ibnJahr: 2037, szenario1: true })
+            ])
          )
       );
 
@@ -467,9 +502,112 @@ describe("filterPipelines", () => {
       setFilter(result, "scenario", "szenario1");
       setFilter(result, "measureType", "scenarioOnly");
       setFilter(result, "searchTerm", "Szenario 1");
+      setYearRange(result, [2035, 2037]);
       resetFilters(result);
 
       expect(result.current.filters).toEqual(initialPipelineFilters);
+   });
+
+   it("keeps the full commissioning year range as an unfiltered range across wider data changes", () => {
+      const firstCollection = collection([
+         pipeline("A", { ibnJahr: 2030, startnetz: true }),
+         pipeline("B", { ibnJahr: 2037, startnetz: true })
+      ]);
+      const secondCollection = collection([
+         pipeline("C", { ibnJahr: 2025, startnetz: true }),
+         pipeline("D", { ibnJahr: 2040, startnetz: true })
+      ]);
+      const { result, rerender } = renderHook(({ currentCollection }) => usePipelineFilters(currentCollection), {
+         initialProps: { currentCollection: firstCollection }
+      });
+
+      expect(result.current.filters.yearFrom).toBe(ALL_VALUE);
+      expect(result.current.filters.yearTo).toBe(ALL_VALUE);
+      expect(idsOf(result.current.filteredCollection.features)).toEqual(["A", "B"]);
+
+      rerender({ currentCollection: secondCollection });
+
+      expect(result.current.filters.yearFrom).toBe(ALL_VALUE);
+      expect(result.current.filters.yearTo).toBe(ALL_VALUE);
+      expect(idsOf(result.current.filteredCollection.features)).toEqual(["C", "D"]);
+   });
+
+   it("normalizes active commissioning year ranges and clamps stale ranges", () => {
+      const firstCollection = collection([
+         pipeline("A", { ibnJahr: 2030, startnetz: true }),
+         pipeline("B", { ibnJahr: 2037, startnetz: true })
+      ]);
+      const secondCollection = collection([
+         pipeline("C", { ibnJahr: 2032, startnetz: true }),
+         pipeline("D", { ibnJahr: 2035, startnetz: true }),
+         pipeline("E", { ibnJahr: 2037, startnetz: true })
+      ]);
+      const { result, rerender } = renderHook(({ currentCollection }) => usePipelineFilters(currentCollection), {
+         initialProps: { currentCollection: firstCollection }
+      });
+
+      setYearRange(result, [2036, 2030]);
+
+      expect(result.current.filters.yearFrom).toBe(2030);
+      expect(result.current.filters.yearTo).toBe(2036);
+
+      rerender({ currentCollection: secondCollection });
+
+      expect(result.current.filters.yearFrom).toBe(2032);
+      expect(result.current.filters.yearTo).toBe(2036);
+   });
+
+   it("clears an active commissioning year range when clamping makes it cover the new full range", () => {
+      const firstCollection = collection([
+         pipeline("A", { ibnJahr: 2028, startnetz: true }),
+         pipeline("B", { ibnJahr: 2035, startnetz: true })
+      ]);
+      const secondCollection = collection([
+         pipeline("C", { ibnJahr: 2030, startnetz: true }),
+         pipeline("D", { ibnJahr: null, startnetz: true }),
+         pipeline("E", { ibnJahr: 2032, startnetz: true })
+      ]);
+      const { result, rerender } = renderHook(({ currentCollection }) => usePipelineFilters(currentCollection), {
+         initialProps: { currentCollection: firstCollection }
+      });
+
+      setYearRange(result, [2030, 2032]);
+
+      expect(result.current.filters.yearFrom).toBe(2030);
+      expect(result.current.filters.yearTo).toBe(2032);
+
+      rerender({ currentCollection: secondCollection });
+
+      expect(result.current.filters.yearFrom).toBe(ALL_VALUE);
+      expect(result.current.filters.yearTo).toBe(ALL_VALUE);
+      expect(idsOf(result.current.filteredCollection.features)).toEqual(["C", "D", "E"]);
+   });
+
+   it("restores the unfiltered commissioning year range when selecting every available year", () => {
+      const { result } = renderHook(() =>
+         usePipelineFilters(
+            collection([
+               pipeline("with-year", { ibnJahr: 2030, startnetz: true }),
+               pipeline("without-year", { ibnJahr: null, startnetz: true }),
+               pipeline("later", { ibnJahr: 2037, startnetz: true })
+            ])
+         )
+      );
+
+      expect(result.current.options.years).toEqual([2030, 2037]);
+      expect(idsOf(result.current.filteredCollection.features)).toEqual(["with-year", "without-year", "later"]);
+
+      setYearRange(result, [2030, 2030]);
+
+      expect(result.current.filters.yearFrom).toBe(2030);
+      expect(result.current.filters.yearTo).toBe(2030);
+      expect(idsOf(result.current.filteredCollection.features)).toEqual(["with-year"]);
+
+      setYearRange(result, [2030, 2037]);
+
+      expect(result.current.filters.yearFrom).toBe(ALL_VALUE);
+      expect(result.current.filters.yearTo).toBe(ALL_VALUE);
+      expect(idsOf(result.current.filteredCollection.features)).toEqual(["with-year", "without-year", "later"]);
    });
 
    it("keeps a deliberate all-data view when scenario marker filters are reset", () => {

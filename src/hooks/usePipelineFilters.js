@@ -21,7 +21,8 @@ export const initialPipelineFilters = {
    operator: ALL_VALUE,
    scenario: ALL_VALUE,
    searchTerm: "",
-   year: ALL_VALUE
+   yearFrom: ALL_VALUE,
+   yearTo: ALL_VALUE
 };
 
 const MAX_AUTO_FIT_SEARCH_RESULTS = 30;
@@ -34,6 +35,47 @@ const SCENARIO_NETWORK_VIEW_TO_KEY = {
 
 function matchesOption(value, selected) {
    return selected === ALL_VALUE || value === selected;
+}
+
+function getCommissioningYearValue(value) {
+   if (value === null || value === undefined || String(value).trim() === "") return null;
+
+   const year = Number(value);
+   return Number.isFinite(year) ? year : null;
+}
+
+function getCommissioningYear(feature) {
+   return getCommissioningYearValue(feature.properties.ibnJahr);
+}
+
+function getCommissioningYearBounds(features) {
+   const years = features.map(getCommissioningYear).filter(year => year !== null);
+   if (years.length === 0) return null;
+
+   return {
+      max: Math.max(...years),
+      min: Math.min(...years)
+   };
+}
+
+function clampYear(value, fallback, bounds) {
+   const year = Number(value);
+   if (!Number.isFinite(year)) return fallback;
+   return Math.min(bounds.max, Math.max(bounds.min, Math.round(year)));
+}
+
+function isAllYearRange(filters) {
+   return filters.yearFrom === ALL_VALUE && filters.yearTo === ALL_VALUE;
+}
+
+function matchesCommissioningYearRange(props, filters) {
+   if (isAllYearRange(filters)) return true;
+
+   const year = getCommissioningYearValue(props.ibnJahr);
+   if (year === null) return false;
+   if (filters.yearFrom !== ALL_VALUE && year < filters.yearFrom) return false;
+   if (filters.yearTo !== ALL_VALUE && year > filters.yearTo) return false;
+   return true;
 }
 
 function matchesOperators(feature, selected) {
@@ -109,6 +151,7 @@ function hasMeasureTypeOption(features, filters, measureType) {
 
 function normalizeFilterCombination(filters, features) {
    let next = filters;
+   const yearBounds = getCommissioningYearBounds(features);
 
    const updateFilter = (key, value) => {
       if (next[key] === value) return;
@@ -123,6 +166,24 @@ function normalizeFilterCombination(filters, features) {
       updateFilter("measureType", ALL_VALUE);
    }
 
+   if (!yearBounds || isAllYearRange(next)) {
+      updateFilter("yearFrom", ALL_VALUE);
+      updateFilter("yearTo", ALL_VALUE);
+   } else {
+      const normalizedYearFrom = clampYear(next.yearFrom, yearBounds.min, yearBounds);
+      const normalizedYearTo = clampYear(next.yearTo, yearBounds.max, yearBounds);
+      const yearFrom = Math.min(normalizedYearFrom, normalizedYearTo);
+      const yearTo = Math.max(normalizedYearFrom, normalizedYearTo);
+
+      if (yearFrom === yearBounds.min && yearTo === yearBounds.max) {
+         updateFilter("yearFrom", ALL_VALUE);
+         updateFilter("yearTo", ALL_VALUE);
+      } else {
+         updateFilter("yearFrom", yearFrom);
+         updateFilter("yearTo", yearTo);
+      }
+   }
+
    return next;
 }
 
@@ -135,7 +196,7 @@ export function filterPipelines(features, filters, query = getSearchQuery(filter
       return (
          matchesNetworkContext(feature, filters) &&
          matchesOption(props.leitungstyp, filters.lineType) &&
-         matchesOption(String(props.ibnJahr ?? ""), filters.year) &&
+         matchesCommissioningYearRange(props, filters) &&
          matchesMeasureType(feature, filters.measureType) &&
          matchesOperators(feature, filters.operator) &&
          matchesOgeParticipation(props, filters.ogeParticipationOnly) &&
@@ -197,6 +258,18 @@ export function usePipelineFilters(collection) {
       setFilterState(normalizeFilterCombination(nextFilters, collection.features));
    };
    const setFilter = (key, value) => commitFilters({ ...filters, [key]: value });
+   const setYearRange = ([yearFrom, yearTo]) => {
+      const yearBounds = getCommissioningYearBounds(collection.features);
+      const nextYearFrom = Math.min(yearFrom, yearTo);
+      const nextYearTo = Math.max(yearFrom, yearTo);
+
+      if (yearBounds && nextYearFrom === yearBounds.min && nextYearTo === yearBounds.max) {
+         commitFilters({ ...filters, yearFrom: ALL_VALUE, yearTo: ALL_VALUE });
+         return;
+      }
+
+      commitFilters({ ...filters, yearFrom: nextYearFrom, yearTo: nextYearTo });
+   };
    const resetFilters = () => commitFilters(initialPipelineFilters);
 
    return {
@@ -211,6 +284,7 @@ export function usePipelineFilters(collection) {
       networkViewOptions: NETWORK_VIEW_OPTIONS,
       scenarioOptions: SCENARIO_OPTIONS,
       searchBounds,
-      setFilter
+      setFilter,
+      setYearRange
    };
 }
