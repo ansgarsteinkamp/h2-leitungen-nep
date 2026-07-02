@@ -2,31 +2,53 @@
  * @vitest-environment jsdom
  */
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { forwardRef, useImperativeHandle } from "react";
+import { forwardRef, useImperativeHandle, useRef } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+import {
+   OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR,
+   PIPELINE_PARTICIPATION_COLORS
+} from "@/components/theme/pipelineTheme";
 
 import PipelineLayer from "./PipelineLayer";
 
+const leafletMockState = vi.hoisted(() => ({
+   layers: new Map()
+}));
+
 afterEach(() => {
+   leafletMockState.layers.clear();
    cleanup();
 });
 
 vi.mock("react-leaflet", () => ({
    GeoJSON: forwardRef(function GeoJSONMock({ data, onEachFeature, style }, ref) {
+      const layerEntriesRef = useRef(new Map());
       const layers = data.features.map(feature => {
-         const handlers = {};
-         const layer = {
-            bindTooltip: vi.fn(),
-            closeTooltip: vi.fn(),
-            feature,
-            getElement: () => null,
-            on: callbacks => Object.assign(handlers, callbacks),
-            setStyle: vi.fn()
-         };
+         const featureId = feature.properties.id;
+         let entry = layerEntriesRef.current.get(featureId);
 
-         onEachFeature?.(feature, layer);
+         if (!entry) {
+            const handlers = {};
+            const layer = {
+               bindTooltip: vi.fn(),
+               closeTooltip: vi.fn(),
+               feature,
+               getElement: () => null,
+               on: callbacks => Object.assign(handlers, callbacks),
+               setStyle: vi.fn()
+            };
 
-         return { feature, handlers, layer };
+            onEachFeature?.(feature, layer);
+            entry = { feature, handlers, layer };
+            layerEntriesRef.current.set(featureId, entry);
+            leafletMockState.layers.set(featureId, layer);
+         } else {
+            entry.feature = feature;
+            entry.layer.feature = feature;
+         }
+
+         return entry;
       });
 
       useImperativeHandle(ref, () => ({ eachLayer: callback => layers.forEach(({ layer }) => callback(layer)) }));
@@ -36,6 +58,7 @@ vi.mock("react-leaflet", () => ({
             {layers.map(({ feature, handlers, layer }) => (
                <button
                   data-color={style(feature).color}
+                  data-weight={style(feature).weight}
                   key={feature.properties.id}
                   onMouseOut={() => handlers.mouseout?.({ target: layer })}
                   onMouseOver={() => handlers.mouseover?.({ target: layer })}
@@ -66,7 +89,8 @@ function pipeline(id, ogeBeteiligung) {
       properties: {
          id,
          leitungstyp: "Umstellung",
-         ogeBeteiligung
+         ogeBeteiligung,
+         ogeIstDurchfuehrenderNetzbetreiber: false
       },
       geometry: {
          type: "LineString",
@@ -112,5 +136,80 @@ describe("PipelineLayer", () => {
             .getByTestId("geojson")
             .getAttribute("data-feature-ids")
       ).toBe("other,oge");
+   });
+
+   it("applies OGE executing operator highlight styling only when enabled", () => {
+      const pipelines = collection([
+         {
+            ...pipeline("oge-contact", true),
+            properties: {
+               ...pipeline("oge-contact", true).properties,
+               ogeIstDurchfuehrenderNetzbetreiber: false
+            }
+         },
+         {
+            ...pipeline("oge-executing", true),
+            properties: {
+               ...pipeline("oge-executing", true).properties,
+               ogeIstDurchfuehrenderNetzbetreiber: true
+            }
+         }
+      ]);
+      const { rerender } = render(
+         <PipelineLayer onSelectPipeline={vi.fn()} pipelines={pipelines} selectedPipelineId={null} />
+      );
+      const getOgeButton = name => within(screen.getByTestId("pane-pipelines-oge")).getByRole("button", { name });
+
+      expect(getOgeButton("oge-contact").getAttribute("data-color")).toBe(PIPELINE_PARTICIPATION_COLORS.oge);
+      expect(getOgeButton("oge-contact").getAttribute("data-weight")).toBe("3");
+      expect(getOgeButton("oge-executing").getAttribute("data-color")).toBe(PIPELINE_PARTICIPATION_COLORS.oge);
+      expect(getOgeButton("oge-executing").getAttribute("data-weight")).toBe("3");
+
+      rerender(
+         <PipelineLayer
+            highlightOgeExecutingOperator
+            onSelectPipeline={vi.fn()}
+            pipelines={pipelines}
+            selectedPipelineId={null}
+         />
+      );
+
+      expect(getOgeButton("oge-contact").getAttribute("data-color")).toBe(PIPELINE_PARTICIPATION_COLORS.oge);
+      expect(getOgeButton("oge-contact").getAttribute("data-weight")).toBe("3");
+      expect(getOgeButton("oge-executing").getAttribute("data-color")).toBe(OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR);
+      expect(getOgeButton("oge-executing").getAttribute("data-weight")).toBe("5.25");
+   });
+
+   it("uses the latest OGE executing operator highlight mode in existing Leaflet event handlers", () => {
+      const pipelines = collection([
+         {
+            ...pipeline("oge-executing", true),
+            properties: {
+               ...pipeline("oge-executing", true).properties,
+               ogeIstDurchfuehrenderNetzbetreiber: true
+            }
+         }
+      ]);
+      const { rerender } = render(
+         <PipelineLayer onSelectPipeline={vi.fn()} pipelines={pipelines} selectedPipelineId={null} />
+      );
+      const existingLayer = leafletMockState.layers.get("oge-executing");
+
+      rerender(
+         <PipelineLayer
+            highlightOgeExecutingOperator
+            onSelectPipeline={vi.fn()}
+            pipelines={pipelines}
+            selectedPipelineId={null}
+         />
+      );
+      fireEvent.mouseOver(screen.getByRole("button", { name: "oge-executing" }));
+
+      expect(existingLayer.setStyle).toHaveBeenLastCalledWith(
+         expect.objectContaining({
+            color: OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR,
+            weight: 5.75
+         })
+      );
    });
 });

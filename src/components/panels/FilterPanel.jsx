@@ -19,6 +19,9 @@ const OPERATOR_FILTER_DESCRIPTION =
    "Der Filter berücksichtigt Unternehmen, die als durchführende Netzbetreiber oder als Ansprechpartner genannt sind. Die Nennung als Ansprechpartner bedeutet nicht zwingend Umsetzungsverantwortung.";
 const OGE_PARTICIPATION_DESCRIPTION =
    "Zeigt nur Maßnahmen an, bei denen OGE als Ansprechpartner oder durchführender Netzbetreiber genannt ist.";
+const OGE_EXECUTING_OPERATOR_HIGHLIGHT_LABEL = "Hervorheben, wenn OGE durchführender FNB ist";
+const OGE_EXECUTING_OPERATOR_HIGHLIGHT_DESCRIPTION =
+   "Hebt Leitungen hervor, bei denen OGE als durchführender Netzbetreiber benannt ist. OGE als Ansprechpartner wird dabei nicht berücksichtigt.";
 const METRIC_COST_DESCRIPTION =
    "Summe der in den Maßnahmendaten angegebenen Kosten der aktuellen Auswahl. Enthalten sind die kartierten Leitungsmaßnahmen; Verdichterstationen und sonstige Investitionspositionen ohne Leitungsgeometrie sind nicht enthalten.";
 
@@ -218,44 +221,56 @@ function SelectField({ className, description, label, options, value, onChange }
    );
 }
 
-function OgeParticipationSwitch({ active, onChange }) {
+function SwitchControl({ active, label, onChange }) {
    const state = active ? "checked" : "unchecked";
    const inputId = useId();
 
    return (
-      <div className="flex min-h-8 items-center gap-2.5">
-         <label className="relative flex min-w-0 cursor-pointer select-none items-center gap-2.5" htmlFor={inputId}>
-            <input
-               checked={active}
-               className="peer absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-               id={inputId}
-               onChange={event => onChange(event.target.checked)}
-               role="switch"
-               type="checkbox"
-            />
+      <label className="relative flex min-w-0 cursor-pointer select-none items-center gap-2.5" htmlFor={inputId}>
+         <input
+            checked={active}
+            className="peer absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+            id={inputId}
+            onChange={event => onChange(event.target.checked)}
+            role="switch"
+            type="checkbox"
+         />
+         <span
+            aria-hidden="true"
+            data-state={state}
+            className={cn(
+               "pointer-events-none relative h-4.5 w-8 shrink-0 rounded-full border border-border bg-field transition-colors peer-focus-visible:ring-3 peer-focus-visible:ring-ring/65 peer-focus-visible:ring-offset-1 peer-focus-visible:ring-offset-background peer-focus-visible:outline-none dark:peer-focus-visible:ring-ring/50",
+               "data-[state=checked]:border-primary/70 data-[state=checked]:bg-primary/80"
+            )}
+         >
             <span
-               aria-hidden="true"
                data-state={state}
-               className={cn(
-                  "pointer-events-none relative h-4.5 w-8 shrink-0 rounded-full border border-border bg-field transition-colors peer-focus-visible:ring-3 peer-focus-visible:ring-ring/65 peer-focus-visible:ring-offset-1 peer-focus-visible:ring-offset-background peer-focus-visible:outline-none dark:peer-focus-visible:ring-ring/50",
-                  "data-[state=checked]:border-primary/70 data-[state=checked]:bg-primary/80"
-               )}
-            >
-               <span
-                  data-state={state}
-                  className="absolute top-1/2 left-0.5 size-3.5 -translate-y-1/2 rounded-full bg-muted-foreground transition-transform data-[state=checked]:translate-x-3.25 data-[state=checked]:bg-primary-foreground"
-               />
-            </span>
-            <span className="pointer-events-none min-w-0 truncate text-xs font-medium text-card-foreground">
-               Nur OGE-Bezug
-            </span>
-         </label>
-         <HelpTooltip label="Nur OGE-Bezug">{OGE_PARTICIPATION_DESCRIPTION}</HelpTooltip>
+               className="absolute top-1/2 left-0.5 size-3.5 -translate-y-1/2 rounded-full bg-muted-foreground transition-transform data-[state=checked]:translate-x-3.25 data-[state=checked]:bg-primary-foreground"
+            />
+         </span>
+         <span className="pointer-events-none min-w-0 text-xs leading-snug font-medium text-card-foreground">
+            {label}
+         </span>
+      </label>
+   );
+}
+
+function SwitchRow({ active, description, label, onChange }) {
+   return (
+      <div className="flex min-h-8 items-center gap-2.5">
+         <SwitchControl active={active} label={label} onChange={onChange} />
+         <HelpTooltip label={label}>{description}</HelpTooltip>
       </div>
    );
 }
 
-function OperatorFilterGroup({ filters, options, setFilter }) {
+function OperatorFilterGroup({
+   filters,
+   highlightOgeExecutingOperator,
+   onHighlightOgeExecutingOperatorChange,
+   options,
+   setFilter
+}) {
    return (
       <section className={cn(FILTER_SECTION_CLASS, "gap-3")} aria-label="Betreiberfilter">
          <SelectField
@@ -265,9 +280,17 @@ function OperatorFilterGroup({ filters, options, setFilter }) {
             options={options.operators}
             value={filters.operator}
          />
-         <OgeParticipationSwitch
+         <SwitchRow
             active={filters.ogeParticipationOnly}
+            description={OGE_PARTICIPATION_DESCRIPTION}
+            label="Nur OGE-Bezug"
             onChange={value => setFilter("ogeParticipationOnly", value)}
+         />
+         <SwitchRow
+            active={highlightOgeExecutingOperator}
+            description={OGE_EXECUTING_OPERATOR_HIGHLIGHT_DESCRIPTION}
+            label={OGE_EXECUTING_OPERATOR_HIGHLIGHT_LABEL}
+            onChange={onHighlightOgeExecutingOperatorChange}
          />
       </section>
    );
@@ -275,8 +298,10 @@ function OperatorFilterGroup({ filters, options, setFilter }) {
 
 function FilterControls({
    filters,
+   highlightOgeExecutingOperator,
    measureTypeOptions,
    networkViewOptions,
+   onHighlightOgeExecutingOperatorChange,
    onResetFilters,
    options,
    scenarioOptions,
@@ -343,7 +368,13 @@ function FilterControls({
             />
          </section>
 
-         <OperatorFilterGroup filters={filters} options={options} setFilter={setFilter} />
+         <OperatorFilterGroup
+            filters={filters}
+            highlightOgeExecutingOperator={highlightOgeExecutingOperator}
+            onHighlightOgeExecutingOperatorChange={onHighlightOgeExecutingOperatorChange}
+            options={options}
+            setFilter={setFilter}
+         />
 
          <div className="mt-auto border-t border-border/80 pt-4">
             <ResetFiltersButton onResetFilters={onResetFilters} />
@@ -364,7 +395,9 @@ function ResetFiltersButton({ onResetFilters }) {
 export default function FilterPanel({
    className,
    filters,
+   highlightOgeExecutingOperator = false,
    metrics,
+   onHighlightOgeExecutingOperatorChange = () => {},
    onResetFilters,
    measureTypeOptions,
    networkViewOptions,
@@ -382,8 +415,10 @@ export default function FilterPanel({
          <MetricsDashboard metrics={metrics} />
          <FilterControls
             filters={filters}
+            highlightOgeExecutingOperator={highlightOgeExecutingOperator}
             measureTypeOptions={measureTypeOptions}
             networkViewOptions={networkViewOptions}
+            onHighlightOgeExecutingOperatorChange={onHighlightOgeExecutingOperatorChange}
             onResetFilters={onResetFilters}
             options={options}
             scenarioOptions={scenarioOptions}

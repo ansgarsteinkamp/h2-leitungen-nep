@@ -32,8 +32,13 @@ vi.mock("@/components/map/CountryLayers", () => ({
 }));
 
 vi.mock("@/components/map/PipelineLayer", () => ({
-   default() {
-      return <div data-testid="pipeline-layer" />;
+   default({ highlightOgeExecutingOperator }) {
+      return (
+         <div
+            data-highlight-oge-executing-operator={String(highlightOgeExecutingOperator)}
+            data-testid="pipeline-layer"
+         />
+      );
    }
 }));
 
@@ -84,5 +89,53 @@ describe("NetworkMap", () => {
       );
 
       expect(screen.getByRole("complementary", { name: "Kartenlegende" })).toBeTruthy();
+   });
+
+   it("passes OGE executing operator highlighting to the pipeline layer", () => {
+      const { rerender } = renderNetworkMap();
+
+      expect(screen.getByTestId("pipeline-layer").getAttribute("data-highlight-oge-executing-operator")).toBe("false");
+
+      rerender(
+         <TooltipProvider>
+            <NetworkMap
+               europeContext={collection}
+               filteredPipelines={collection}
+               germany={collection}
+               highlightOgeExecutingOperator
+               onSelectPipeline={vi.fn()}
+               resetViewKey={0}
+               searchActive={false}
+               searchBounds={[]}
+               selection={null}
+            />
+         </TooltipProvider>
+      );
+
+      expect(screen.getByTestId("pipeline-layer").getAttribute("data-highlight-oge-executing-operator")).toBe("true");
+   });
+
+   it("shows the OGE executing operator highlight in the legend only while active", () => {
+      const { rerender } = renderNetworkMap();
+
+      expect(screen.queryByText("OGE als durchführender FNB")).toBeNull();
+
+      rerender(
+         <TooltipProvider>
+            <NetworkMap
+               europeContext={collection}
+               filteredPipelines={collection}
+               germany={collection}
+               highlightOgeExecutingOperator
+               onSelectPipeline={vi.fn()}
+               resetViewKey={0}
+               searchActive={false}
+               searchBounds={[]}
+               selection={null}
+            />
+         </TooltipProvider>
+      );
+
+      expect(screen.getByText("OGE als durchführender FNB")).toBeTruthy();
    });
 });

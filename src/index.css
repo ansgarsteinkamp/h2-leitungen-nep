@@ -183,6 +183,7 @@
    --map-pipeline-symbol-no-oge: #bedfd9;
    --map-pipeline-fallback: #013c74;
    --map-pipeline-selection-halo-fallback: #013c74;
+   --map-pipeline-oge-executing-operator-highlight: #d7ac72;
    --map-country-context-stroke: #9ed8d7;
    --map-country-context-fill: #f6fcfc;
    --map-country-germany-stroke: #f0efa9;
@@ -234,6 +235,7 @@
    --map-pipeline-symbol-no-oge: #86b7a7;
    --map-pipeline-fallback: #e5e5e2;
    --map-pipeline-selection-halo-fallback: #faf9f5;
+   --map-pipeline-oge-executing-operator-highlight: #b4b27d;
    --map-country-context-stroke: #74746a;
    --map-country-context-fill: #30302e;
    --map-country-germany-stroke: #faf9f5;

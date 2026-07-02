@@ -44,8 +44,27 @@ describe("parsePipelineGeoJson", () => {
       expect(props.netzausbauvorschlag).toBe(false);
       expect(props.standardAnzeige).toBe(true);
       expect(props.ogeBeteiligung).toBe(true);
+      expect(props.ogeIstDurchfuehrenderNetzbetreiber).toBe(true);
       expect(props.szenario1).toBeNull();
       expect(props.ibnJahr).toBe(2032);
+   });
+
+   it("keeps OGE contact participation separate from OGE executing operator", () => {
+      const parsed = parsePipelineGeoJson(
+         collection([
+            feature({
+               properties: {
+                  ...baseProperties,
+                  durchfuehrendeNetzbetreiber: "Regional AG",
+                  ansprechpartner: "Open Grid Europe GmbH"
+               }
+            })
+         ])
+      );
+      const props = parsed.features[0].properties;
+
+      expect(props.ogeBeteiligung).toBe(true);
+      expect(props.ogeIstDurchfuehrenderNetzbetreiber).toBe(false);
    });
 
    it("parses German-formatted numbers with thousands separators and decimal commas", () => {

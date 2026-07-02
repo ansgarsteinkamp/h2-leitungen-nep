@@ -11,6 +11,7 @@ export default function NetworkMap({
    europeContext,
    filteredPipelines,
    germany,
+   highlightOgeExecutingOperator = false,
    onSelectPipeline,
    resetViewKey,
    searchActive,
@@ -31,11 +32,17 @@ export default function NetworkMap({
          <MapZoomControls />
          <CountryLayers europeContext={europeContext} germany={germany} />
          <PipelineLayer
+            highlightOgeExecutingOperator={highlightOgeExecutingOperator}
             onSelectPipeline={onSelectPipeline}
             pipelines={filteredPipelines}
             selectedPipelineId={selection?.item?.properties?.id}
          />
-         {isLegendVisible ? <MapLegend onHide={() => setHiddenLegendResetKey(resetViewKey)} /> : null}
+         {isLegendVisible ? (
+            <MapLegend
+               showOgeExecutingOperatorHighlight={highlightOgeExecutingOperator}
+               onHide={() => setHiddenLegendResetKey(resetViewKey)}
+            />
+         ) : null}
       </MapViewport>
    );
 }

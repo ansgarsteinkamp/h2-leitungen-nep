@@ -3,6 +3,7 @@ import { normalizeLookupText, normalizeOperatorName } from "@/lib/domain/operato
 export const SCENARIO_KEYS = ["szenario1", "szenario2", "szenario3"];
 
 const PARTICIPANT_KEYS = ["durchfuehrendeNetzbetreiber", "ansprechpartner"];
+const EXECUTING_OPERATOR_KEY = "durchfuehrendeNetzbetreiber";
 
 const nonEmpty = value => value !== null && value !== undefined && String(value).trim() !== "";
 
@@ -24,11 +25,22 @@ export function getPipelineParticipants(input) {
    return [...new Set(rawValues.flatMap(splitListValue).map(normalizeOperatorName).filter(nonEmpty))];
 }
 
+export function isOgeOperatorName(value) {
+   const normalized = normalizeLookupText(value);
+   return /\boge\b/.test(normalized) || normalized.includes("open grid europe");
+}
+
 export function hasOgeParticipation(input) {
-   return getPipelineParticipants(input).some(value => {
-      const normalized = normalizeLookupText(value);
-      return /\boge\b/.test(normalized) || normalized.includes("open grid europe");
-   });
+   return getPipelineParticipants(input).some(isOgeOperatorName);
+}
+
+export function hasOgeExecutingOperator(input) {
+   const props = input?.properties ?? input ?? {};
+   return toValueArray(props[EXECUTING_OPERATOR_KEY])
+      .filter(nonEmpty)
+      .flatMap(splitListValue)
+      .map(normalizeOperatorName)
+      .some(isOgeOperatorName);
 }
 
 export function isStandardFeature(input) {

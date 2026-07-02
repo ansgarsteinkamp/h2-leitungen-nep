@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getPipelineParticipants, hasOgeParticipation, isStandardFeature } from "./pipeline";
+import { getPipelineParticipants, hasOgeExecutingOperator, hasOgeParticipation, isStandardFeature } from "./pipeline";
 
 describe("pipeline domain helpers", () => {
    it("treats startnetz and netzausbauvorschlag as standard features", () => {
@@ -27,6 +27,35 @@ describe("pipeline domain helpers", () => {
                durchfuehrendeNetzbetreiber: [],
                ansprechpartner: ["Regional AG"],
                ogeBeteiligung: true
+            }
+         })
+      ).toBe(false);
+   });
+
+   it("derives OGE executing operator only from executing operators", () => {
+      expect(
+         hasOgeExecutingOperator({
+            properties: {
+               durchfuehrendeNetzbetreiber: ["Partner Netz, OGE"],
+               ansprechpartner: []
+            }
+         })
+      ).toBe(true);
+
+      expect(
+         hasOgeExecutingOperator({
+            properties: {
+               durchfuehrendeNetzbetreiber: ["Regional AG"],
+               ansprechpartner: ["Open Grid Europe GmbH"]
+            }
+         })
+      ).toBe(false);
+
+      expect(
+         hasOgeExecutingOperator({
+            properties: {
+               durchfuehrendeNetzbetreiber: ["Regional AG"],
+               ansprechpartner: []
             }
          })
       ).toBe(false);

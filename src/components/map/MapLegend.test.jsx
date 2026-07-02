@@ -37,6 +37,22 @@ describe("MapLegend", () => {
       expect(within(legend).getByRole("list")).toBeTruthy();
    });
 
+   it("does not explain OGE executing operator highlights while the highlight is inactive", () => {
+      renderLegend();
+
+      expect(screen.queryByText("OGE als durchführender FNB")).toBeNull();
+   });
+
+   it("adds the OGE executing operator highlight when the highlight is active", () => {
+      renderLegend({ showOgeExecutingOperatorHighlight: true });
+
+      const legend = screen.getByRole("complementary", { name: "Kartenlegende" });
+      const entries = within(legend).getAllByRole("listitem");
+
+      expect(entries).toHaveLength(5);
+      expect(entries.at(-1).textContent).toBe("OGE als durchführender FNB");
+   });
+
    it("requests hiding from the map", () => {
       const onHide = vi.fn();
 

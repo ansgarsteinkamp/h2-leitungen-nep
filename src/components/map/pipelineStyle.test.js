@@ -15,6 +15,7 @@ import {
    PIPELINE_PARTICIPATION_COLORS,
    PIPELINE_FALLBACK_COLOR,
    PIPELINE_SYMBOL_COLORS,
+   OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR,
    SELECTION_HALO_COLORS,
    SELECTION_HALO_FALLBACK_COLOR
 } from "@/components/theme/pipelineTheme";
@@ -35,6 +36,7 @@ function mapVariableNames() {
       COUNTRY_STYLES,
       PIPELINE_PARTICIPATION_COLORS,
       PIPELINE_SYMBOL_COLORS,
+      OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR,
       SELECTION_HALO_COLORS,
       PIPELINE_FALLBACK_COLOR,
       SELECTION_HALO_FALLBACK_COLOR
@@ -71,6 +73,9 @@ describe("map theme tokens", () => {
       expect(SELECTION_HALO_COLORS.noOge).toBe("var(--map-pipeline-selection-halo-no-oge, #86b7a7)");
       expect(PIPELINE_SYMBOL_COLORS.oge).toBe("var(--map-pipeline-symbol-oge, #d97757)");
       expect(PIPELINE_SYMBOL_COLORS.noOge).toBe("var(--map-pipeline-symbol-no-oge, #86b7a7)");
+      expect(OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR).toBe(
+         "var(--map-pipeline-oge-executing-operator-highlight, #b4b27d)"
+      );
       expect(PIPELINE_FALLBACK_COLOR).toBe("var(--map-pipeline-fallback, #e5e5e2)");
       expect(SELECTION_HALO_FALLBACK_COLOR).toBe("var(--map-pipeline-selection-halo-fallback, #faf9f5)");
    });
@@ -114,6 +119,7 @@ describe("map theme tokens", () => {
       expect(darkTheme.get("--map-pipeline-selection-halo-no-oge")).toBe("#86b7a7");
       expect(darkTheme.get("--map-pipeline-symbol-oge")).toBe("#d97757");
       expect(darkTheme.get("--map-pipeline-symbol-no-oge")).toBe("#86b7a7");
+      expect(darkTheme.get("--map-pipeline-oge-executing-operator-highlight")).toBe("#b4b27d");
       expect(darkTheme.get("--map-pipeline-fallback")).toBe("#e5e5e2");
       expect(darkTheme.get("--map-pipeline-selection-halo-fallback")).toBe("#faf9f5");
       expect(darkTheme.get("--map-country-germany-stroke")).toBe("#faf9f5");
@@ -130,6 +136,7 @@ describe("map theme tokens", () => {
       expect(rootTheme.get("--map-pipeline-selection-halo-no-oge")).toBe("#75b8af");
       expect(rootTheme.get("--map-pipeline-symbol-oge").toLowerCase()).toBe("#52a436");
       expect(rootTheme.get("--map-pipeline-symbol-no-oge")).toBe("#bedfd9");
+      expect(rootTheme.get("--map-pipeline-oge-executing-operator-highlight")).toBe("#d7ac72");
       expect(rootTheme.get("--map-background")).toBe("#ffffff");
       expect(rootTheme.get("--map-country-context-fill")).toBe("#f6fcfc");
       expect(rootTheme.get("--map-country-context-stroke")).toBe("#9ed8d7");
@@ -201,6 +208,43 @@ describe("getPipelineStyle", () => {
       const selected = getPipelineStyle(pipeline("Neubau", { ogeBeteiligung: true }), "H2-1");
       const hovered = getPipelineStyle(pipeline("Neubau", { ogeBeteiligung: false }), null, "H2-1");
 
+      expect(selected.weight).toBe(5.75);
+      expect(hovered.weight).toBe(5.75);
+   });
+
+   it("highlights OGE executing operators as primary pipeline styling when enabled", () => {
+      const highlighted = getPipelineStyle(
+         pipeline("Neubau", { ogeIstDurchfuehrenderNetzbetreiber: true }),
+         null,
+         null,
+         { highlightOgeExecutingOperator: true }
+      );
+      const regular = getPipelineStyle(pipeline("Neubau", { ogeIstDurchfuehrenderNetzbetreiber: false }), null, null, {
+         highlightOgeExecutingOperator: true
+      });
+
+      expect(highlighted).toMatchObject({
+         color: OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR,
+         dashArray: "4 4",
+         weight: 5.25
+      });
+      expect(regular.color).toBe(PIPELINE_PARTICIPATION_COLORS.oge);
+      expect(regular.weight).toBe(3);
+   });
+
+   it("keeps selected and hovered states stronger than OGE executing operator highlighting", () => {
+      const selected = getPipelineStyle(
+         pipeline("Neubau", { ogeIstDurchfuehrenderNetzbetreiber: true }),
+         "H2-1",
+         null,
+         { highlightOgeExecutingOperator: true }
+      );
+      const hovered = getPipelineStyle(pipeline("Neubau", { ogeIstDurchfuehrenderNetzbetreiber: true }), null, "H2-1", {
+         highlightOgeExecutingOperator: true
+      });
+
+      expect(selected.color).toBe(OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR);
+      expect(hovered.color).toBe(OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR);
       expect(selected.weight).toBe(5.75);
       expect(hovered.weight).toBe(5.75);
    });

@@ -35,6 +35,7 @@ function restoreSelectionFocus(previousResultId, previousTrigger) {
 }
 
 export default function PipelineWorkspace({ countries, pipelineCollection }) {
+   const [highlightOgeExecutingOperator, setHighlightOgeExecutingOperator] = useState(false);
    const [resetViewKey, setResetViewKey] = useState(0);
    const lastSelectionResultIdRef = useRef(null);
    const lastSelectionTriggerRef = useRef(null);
@@ -46,6 +47,7 @@ export default function PipelineWorkspace({ countries, pipelineCollection }) {
    const resetFilters = () => {
       filters.resetFilters();
       selection.clearSelection();
+      setHighlightOgeExecutingOperator(false);
       setResetViewKey(value => value + 1);
    };
 
@@ -81,7 +83,7 @@ export default function PipelineWorkspace({ countries, pipelineCollection }) {
    return (
       <main className="app-shell min-h-svh bg-background p-4 text-foreground max-lg:p-3">
          <Topbar />
-         <section className="mx-auto grid max-w-440 grid-cols-[24rem_minmax(0,1fr)] items-stretch gap-4 min-[1360px]:h-[calc(100svh-112px)] min-[1360px]:grid-cols-[26rem_minmax(340px,1fr)_26.5rem] max-lg:grid-cols-1">
+         <section className="mx-auto grid max-w-440 grid-cols-[25rem_minmax(0,1fr)] items-stretch gap-4 min-[1360px]:h-[calc(100svh-112px)] min-[1360px]:grid-cols-[27rem_minmax(340px,1fr)_26.5rem] max-lg:grid-cols-1">
             <FilterPanel
                className={
                   selection.selection
@@ -89,7 +91,9 @@ export default function PipelineWorkspace({ countries, pipelineCollection }) {
                      : "max-h-[calc(100svh-112px)] min-[1360px]:h-full max-lg:order-1 max-lg:h-auto max-lg:max-h-none"
                }
                filters={filters.filters}
+               highlightOgeExecutingOperator={highlightOgeExecutingOperator}
                metrics={filters.metrics}
+               onHighlightOgeExecutingOperatorChange={setHighlightOgeExecutingOperator}
                onResetFilters={resetFilters}
                measureTypeOptions={filters.measureTypeOptions}
                networkViewOptions={filters.networkViewOptions}
@@ -104,6 +108,7 @@ export default function PipelineWorkspace({ countries, pipelineCollection }) {
                      europeContext={europeContext}
                      filteredPipelines={filters.filteredCollection}
                      germany={germany}
+                     highlightOgeExecutingOperator={highlightOgeExecutingOperator}
                      onSelectPipeline={selectPipeline}
                      resetViewKey={resetViewKey}
                      searchActive={filters.hasActiveSearch}

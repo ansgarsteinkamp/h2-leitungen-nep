@@ -15,6 +15,7 @@ export const PIPELINE_SYMBOL_COLORS = {
 
 export const PIPELINE_FALLBACK_COLOR = "var(--map-pipeline-fallback, #e5e5e2)";
 export const SELECTION_HALO_FALLBACK_COLOR = "var(--map-pipeline-selection-halo-fallback, #faf9f5)";
+export const OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR = "var(--map-pipeline-oge-executing-operator-highlight, #b4b27d)";
 
 const NEUBAU_DASH_LENGTH = 4;
 const NEUBAU_DASH_GAP = 4;
@@ -53,4 +54,8 @@ export function getLineTypeSymbolBackground(lineType, color) {
 export function getSelectionHaloColor(input) {
    const participationKey = getPipelineParticipationKey(input);
    return SELECTION_HALO_COLORS[participationKey] ?? SELECTION_HALO_FALLBACK_COLOR;
+}
+
+export function getOgeExecutingOperatorHighlightColor() {
+   return OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR;
 }

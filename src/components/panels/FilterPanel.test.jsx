@@ -23,8 +23,10 @@ const metrics = { costMioEur: 0, count: 0, lengthKm: 0 };
 
 function renderFilterPanel({
    filters = {},
+   highlightOgeExecutingOperator = false,
    measureTypeOptions = MEASURE_TYPE_OPTIONS,
    networkViewOptions = NETWORK_VIEW_OPTIONS,
+   onHighlightOgeExecutingOperatorChange = vi.fn(),
    onResetFilters = vi.fn(),
    options: filterOptions = options,
    scenarioOptions = SCENARIO_OPTIONS,
@@ -34,8 +36,10 @@ function renderFilterPanel({
       <TooltipProvider>
          <FilterPanel
             filters={{ ...initialPipelineFilters, ...filters }}
+            highlightOgeExecutingOperator={highlightOgeExecutingOperator}
             measureTypeOptions={measureTypeOptions}
             metrics={metrics}
+            onHighlightOgeExecutingOperatorChange={onHighlightOgeExecutingOperatorChange}
             onResetFilters={onResetFilters}
             networkViewOptions={networkViewOptions}
             options={filterOptions}
@@ -45,7 +49,11 @@ function renderFilterPanel({
       </TooltipProvider>
    );
 
-   return { onResetFilters, setFilter };
+   return {
+      onHighlightOgeExecutingOperatorChange,
+      onResetFilters,
+      setFilter
+   };
 }
 
 function getHelpTrigger(label) {
@@ -81,6 +89,7 @@ describe("FilterPanel", () => {
       expect(getHelpTrigger("NEP-Einordnung")).toBeTruthy();
       expect(getHelpTrigger("Netzbetreiber oder Ansprechpartner")).toBeTruthy();
       expect(getHelpTrigger("Nur OGE-Bezug")).toBeTruthy();
+      expect(getHelpTrigger("Hervorheben, wenn OGE durchführender FNB ist")).toBeTruthy();
 
       expect(getHelpTrigger("Kosten")).toBeTruthy();
 
@@ -102,6 +111,42 @@ describe("FilterPanel", () => {
       fireEvent.click(switchFilter);
 
       expect(setFilter).toHaveBeenCalledWith("ogeParticipationOnly", true);
+   });
+
+   it("exposes OGE executing operator highlighting as a display switch", () => {
+      const onHighlightOgeExecutingOperatorChange = vi.fn();
+      const setFilter = vi.fn();
+
+      renderFilterPanel({ onHighlightOgeExecutingOperatorChange, setFilter });
+
+      const highlightSwitch = screen.getByRole("switch", {
+         name: "Hervorheben, wenn OGE durchführender FNB ist"
+      });
+
+      expect(highlightSwitch).toHaveProperty("checked", false);
+      expect(screen.getByText("Hervorheben, wenn OGE durchführender FNB ist")).toBeTruthy();
+      expect(getHelpTrigger("Hervorheben, wenn OGE durchführender FNB ist")).toBeTruthy();
+
+      fireEvent.click(highlightSwitch);
+
+      expect(onHighlightOgeExecutingOperatorChange).toHaveBeenCalledWith(true);
+      expect(setFilter).not.toHaveBeenCalled();
+   });
+
+   it("reflects active OGE executing operator highlighting in the switch", () => {
+      const onHighlightOgeExecutingOperatorChange = vi.fn();
+
+      renderFilterPanel({ highlightOgeExecutingOperator: true, onHighlightOgeExecutingOperatorChange });
+
+      const highlightSwitch = screen.getByRole("switch", {
+         name: "Hervorheben, wenn OGE durchführender FNB ist"
+      });
+
+      expect(highlightSwitch).toHaveProperty("checked", true);
+
+      fireEvent.click(highlightSwitch);
+
+      expect(onHighlightOgeExecutingOperatorChange).toHaveBeenCalledWith(false);
    });
 
    it("uses a compact network view selector for scenario views", () => {
@@ -195,6 +240,20 @@ describe("FilterPanel", () => {
 
       expect(setFilter).not.toHaveBeenCalled();
       expect(screen.getByRole("switch", { name: "Nur OGE-Bezug" })).toHaveProperty("checked", false);
+   });
+
+   it("keeps the OGE executing operator highlight tooltip trigger separate from the switch", () => {
+      const onHighlightOgeExecutingOperatorChange = vi.fn();
+
+      renderFilterPanel({ onHighlightOgeExecutingOperatorChange });
+
+      fireEvent.click(getHelpTrigger("Hervorheben, wenn OGE durchführender FNB ist"));
+
+      expect(onHighlightOgeExecutingOperatorChange).not.toHaveBeenCalled();
+      expect(screen.getByRole("switch", { name: "Hervorheben, wenn OGE durchführender FNB ist" })).toHaveProperty(
+         "checked",
+         false
+      );
    });
 
    it("reflects an active OGE participation filter in the switch", () => {

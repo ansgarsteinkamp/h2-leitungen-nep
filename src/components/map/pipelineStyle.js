@@ -1,17 +1,30 @@
-import { getLineTypeDashArray, getPipelineColor, getSelectionHaloColor } from "@/components/theme/pipelineTheme";
+import {
+   getLineTypeDashArray,
+   getOgeExecutingOperatorHighlightColor,
+   getPipelineColor,
+   getSelectionHaloColor
+} from "@/components/theme/pipelineTheme";
 
 const BASE_WEIGHT = 3;
 const HOVER_WEIGHT = 5.75;
+const OGE_EXECUTING_OPERATOR_HIGHLIGHT_WEIGHT = 5.25;
 
-export const getPipelineStyle = (feature, selectedPipelineId, hoveredPipelineId = null) => {
+export const getPipelineStyle = (
+   feature,
+   selectedPipelineId,
+   hoveredPipelineId = null,
+   { highlightOgeExecutingOperator = false } = {}
+) => {
    const pipelineId = feature.properties.id;
    const selected = pipelineId === selectedPipelineId;
    const hovered = pipelineId === hoveredPipelineId;
-   const weight = selected ? BASE_WEIGHT + 2.75 : BASE_WEIGHT;
+   const highlighted = highlightOgeExecutingOperator && feature.properties.ogeIstDurchfuehrenderNetzbetreiber === true;
+   const baseWeight = highlighted ? OGE_EXECUTING_OPERATOR_HIGHLIGHT_WEIGHT : BASE_WEIGHT;
+   const weight = selected ? BASE_WEIGHT + 2.75 : baseWeight;
 
    return {
       className: null,
-      color: getPipelineColor(feature),
+      color: highlighted ? getOgeExecutingOperatorHighlightColor() : getPipelineColor(feature),
       dashArray: getLineTypeDashArray(feature.properties.leitungstyp),
       lineCap: "round",
       lineJoin: "round",

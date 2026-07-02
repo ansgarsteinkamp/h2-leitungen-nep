@@ -2,7 +2,7 @@ import { X } from "lucide-react";
 
 import { MAP_EXPORT_EXCLUDE_PROPS } from "@/components/map/mapExport";
 import { PipelineLineSymbol } from "@/components/ui/pipeline-line-symbol";
-import { PIPELINE_SYMBOL_COLORS } from "@/components/theme/pipelineTheme";
+import { OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR, PIPELINE_SYMBOL_COLORS } from "@/components/theme/pipelineTheme";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const participationEntries = [
@@ -27,7 +27,17 @@ function LegendSymbol({ color, lineType }) {
    );
 }
 
-export default function MapLegend({ onHide }) {
+function HighlightLegendSymbol() {
+   return (
+      <PipelineLineSymbol
+         className="h-1.5 w-5 rounded-full"
+         color={OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR}
+         opacity={1}
+      />
+   );
+}
+
+export default function MapLegend({ showOgeExecutingOperatorHighlight = false, onHide }) {
    return (
       <aside
          aria-label="Kartenlegende"
@@ -58,6 +68,12 @@ export default function MapLegend({ onHide }) {
                   {entry.label}
                </li>
             ))}
+            {showOgeExecutingOperatorHighlight ? (
+               <li className="mt-1 inline-flex items-center gap-2 border-t border-border/60 pt-1.5">
+                  <HighlightLegendSymbol />
+                  OGE als durchführender FNB
+               </li>
+            ) : null}
          </ul>
       </aside>
    );

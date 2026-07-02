@@ -1,5 +1,5 @@
 import { normalizeOperatorName } from "@/lib/domain/operators";
-import { hasOgeParticipation, isStandardFeature, splitListValue } from "@/lib/domain/pipeline";
+import { hasOgeExecutingOperator, hasOgeParticipation, isStandardFeature, splitListValue } from "@/lib/domain/pipeline";
 
 const REQUIRED_PROPERTIES = ["id", "name", "leitungstyp", "startnetz", "netzausbauvorschlag", "ibnJahr"];
 
@@ -13,7 +13,8 @@ const BOOLEAN_PROPERTIES = [
    "szenario2",
    "szenario3",
    "finalInvestmentDecision",
-   "ogeBeteiligung"
+   "ogeBeteiligung",
+   "ogeIstDurchfuehrenderNetzbetreiber"
 ];
 
 const REQUIRED_BOOLEAN_PROPERTIES = ["startnetz", "netzausbauvorschlag"];
@@ -213,6 +214,7 @@ function normalizeProperties(properties, featureIndex) {
 
    normalized.standardAnzeige = isStandardFeature(normalized);
    normalized.ogeBeteiligung = hasOgeParticipation(normalized);
+   normalized.ogeIstDurchfuehrenderNetzbetreiber = hasOgeExecutingOperator(normalized);
 
    return normalized;
 }
