@@ -1,0 +1,1642 @@
+[
+   {
+      "name": "Achim",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.9908,
+         "lon": 9.04
+      }
+   },
+   {
+      "name": "Ahlten",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.365,
+         "lon": 9.92
+      }
+   },
+   {
+      "name": "Amerdingen",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 48.735,
+         "lon": 10.445
+      }
+   },
+   {
+      "name": "Arresting",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 48.83,
+         "lon": 11.48
+      }
+   },
+   {
+      "name": "Asbeck",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.40215,
+         "lon": 7.881875
+      }
+   },
+   {
+      "name": "Augsburg",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 48.3705,
+         "lon": 10.8978
+      }
+   },
+   {
+      "name": "Bad Bentheim",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.3011,
+         "lon": 7.1583
+      }
+   },
+   {
+      "name": "Bad Berleburg",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.0522,
+         "lon": 8.3897
+      }
+   },
+   {
+      "name": "Basel",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 47.5596,
+         "lon": 7.5886
+      }
+   },
+   {
+      "name": "Bayreuth",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.9481,
+         "lon": 11.5783
+      }
+   },
+   {
+      "name": "Berlin",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.52,
+         "lon": 13.405
+      }
+   },
+   {
+      "name": "Bernau",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.6797,
+         "lon": 13.5872
+      }
+   },
+   {
+      "name": "Bischofsheim",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.9931,
+         "lon": 8.3706
+      }
+   },
+   {
+      "name": "Blumberg",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.6033,
+         "lon": 13.6178
+      }
+   },
+   {
+      "name": "Bobbau",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.68,
+         "lon": 12.26
+      }
+   },
+   {
+      "name": "Bocholtz",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.8072,
+         "lon": 5.9958
+      }
+   },
+   {
+      "name": "Bocholtz/Vetschau",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.81,
+         "lon": 6.02
+      }
+   },
+   {
+      "name": "Bonn",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.7374,
+         "lon": 7.0982
+      }
+   },
+   {
+      "name": "Brandov",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.6333,
+         "lon": 13.3833
+      }
+   },
+   {
+      "name": "Bremen",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 53.0793,
+         "lon": 8.8017
+      }
+   },
+   {
+      "name": "Brunsbüttel",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 53.8967,
+         "lon": 9.1333
+      }
+   },
+   {
+      "name": "Buckow",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.4224,
+         "lon": 13.4393
+      }
+   },
+   {
+      "name": "Börnicke",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.69,
+         "lon": 13.51
+      }
+   },
+   {
+      "name": "Deggendorf",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 48.8408,
+         "lon": 12.9536
+      }
+   },
+   {
+      "name": "Deutschneudorf",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.6069,
+         "lon": 13.36
+      }
+   },
+   {
+      "name": "Dornum",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 53.6467,
+         "lon": 7.4283
+      }
+   },
+   {
+      "name": "Dorsten",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.6597,
+         "lon": 6.9642
+      }
+   },
+   {
+      "name": "Dortmund",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.5136,
+         "lon": 7.4653
+      }
+   },
+   {
+      "name": "Dresden",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.0504,
+         "lon": 13.7373
+      }
+   },
+   {
+      "name": "Drohne",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.4167,
+         "lon": 8.3833
+      }
+   },
+   {
+      "name": "Düsseldorf",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.2277,
+         "lon": 6.7735
+      }
+   },
+   {
+      "name": "Eisenhüttenstadt",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.1497,
+         "lon": 14.6383
+      }
+   },
+   {
+      "name": "Elbe-Süd",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 53.68,
+         "lon": 9.5
+      }
+   },
+   {
+      "name": "Ellund",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 54.8367,
+         "lon": 9.2789
+      }
+   },
+   {
+      "name": "Elten/Zevenaar",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.87,
+         "lon": 6.18
+      }
+   },
+   {
+      "name": "Emden",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 53.3592,
+         "lon": 7.2056
+      }
+   },
+   {
+      "name": "Emsbüren",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.4,
+         "lon": 7.29
+      }
+   },
+   {
+      "name": "Erfurt",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.9848,
+         "lon": 11.0299
+      }
+   },
+   {
+      "name": "Essen",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.4556,
+         "lon": 7.0116
+      }
+   },
+   {
+      "name": "Eynatten/Raeren/Lichtenbusch",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.7,
+         "lon": 6.12
+      }
+   },
+   {
+      "name": "Finsing",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 48.2181,
+         "lon": 11.825
+      }
+   },
+   {
+      "name": "Flensburg",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 54.7822,
+         "lon": 9.4361
+      }
+   },
+   {
+      "name": "Forchheim",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 48.8257,
+         "lon": 11.6831
+      }
+   },
+   {
+      "name": "Frankfurt",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.1109,
+         "lon": 8.6821
+      }
+   },
+   {
+      "name": "Frankfurt (Oder)",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.3411,
+         "lon": 14.5486
+      }
+   },
+   {
+      "name": "Freiburg",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 47.999,
+         "lon": 7.8421
+      }
+   },
+   {
+      "name": "Frenswegen",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.45,
+         "lon": 7.07
+      }
+   },
+   {
+      "name": "Friesack",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.7367,
+         "lon": 12.5789
+      }
+   },
+   {
+      "name": "Fürstenwalde",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.3608,
+         "lon": 14.0619
+      }
+   },
+   {
+      "name": "Gera",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.88,
+         "lon": 12.0828
+      }
+   },
+   {
+      "name": "Gernsheim",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.75,
+         "lon": 8.49
+      }
+   },
+   {
+      "name": "Gescher",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.955,
+         "lon": 7.0058
+      }
+   },
+   {
+      "name": "Giessen",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.587,
+         "lon": 8.6784
+      }
+   },
+   {
+      "name": "Glehn",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.165,
+         "lon": 6.545
+      }
+   },
+   {
+      "name": "Greifswald",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 54.0865,
+         "lon": 13.3923
+      }
+   },
+   {
+      "name": "Groß Köris",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.1567,
+         "lon": 13.61
+      }
+   },
+   {
+      "name": "Großenkneten",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.9497,
+         "lon": 8.2544
+      }
+   },
+   {
+      "name": "Gubin",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.9494,
+         "lon": 14.7183
+      }
+   },
+   {
+      "name": "Göttingen",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.5413,
+         "lon": 9.9158
+      }
+   },
+   {
+      "name": "Haanrade",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.8683,
+         "lon": 6.0783
+      }
+   },
+   {
+      "name": "Halle",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.4825,
+         "lon": 11.9697
+      }
+   },
+   {
+      "name": "Hamborn",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.49,
+         "lon": 6.77
+      }
+   },
+   {
+      "name": "Hamburg",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 53.5511,
+         "lon": 9.9937
+      }
+   },
+   {
+      "name": "Hameln",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.1039,
+         "lon": 9.3564
+      }
+   },
+   {
+      "name": "Hamm",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.6739,
+         "lon": 7.815
+      }
+   },
+   {
+      "name": "Hannover",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.3759,
+         "lon": 9.732
+      }
+   },
+   {
+      "name": "Heidenau",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 53.2967,
+         "lon": 9.6842
+      }
+   },
+   {
+      "name": "Heist",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 53.6486,
+         "lon": 9.6392
+      }
+   },
+   {
+      "name": "Herbstein",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.5567,
+         "lon": 9.3475
+      }
+   },
+   {
+      "name": "Hof",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.3167,
+         "lon": 11.9167
+      }
+   },
+   {
+      "name": "Holtum",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.92,
+         "lon": 9.2
+      }
+   },
+   {
+      "name": "Hügelheim",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 47.8167,
+         "lon": 7.6333
+      }
+   },
+   {
+      "name": "Kaiserslautern",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.4401,
+         "lon": 7.7491
+      }
+   },
+   {
+      "name": "Kamminke",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 53.8983,
+         "lon": 14.1858
+      }
+   },
+   {
+      "name": "Karlsruhe",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.0069,
+         "lon": 8.4037
+      }
+   },
+   {
+      "name": "Kassel",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.3127,
+         "lon": 9.4797
+      }
+   },
+   {
+      "name": "Kempten",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 47.7267,
+         "lon": 10.3167
+      }
+   },
+   {
+      "name": "Kiefersfelden",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 47.6122,
+         "lon": 12.1908
+      }
+   },
+   {
+      "name": "Kiel",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 54.3233,
+         "lon": 10.1394
+      }
+   },
+   {
+      "name": "Kienbaum",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.4383,
+         "lon": 13.92
+      }
+   },
+   {
+      "name": "Klein-Offenseth",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 53.8547,
+         "lon": 9.6889
+      }
+   },
+   {
+      "name": "Koblenz",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.3569,
+         "lon": 7.589
+      }
+   },
+   {
+      "name": "Kolshorn",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.41,
+         "lon": 9.95
+      }
+   },
+   {
+      "name": "Krefeld",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.3388,
+         "lon": 6.5853
+      }
+   },
+   {
+      "name": "Kreuztal",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.9614,
+         "lon": 7.9889
+      }
+   },
+   {
+      "name": "Köln",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.9375,
+         "lon": 6.9603
+      }
+   },
+   {
+      "name": "Lampertheim",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.5967,
+         "lon": 8.4675
+      }
+   },
+   {
+      "name": "Lasow",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.2167,
+         "lon": 15.0333
+      }
+   },
+   {
+      "name": "Lauchhammer",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.4939,
+         "lon": 13.7683
+      }
+   },
+   {
+      "name": "Lauterbach",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.6383,
+         "lon": 9.3936
+      }
+   },
+   {
+      "name": "Legden",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.0206,
+         "lon": 7.0947
+      }
+   },
+   {
+      "name": "Lehringen",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.7,
+         "lon": 9.15
+      }
+   },
+   {
+      "name": "Leipzig",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.3397,
+         "lon": 12.3731
+      }
+   },
+   {
+      "name": "Lichterfelde",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.4333,
+         "lon": 13.3167
+      }
+   },
+   {
+      "name": "Lindau",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 47.5461,
+         "lon": 9.6839
+      }
+   },
+   {
+      "name": "Lubmin",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 54.1372,
+         "lon": 13.6156
+      }
+   },
+   {
+      "name": "Lübeck",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 53.8655,
+         "lon": 10.6866
+      }
+   },
+   {
+      "name": "Magdeburg",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.1205,
+         "lon": 11.6276
+      }
+   },
+   {
+      "name": "Mainz",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.9929,
+         "lon": 8.2473
+      }
+   },
+   {
+      "name": "Mallnow",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.42,
+         "lon": 14.4
+      }
+   },
+   {
+      "name": "Marburg",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.8022,
+         "lon": 8.7669
+      }
+   },
+   {
+      "name": "Medelsheim",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.155,
+         "lon": 7.14
+      }
+   },
+   {
+      "name": "Michelbach",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.1,
+         "lon": 9.75
+      }
+   },
+   {
+      "name": "Mittelbrunn",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.42,
+         "lon": 7.59
+      }
+   },
+   {
+      "name": "München",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 48.1351,
+         "lon": 11.582
+      }
+   },
+   {
+      "name": "Münster",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.9607,
+         "lon": 7.6261
+      }
+   },
+   {
+      "name": "Neubrandenburg",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 53.5575,
+         "lon": 13.26
+      }
+   },
+   {
+      "name": "Nordlohne",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.46,
+         "lon": 7.31
+      }
+   },
+   {
+      "name": "Nürnberg",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.4521,
+         "lon": 11.0767
+      }
+   },
+   {
+      "name": "Oberkappel",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 48.53,
+         "lon": 13.7469
+      }
+   },
+   {
+      "name": "Obermichelbach",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.5397,
+         "lon": 10.9575
+      }
+   },
+   {
+      "name": "Olbernhau",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.6597,
+         "lon": 13.34
+      }
+   },
+   {
+      "name": "Osnabrück",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.2799,
+         "lon": 8.0472
+      }
+   },
+   {
+      "name": "Oude Statenzijl/Bunde",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 53.19,
+         "lon": 7.21
+      }
+   },
+   {
+      "name": "Paderborn",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.7189,
+         "lon": 8.7575
+      }
+   },
+   {
+      "name": "Paffrath",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.0033,
+         "lon": 7.12
+      }
+   },
+   {
+      "name": "Passau",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 48.5667,
+         "lon": 13.4667
+      }
+   },
+   {
+      "name": "Pfronten",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 47.5822,
+         "lon": 10.5533
+      }
+   },
+   {
+      "name": "Porz",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.8858,
+         "lon": 7.0575
+      }
+   },
+   {
+      "name": "Potsdam",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.3906,
+         "lon": 13.0645
+      }
+   },
+   {
+      "name": "Quarnstedt",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 53.9247,
+         "lon": 9.7639
+      }
+   },
+   {
+      "name": "Raubling",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 47.7856,
+         "lon": 12.1078
+      }
+   },
+   {
+      "name": "Recklinghausen",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.6144,
+         "lon": 7.1978
+      }
+   },
+   {
+      "name": "Remich",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.545,
+         "lon": 6.3672
+      }
+   },
+   {
+      "name": "Renzenhof",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.55,
+         "lon": 11.22
+      }
+   },
+   {
+      "name": "Rheine",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.2799,
+         "lon": 7.4406
+      }
+   },
+   {
+      "name": "Rimpar",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.8517,
+         "lon": 9.9556
+      }
+   },
+   {
+      "name": "Ronneburg",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.8631,
+         "lon": 12.1897
+      }
+   },
+   {
+      "name": "Rostock",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 54.0924,
+         "lon": 12.0991
+      }
+   },
+   {
+      "name": "Rothenstadt",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.65,
+         "lon": 12.14
+      }
+   },
+   {
+      "name": "Saarbrücken",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.2401,
+         "lon": 6.9969
+      }
+   },
+   {
+      "name": "Scheidt",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.3167,
+         "lon": 7.9167
+      }
+   },
+   {
+      "name": "Schlüchtern",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.3489,
+         "lon": 9.525
+      }
+   },
+   {
+      "name": "Schnaitsee",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 48.0733,
+         "lon": 12.38
+      }
+   },
+   {
+      "name": "Schneeren",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.49,
+         "lon": 9.33
+      }
+   },
+   {
+      "name": "Schwandorf",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.3264,
+         "lon": 12.1094
+      }
+   },
+   {
+      "name": "Schwarzach",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 48.74,
+         "lon": 8.14
+      }
+   },
+   {
+      "name": "Schwerin",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 53.6355,
+         "lon": 11.4012
+      }
+   },
+   {
+      "name": "Senden",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 48.3236,
+         "lon": 10.0561
+      }
+   },
+   {
+      "name": "Siegen",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.8756,
+         "lon": 8.0244
+      }
+   },
+   {
+      "name": "St. Hubert",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.4211,
+         "lon": 6.4569
+      }
+   },
+   {
+      "name": "Stade",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 53.6008,
+         "lon": 9.4764
+      }
+   },
+   {
+      "name": "Steinbrink",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.42,
+         "lon": 8.78
+      }
+   },
+   {
+      "name": "Steinitz",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.8,
+         "lon": 11.1667
+      }
+   },
+   {
+      "name": "Stendal",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.6058,
+         "lon": 11.8558
+      }
+   },
+   {
+      "name": "Stolberg",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.7717,
+         "lon": 6.2278
+      }
+   },
+   {
+      "name": "Stralsund",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 54.3092,
+         "lon": 13.0819
+      }
+   },
+   {
+      "name": "Stuttgart",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 48.7758,
+         "lon": 9.1829
+      }
+   },
+   {
+      "name": "Tegelen",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.3372,
+         "lon": 6.1394
+      }
+   },
+   {
+      "name": "Thayngen-Fallentor",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 47.7472,
+         "lon": 8.7053
+      }
+   },
+   {
+      "name": "Ulm",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 48.3984,
+         "lon": 9.9916
+      }
+   },
+   {
+      "name": "Ummeln",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.0033,
+         "lon": 8.4711
+      }
+   },
+   {
+      "name": "Unterlüß",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.8347,
+         "lon": 10.3286
+      }
+   },
+   {
+      "name": "Visselhövede",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.9856,
+         "lon": 9.5817
+      }
+   },
+   {
+      "name": "Vitzeroda",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.98,
+         "lon": 10.13
+      }
+   },
+   {
+      "name": "Vohburg",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 48.7683,
+         "lon": 11.6178
+      }
+   },
+   {
+      "name": "Voigtei",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.47,
+         "lon": 8.95
+      }
+   },
+   {
+      "name": "Vreden/Winterswijk",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.03,
+         "lon": 6.83
+      }
+   },
+   {
+      "name": "Waidhaus",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.64,
+         "lon": 12.5033
+      }
+   },
+   {
+      "name": "Wallbach",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 47.55,
+         "lon": 7.92
+      }
+   },
+   {
+      "name": "Warburg",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.4906,
+         "lon": 9.1522
+      }
+   },
+   {
+      "name": "Wardenburg",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 53.0625,
+         "lon": 8.1961
+      }
+   },
+   {
+      "name": "Werne",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.6631,
+         "lon": 7.6281
+      }
+   },
+   {
+      "name": "Wertingen",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 48.5647,
+         "lon": 10.6853
+      }
+   },
+   {
+      "name": "Wiesbaden",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 50.0825,
+         "lon": 8.24
+      }
+   },
+   {
+      "name": "Wilhelmshaven",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 53.5231,
+         "lon": 8.1069
+      }
+   },
+   {
+      "name": "Wittenberg",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.8667,
+         "lon": 12.6485
+      }
+   },
+   {
+      "name": "Wolfsburg",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 52.4227,
+         "lon": 10.7865
+      }
+   },
+   {
+      "name": "Wuppertal",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 51.2562,
+         "lon": 7.1508
+      }
+   },
+   {
+      "name": "Würzburg",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 49.7913,
+         "lon": 9.9534
+      }
+   },
+   {
+      "name": "Überackern",
+      "typ": "Ort",
+      "koordinaten": {
+         "lat": 48.155,
+         "lon": 12.845
+      }
+   },
+   {
+      "name": "7Fields",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 47.9,
+         "lon": 13.1
+      }
+   },
+   {
+      "name": "Allmenhausen",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 51.18,
+         "lon": 10.68
+      }
+   },
+   {
+      "name": "Bad Lauchstädt",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 51.3844,
+         "lon": 11.8722
+      }
+   },
+   {
+      "name": "Bernburg/Peißen",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 51.785,
+         "lon": 11.765
+      }
+   },
+   {
+      "name": "Bierwang",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 48.145,
+         "lon": 12.295
+      }
+   },
+   {
+      "name": "Breitbrunn",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 48.03,
+         "lon": 12.33
+      }
+   },
+   {
+      "name": "Buchholz",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 52.157564,
+         "lon": 12.925989
+      }
+   },
+   {
+      "name": "Dötlingen",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 52.92,
+         "lon": 8.4
+      }
+   },
+   {
+      "name": "Empelde",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 52.34,
+         "lon": 9.65
+      }
+   },
+   {
+      "name": "Epe",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 52.19,
+         "lon": 7.03
+      }
+   },
+   {
+      "name": "Eschenfelden",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 49.5806,
+         "lon": 11.6383
+      }
+   },
+   {
+      "name": "Etzel",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 53.3989,
+         "lon": 7.7519
+      }
+   },
+   {
+      "name": "Fronhofen",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 47.86,
+         "lon": 9.54
+      }
+   },
+   {
+      "name": "Haidach",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 47.92,
+         "lon": 13.03
+      }
+   },
+   {
+      "name": "Harsefeld",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 53.45,
+         "lon": 9.49
+      }
+   },
+   {
+      "name": "Huntorf",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 53.23,
+         "lon": 8.48
+      }
+   },
+   {
+      "name": "Hähnlein",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 49.7714,
+         "lon": 8.5772
+      }
+   },
+   {
+      "name": "Inzenham",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 47.88,
+         "lon": 12.04
+      }
+   },
+   {
+      "name": "Jemgum",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 53.26,
+         "lon": 7.39
+      }
+   },
+   {
+      "name": "Kalle",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 52.53,
+         "lon": 6.96
+      }
+   },
+   {
+      "name": "Kirchheilingen",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 51.14,
+         "lon": 10.65
+      }
+   },
+   {
+      "name": "Kraak",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 53.46,
+         "lon": 11.22
+      }
+   },
+   {
+      "name": "Krummhörn",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 53.4,
+         "lon": 7.04
+      }
+   },
+   {
+      "name": "Lesum",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 53.17,
+         "lon": 8.64
+      }
+   },
+   {
+      "name": "Nüttermoor",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 53.22,
+         "lon": 7.49
+      }
+   },
+   {
+      "name": "Peckensen",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 52.83,
+         "lon": 11.19
+      }
+   },
+   {
+      "name": "Reckrod",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 50.7461,
+         "lon": 9.8206
+      }
+   },
+   {
+      "name": "Rehden",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 52.6136,
+         "lon": 8.4744
+      }
+   },
+   {
+      "name": "Sandhausen",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 49.34,
+         "lon": 8.65
+      }
+   },
+   {
+      "name": "Staßfurt",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 51.8533,
+         "lon": 11.5808
+      }
+   },
+   {
+      "name": "Stockstadt",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 49.83,
+         "lon": 8.48
+      }
+   },
+   {
+      "name": "Uelsen",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 52.5,
+         "lon": 6.88
+      }
+   },
+   {
+      "name": "Wolfersberg",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 48.01,
+         "lon": 12.19
+      }
+   },
+   {
+      "name": "Xanten",
+      "typ": "Speicher",
+      "koordinaten": {
+         "lat": 51.6603,
+         "lon": 6.4531
+      }
+   }
+]

@@ -339,18 +339,20 @@ function OperatorFilterGroup({
             options={options.operators}
             value={filters.operator}
          />
-         <SwitchRow
-            active={filters.ogeParticipationOnly}
-            description={OGE_PARTICIPATION_DESCRIPTION}
-            label="Nur OGE-Bezug"
-            onChange={value => setFilter("ogeParticipationOnly", value)}
-         />
-         <SwitchRow
-            active={highlightOgeExecutingOperator}
-            description={OGE_EXECUTING_OPERATOR_HIGHLIGHT_DESCRIPTION}
-            label={OGE_EXECUTING_OPERATOR_HIGHLIGHT_LABEL}
-            onChange={onHighlightOgeExecutingOperatorChange}
-         />
+         <div className="grid gap-1.5">
+            <SwitchRow
+               active={filters.ogeParticipationOnly}
+               description={OGE_PARTICIPATION_DESCRIPTION}
+               label="Nur OGE-Bezug"
+               onChange={value => setFilter("ogeParticipationOnly", value)}
+            />
+            <SwitchRow
+               active={highlightOgeExecutingOperator}
+               description={OGE_EXECUTING_OPERATOR_HIGHLIGHT_DESCRIPTION}
+               label={OGE_EXECUTING_OPERATOR_HIGHLIGHT_LABEL}
+               onChange={onHighlightOgeExecutingOperatorChange}
+            />
+         </div>
       </section>
    );
 }

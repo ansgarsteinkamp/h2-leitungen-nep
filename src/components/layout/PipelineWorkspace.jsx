@@ -1,10 +1,11 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import NetworkMap from "@/components/map/NetworkMap";
 import FilterPanel from "@/components/panels/FilterPanel";
 import InspectorPanel from "@/components/panels/InspectorPanel";
 import Topbar from "@/components/layout/Topbar";
 import { buildCountryCollections } from "@/lib/data/geoCollections";
+import { loadPlaces } from "@/lib/data/loadPlaces";
 import { usePipelineFilters } from "@/hooks/usePipelineFilters";
 import { usePipelineSelection } from "@/hooks/usePipelineSelection";
 
@@ -36,6 +37,10 @@ function restoreSelectionFocus(previousResultId, previousTrigger) {
 
 export default function PipelineWorkspace({ countries, pipelineCollection }) {
    const [highlightOgeExecutingOperator, setHighlightOgeExecutingOperator] = useState(false);
+   const [mapContent, setMapContent] = useState("pipelines");
+   const [places, setPlaces] = useState([]);
+   const [placesError, setPlacesError] = useState(null);
+   const [placesLoaded, setPlacesLoaded] = useState(false);
    const [resetViewKey, setResetViewKey] = useState(0);
    const lastSelectionResultIdRef = useRef(null);
    const lastSelectionTriggerRef = useRef(null);
@@ -43,6 +48,36 @@ export default function PipelineWorkspace({ countries, pipelineCollection }) {
 
    const filters = usePipelineFilters(pipelineCollection);
    const selection = usePipelineSelection(filters.filteredCollection);
+
+   useEffect(() => {
+      let active = true;
+
+      loadPlaces(import.meta.env.BASE_URL)
+         .then(data => {
+            if (active) {
+               setPlaces(data);
+               setPlacesLoaded(true);
+            }
+         })
+         .catch(error => {
+            console.error("Ortsdaten konnten nicht geladen werden:", error);
+            if (active) {
+               setPlacesError(error);
+               setPlacesLoaded(true);
+               setMapContent("pipelines");
+            }
+         });
+
+      return () => {
+         active = false;
+      };
+   }, []);
+
+   const changeMapContent = value => {
+      if (value === mapContent) return;
+      if (value === "places" && (!placesLoaded || placesError)) return;
+      setMapContent(value);
+   };
 
    const resetFilters = () => {
       filters.resetFilters();
@@ -110,7 +145,14 @@ export default function PipelineWorkspace({ countries, pipelineCollection }) {
                      filteredPipelines={filters.filteredCollection}
                      germany={germany}
                      highlightOgeExecutingOperator={highlightOgeExecutingOperator}
+                     mapContent={mapContent}
+                     onMapContentChange={changeMapContent}
                      onSelectPipeline={selectPipeline}
+                     places={places}
+                     placesDisabled={!placesLoaded || Boolean(placesError)}
+                     placesUnavailableReason={
+                        placesError ? "Orte konnten nicht geladen werden." : "Orte werden geladen."
+                     }
                      resetViewKey={resetViewKey}
                      searchActive={filters.hasActiveSearch}
                      searchBounds={filters.searchBounds}

@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
    OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR,
+   PIPELINE_CONTEXT_COLORS,
    PIPELINE_PARTICIPATION_COLORS
 } from "@/components/theme/pipelineTheme";
 
@@ -22,7 +23,7 @@ afterEach(() => {
 });
 
 vi.mock("react-leaflet", () => ({
-   GeoJSON: forwardRef(function GeoJSONMock({ data, onEachFeature, style }, ref) {
+   GeoJSON: forwardRef(function GeoJSONMock({ data, interactive = true, onEachFeature, style }, ref) {
       const layerEntriesRef = useRef(new Map());
       const layers = data.features.map(feature => {
          const featureId = feature.properties.id;
@@ -30,16 +31,20 @@ vi.mock("react-leaflet", () => ({
 
          if (!entry) {
             const handlers = {};
+            const element = {
+               setAttribute: vi.fn()
+            };
             const layer = {
                bindTooltip: vi.fn(),
                closeTooltip: vi.fn(),
                feature,
-               getElement: () => null,
+               getElement: () => element,
                on: callbacks => Object.assign(handlers, callbacks),
                setStyle: vi.fn()
             };
 
             onEachFeature?.(feature, layer);
+            handlers.add?.({ target: layer });
             entry = { feature, handlers, layer };
             layerEntriesRef.current.set(featureId, entry);
             leafletMockState.layers.set(featureId, layer);
@@ -54,7 +59,11 @@ vi.mock("react-leaflet", () => ({
       useImperativeHandle(ref, () => ({ eachLayer: callback => layers.forEach(({ layer }) => callback(layer)) }));
 
       return (
-         <div data-feature-ids={data.features.map(feature => feature.properties.id).join(",")} data-testid="geojson">
+         <div
+            data-feature-ids={data.features.map(feature => feature.properties.id).join(",")}
+            data-interactive={String(interactive)}
+            data-testid="geojson"
+         >
             {layers.map(({ feature, handlers, layer }) => (
                <button
                   data-color={style(feature).color}
@@ -211,5 +220,24 @@ describe("PipelineLayer", () => {
             weight: 5.75
          })
       );
+   });
+
+   it("renders context pipelines as non-interactive background lines", () => {
+      render(<PipelineLayer pipelines={collection()} presentation="context" selectedPipelineId="other" />);
+
+      expect(screen.queryByTestId("pane-pipeline-active-overlay")).toBeNull();
+      expect(screen.queryByTestId("pane-pipeline-selection-halo")).toBeNull();
+      expect(within(screen.getByTestId("pane-pipelines")).getByTestId("geojson").getAttribute("data-interactive")).toBe(
+         "false"
+      );
+      expect(
+         within(screen.getByTestId("pane-pipelines-oge")).getByTestId("geojson").getAttribute("data-interactive")
+      ).toBe("false");
+      expect(
+         within(screen.getByTestId("pane-pipelines")).getByRole("button", { name: "other" }).getAttribute("data-color")
+      ).toBe(PIPELINE_CONTEXT_COLORS.noOge);
+      expect(leafletMockState.layers.get("other").bindTooltip).not.toHaveBeenCalled();
+      expect(leafletMockState.layers.get("other").getElement().setAttribute).toHaveBeenCalledWith("tabindex", "-1");
+      expect(leafletMockState.layers.get("other").getElement().setAttribute).toHaveBeenCalledWith("focusable", "false");
    });
 });

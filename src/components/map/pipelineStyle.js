@@ -1,6 +1,7 @@
 import {
    getLineTypeDashArray,
    getOgeExecutingOperatorHighlightColor,
+   getPipelineContextColor,
    getPipelineColor,
    getSelectionHaloColor
 } from "@/components/theme/pipelineTheme";
@@ -41,4 +42,14 @@ export const getSelectionHaloStyle = feature => ({
    lineJoin: "round",
    opacity: 0.58,
    weight: 16
+});
+
+export const getPipelineContextStyle = feature => ({
+   className: "pipeline-context-line",
+   color: getPipelineContextColor(feature),
+   dashArray: getLineTypeDashArray(feature.properties.leitungstyp),
+   lineCap: "round",
+   lineJoin: "round",
+   opacity: 0.42,
+   weight: 2.05
 });

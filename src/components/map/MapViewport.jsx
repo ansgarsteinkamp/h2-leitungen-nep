@@ -24,6 +24,11 @@ const cancelFrame = frameId => {
 
 const MAP_LABEL = "Interaktive Karte der H₂-Leitungen aus dem NEP 2025";
 
+const MAP_MAX_BOUNDS = [
+   [45.5, 2.5],
+   [56.7, 18.5]
+];
+
 function MapContainerA11yAttributes() {
    const map = useMap();
 
@@ -93,6 +98,8 @@ export default function MapViewport({ children }) {
             center={[51.1, 10.3]}
             className="h-full min-h-110 bg-map-background min-[1360px]:min-h-155 max-lg:h-auto max-lg:min-h-[58vh] max-sm:min-h-[54vh]"
             keyboard={false}
+            maxBounds={MAP_MAX_BOUNDS}
+            maxBoundsViscosity={0.65}
             maxZoom={10}
             minZoom={5}
             scrollWheelZoom

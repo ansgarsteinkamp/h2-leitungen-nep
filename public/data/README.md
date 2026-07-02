@@ -2,6 +2,8 @@
 
 `countries_v2.geojson` contains the static country polygons used by the map.
 
+`orte.json` contains the static place and storage-location points that can be shown as an alternate map layer.
+
 The current file was regenerated from the previously committed `countries_v2.geojson` with Mapshaper `0.7.20`, simplifying all countries in one run so shared borders stay topologically aligned. This avoids double or offset borders such as the Germany-Netherlands boundary while keeping the existing app runtime unchanged.
 
 The source for this regeneration was the version of this file before the country-boundary simplification change, commit `7527f447dbbdf8afc56b7fbcb50083a608e41dd9`. To repeat the process, write that source version to a temporary file, run Mapshaper, and then replace `countries_v2.geojson` with the generated output:

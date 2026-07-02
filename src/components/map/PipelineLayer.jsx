@@ -3,7 +3,7 @@ import { GeoJSON, Pane, useMap } from "react-leaflet";
 
 import { pipelineMeta, pipelineTitle } from "@/lib/domain/formatters";
 import { createPipelineDataKey } from "@/components/map/mapDataKey";
-import { getPipelineStyle, getSelectionHaloStyle } from "@/components/map/pipelineStyle";
+import { getPipelineContextStyle, getPipelineStyle, getSelectionHaloStyle } from "@/components/map/pipelineStyle";
 import { getPipelineParticipationKey } from "@/components/theme/pipelineTheme";
 
 const MAP_TOOLTIP_OPTIONS = {
@@ -14,6 +14,7 @@ const MAP_TOOLTIP_OPTIONS = {
    pane: "tooltipPane",
    sticky: true
 };
+const PIPELINE_PRESENTATION_CONTEXT = "context";
 
 const createTooltip = feature => {
    const root = document.createElement("span");
@@ -58,9 +59,11 @@ export default function PipelineLayer({
    highlightOgeExecutingOperator = false,
    onSelectPipeline,
    pipelines,
+   presentation = "interactive",
    selectedPipelineId
 }) {
    const map = useMap();
+   const isContextPresentation = presentation === PIPELINE_PRESENTATION_CONTEXT;
    const ogeGeoJsonRef = useRef(null);
    const otherGeoJsonRef = useRef(null);
    const [hoveredPipelineId, setHoveredPipelineId] = useState(null);
@@ -77,14 +80,17 @@ export default function PipelineLayer({
    );
    const pipelineStyleOptions = useMemo(() => ({ highlightOgeExecutingOperator }), [highlightOgeExecutingOperator]);
    const selectedPipeline = useMemo(() => {
+      if (isContextPresentation) return null;
       if (!selectedPipelineId) return null;
       return pipelines.features.find(feature => feature.properties.id === selectedPipelineId) ?? null;
-   }, [pipelines, selectedPipelineId]);
+   }, [isContextPresentation, pipelines, selectedPipelineId]);
    const selectedPipelineData = useMemo(() => {
       if (!selectedPipeline) return null;
       return createPipelineFeatureCollection(pipelines, [selectedPipeline]);
    }, [pipelines, selectedPipeline]);
    const activePipelineData = useMemo(() => {
+      if (isContextPresentation) return null;
+
       const activeIds = [selectedPipelineId, hoveredPipelineId].filter(Boolean);
       if (activeIds.length === 0) return null;
 
@@ -95,7 +101,7 @@ export default function PipelineLayer({
       if (activeFeatures.length === 0) return null;
 
       return createPipelineFeatureCollection(pipelines, activeFeatures);
-   }, [hoveredPipelineId, pipelines, selectedPipelineId]);
+   }, [hoveredPipelineId, isContextPresentation, pipelines, selectedPipelineId]);
 
    useLayoutEffect(() => {
       pipelineStyleOptionsRef.current = pipelineStyleOptions;
@@ -125,6 +131,13 @@ export default function PipelineLayer({
          pipelineStyleOptionsRef.current
       );
    }, []);
+   const getBasePipelineStyle = useCallback(
+      feature =>
+         isContextPresentation
+            ? getPipelineContextStyle(feature)
+            : getPipelineStyle(feature, selectedPipelineId, null, pipelineStyleOptions),
+      [isContextPresentation, pipelineStyleOptions, selectedPipelineId]
+   );
 
    const bringSelectedPipelineToFront = useCallback(() => {
       const selectedPipelineId = selectedPipelineIdRef.current;
@@ -146,9 +159,13 @@ export default function PipelineLayer({
             const feature = layer.feature;
             if (!feature) return;
 
+            if (isContextPresentation) {
+               layer.setStyle(getPipelineContextStyle(feature));
+               return;
+            }
+
             const featureId = feature.properties.id;
             layer.setStyle(getCurrentPipelineStyle(feature, activeSelectedPipelineId, activeHoveredPipelineId));
-
             if (featureId === activeSelectedPipelineId) selectedLayer = layer;
             if (featureId === activeHoveredPipelineId) hoveredLayer = layer;
          });
@@ -158,10 +175,12 @@ export default function PipelineLayer({
          if (selectedLayer) bringToFront(selectedLayer);
          if (hoveredLayer) bringToFront(hoveredLayer);
       },
-      [eachPipelineLayer, getCurrentPipelineStyle]
+      [eachPipelineLayer, getCurrentPipelineStyle, isContextPresentation]
    );
 
    useEffect(() => {
+      if (isContextPresentation) return undefined;
+
       const closeTooltipOnMapMove = () => {
          hoveredPipelineIdRef.current = null;
          setHoveredPipelineId(null);
@@ -174,7 +193,7 @@ export default function PipelineLayer({
       return () => {
          map.off("movestart zoomstart dragstart", closeTooltipOnMapMove);
       };
-   }, [closeOpenTooltip, map, refreshPipelineStyles]);
+   }, [closeOpenTooltip, isContextPresentation, map, refreshPipelineStyles]);
 
    useEffect(() => {
       if (previousPipelinesRef.current !== pipelines) {
@@ -190,6 +209,13 @@ export default function PipelineLayer({
    }, [closeOpenTooltip, pipelineStyleOptions, pipelines, refreshPipelineStyles, selectedPipelineId]);
 
    const bindPipeline = (feature, layer) => {
+      if (isContextPresentation) {
+         layer.on({
+            add: () => makeLayerInert(layer)
+         });
+         return;
+      }
+
       layer.bindTooltip(createTooltip(feature), MAP_TOOLTIP_OPTIONS);
 
       const pipelineId = feature.properties.id;
@@ -250,7 +276,8 @@ export default function PipelineLayer({
                ref={otherGeoJsonRef}
                data={otherPipelineData}
                onEachFeature={bindPipeline}
-               style={feature => getPipelineStyle(feature, selectedPipelineId, null, pipelineStyleOptions)}
+               interactive={!isContextPresentation}
+               style={getBasePipelineStyle}
             />
          </Pane>
          <Pane name="pipelines-oge" style={{ zIndex: 430 }}>
@@ -259,7 +286,8 @@ export default function PipelineLayer({
                ref={ogeGeoJsonRef}
                data={ogePipelineData}
                onEachFeature={bindPipeline}
-               style={feature => getPipelineStyle(feature, selectedPipelineId, null, pipelineStyleOptions)}
+               interactive={!isContextPresentation}
+               style={getBasePipelineStyle}
             />
          </Pane>
          {/* Leaflet can only reorder paths within one pane, so active paths get a small top overlay. */}

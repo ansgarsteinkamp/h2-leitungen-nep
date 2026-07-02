@@ -4,14 +4,17 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { COUNTRY_STYLES } from "./mapTheme";
-import { getPipelineStyle, getSelectionHaloStyle } from "./pipelineStyle";
+import { getPipelineContextStyle, getPipelineStyle, getSelectionHaloStyle } from "./pipelineStyle";
 import {
    getLineTypeDashArray,
    getLineTypeSymbolBackground,
+   getPipelineContextColor,
    getPipelineColor,
    getPipelineParticipationKey,
    getSelectionHaloColor,
    LINE_TYPE_DASH_ARRAYS,
+   PIPELINE_CONTEXT_COLORS,
+   PIPELINE_CONTEXT_FALLBACK_COLOR,
    PIPELINE_PARTICIPATION_COLORS,
    PIPELINE_FALLBACK_COLOR,
    PIPELINE_SYMBOL_COLORS,
@@ -36,10 +39,12 @@ function mapVariableNames() {
       COUNTRY_STYLES,
       PIPELINE_PARTICIPATION_COLORS,
       PIPELINE_SYMBOL_COLORS,
+      PIPELINE_CONTEXT_COLORS,
       OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR,
       SELECTION_HALO_COLORS,
       PIPELINE_FALLBACK_COLOR,
-      SELECTION_HALO_FALLBACK_COLOR
+      SELECTION_HALO_FALLBACK_COLOR,
+      PIPELINE_CONTEXT_FALLBACK_COLOR
    ]
       .flatMap(value => [...JSON.stringify(value).matchAll(/--map-[a-z-]+/g)].map(match => match[0]))
       .filter((value, index, values) => values.indexOf(value) === index);
@@ -73,11 +78,14 @@ describe("map theme tokens", () => {
       expect(SELECTION_HALO_COLORS.noOge).toBe("var(--map-pipeline-selection-halo-no-oge, #86b7a7)");
       expect(PIPELINE_SYMBOL_COLORS.oge).toBe("var(--map-pipeline-symbol-oge, #d97757)");
       expect(PIPELINE_SYMBOL_COLORS.noOge).toBe("var(--map-pipeline-symbol-no-oge, #86b7a7)");
+      expect(PIPELINE_CONTEXT_COLORS.oge).toBe("var(--map-pipeline-context-oge, #d97757)");
+      expect(PIPELINE_CONTEXT_COLORS.noOge).toBe("var(--map-pipeline-context-no-oge, #86b7a7)");
       expect(OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR).toBe(
          "var(--map-pipeline-oge-executing-operator-highlight, #b4b27d)"
       );
       expect(PIPELINE_FALLBACK_COLOR).toBe("var(--map-pipeline-fallback, #e5e5e2)");
       expect(SELECTION_HALO_FALLBACK_COLOR).toBe("var(--map-pipeline-selection-halo-fallback, #faf9f5)");
+      expect(PIPELINE_CONTEXT_FALLBACK_COLOR).toBe("var(--map-pipeline-context-fallback, #e5e5e2)");
    });
 
    it("encodes line type through dash arrays", () => {
@@ -119,9 +127,12 @@ describe("map theme tokens", () => {
       expect(darkTheme.get("--map-pipeline-selection-halo-no-oge")).toBe("#86b7a7");
       expect(darkTheme.get("--map-pipeline-symbol-oge")).toBe("#d97757");
       expect(darkTheme.get("--map-pipeline-symbol-no-oge")).toBe("#86b7a7");
+      expect(darkTheme.get("--map-pipeline-context-oge")).toBe("#d97757");
+      expect(darkTheme.get("--map-pipeline-context-no-oge")).toBe("#86b7a7");
       expect(darkTheme.get("--map-pipeline-oge-executing-operator-highlight")).toBe("#b4b27d");
       expect(darkTheme.get("--map-pipeline-fallback")).toBe("#e5e5e2");
       expect(darkTheme.get("--map-pipeline-selection-halo-fallback")).toBe("#faf9f5");
+      expect(darkTheme.get("--map-pipeline-context-fallback")).toBe("#e5e5e2");
       expect(darkTheme.get("--map-country-germany-stroke")).toBe("#faf9f5");
       expect(darkTheme.get("--map-country-germany-fill")).toBe("#22221f");
    });
@@ -136,6 +147,8 @@ describe("map theme tokens", () => {
       expect(rootTheme.get("--map-pipeline-selection-halo-no-oge")).toBe("#75b8af");
       expect(rootTheme.get("--map-pipeline-symbol-oge").toLowerCase()).toBe("#52a436");
       expect(rootTheme.get("--map-pipeline-symbol-no-oge")).toBe("#bedfd9");
+      expect(rootTheme.get("--map-pipeline-context-oge")).toBe("#6aa85a");
+      expect(rootTheme.get("--map-pipeline-context-no-oge")).toBe("#9ed8d7");
       expect(rootTheme.get("--map-pipeline-oge-executing-operator-highlight")).toBe("#d7ac72");
       expect(rootTheme.get("--map-background")).toBe("#ffffff");
       expect(rootTheme.get("--map-country-context-fill")).toBe("#f6fcfc");
@@ -152,6 +165,7 @@ describe("map theme tokens", () => {
       expect(getPipelineParticipationKey({ ogeBeteiligung: false })).toBe("noOge");
       expect(getPipelineColor({ ogeBeteiligung: undefined })).toBe(PIPELINE_FALLBACK_COLOR);
       expect(getSelectionHaloColor({ ogeBeteiligung: undefined })).toBe(SELECTION_HALO_FALLBACK_COLOR);
+      expect(getPipelineContextColor({ ogeBeteiligung: undefined })).toBe(PIPELINE_CONTEXT_FALLBACK_COLOR);
    });
 });
 
@@ -189,6 +203,19 @@ describe("getPipelineStyle", () => {
       );
       expect(getSelectionHaloStyle(pipeline("Umstellung")).className).toBe("pipeline-selection-halo");
       expect(getSelectionHaloStyle(pipeline("Neubau")).className).toBe("pipeline-selection-halo");
+   });
+
+   it("uses dedicated muted context colors for the places layer background", () => {
+      expect(getPipelineContextStyle(pipeline("Umstellung", { ogeBeteiligung: false }))).toMatchObject({
+         className: "pipeline-context-line",
+         color: PIPELINE_CONTEXT_COLORS.noOge,
+         opacity: 0.42,
+         weight: 2.05
+      });
+      expect(getPipelineContextStyle(pipeline("Neubau", { ogeBeteiligung: true })).dashArray).toBe("4 4");
+      expect(getPipelineContextStyle(pipeline("Umstellung", { ogeBeteiligung: undefined })).color).toBe(
+         PIPELINE_CONTEXT_FALLBACK_COLOR
+      );
    });
 
    it("does not add class-based visual categories beyond participation and line type", () => {
