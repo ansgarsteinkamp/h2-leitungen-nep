@@ -205,7 +205,6 @@ export default function PipelineLayer({
          if (hoveredLayer) bringToFront(hoveredLayer);
          eachHitboxLayer(layer => {
             const featureId = layer.feature?.properties.id;
-            if (featureId === activeSelectedPipelineId) bringToFront(layer);
             if (featureId === activeHoveredPipelineId) bringToFront(layer);
          });
       },

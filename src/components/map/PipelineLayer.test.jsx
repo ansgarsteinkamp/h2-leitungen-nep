@@ -302,10 +302,10 @@ describe("PipelineLayer", () => {
       );
    });
 
-   it("keeps selected hitboxes aligned with the selected visual pipeline priority", () => {
+   it("does not promote selected hitboxes above other clickable pipelines", () => {
       render(<PipelineLayer onSelectPipeline={vi.fn()} pipelines={collection()} selectedPipelineId="other" />);
 
-      expect(leafletMockState.layers.get("pipeline-hitbox:other").layer.bringToFront).toHaveBeenCalled();
+      expect(leafletMockState.layers.get("pipeline-hitbox:other").layer.bringToFront).not.toHaveBeenCalled();
    });
 
    it("cleans up open tooltips when the map or browser context changes", () => {
