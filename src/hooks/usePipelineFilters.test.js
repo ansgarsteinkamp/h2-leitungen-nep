@@ -160,30 +160,46 @@ describe("filterPipelines", () => {
          filterIds(
             [
                pipeline("A", {
+                  kernnetzAntragsId: "KLN001-01",
                   leitungstyp: "Neubau",
                   durchfuehrendeNetzbetreiber: ["Open Grid Europe GmbH"],
+                  ogeBeteiligung: true,
                   szenario1: true,
                   ibnJahr: 2035,
                   startnetz: true
                }),
                pipeline("B", {
+                  kernnetzAntragsId: "KLN002-01",
                   leitungstyp: "Umstellung",
                   durchfuehrendeNetzbetreiber: ["Open Grid Europe GmbH"],
+                  ogeBeteiligung: true,
                   szenario1: true,
                   ibnJahr: 2035,
                   startnetz: true
                }),
                pipeline("C", {
+                  kernnetzAntragsId: "KLN003-01",
                   leitungstyp: "Neubau",
                   durchfuehrendeNetzbetreiber: ["Nowega GmbH"],
+                  szenario1: true,
+                  ibnJahr: 2035,
+                  startnetz: true
+               }),
+               pipeline("D", {
+                  kernnetzAntragsId: "",
+                  leitungstyp: "Neubau",
+                  durchfuehrendeNetzbetreiber: ["Open Grid Europe GmbH"],
+                  ogeBeteiligung: true,
                   szenario1: true,
                   ibnJahr: 2035,
                   startnetz: true
                })
             ],
             {
+               kernnetzIdStatus: "withKernnetzId",
                lineType: "Neubau",
                measureType: ALL_VALUE,
+               ogeParticipationOnly: true,
                operator: "Open Grid Europe GmbH",
                scenario: "szenario1",
                yearFrom: 2035,
@@ -220,8 +236,48 @@ describe("filterPipelines", () => {
       expect(filterIds(features, { yearFrom: 2030, yearTo: 2030 })).toEqual(["with-year"]);
    });
 
+   it("filters by presence of a kernnetz ID and treats blank values as missing", () => {
+      const features = [
+         pipeline("with-id", { kernnetzAntragsId: "KLN001-01", startnetz: true }),
+         pipeline("empty-id", { kernnetzAntragsId: "", startnetz: true }),
+         pipeline("blank-id", { kernnetzAntragsId: "   ", startnetz: true }),
+         pipeline("null-id", { kernnetzAntragsId: null, startnetz: true }),
+         pipeline("missing-id", { startnetz: true })
+      ];
+
+      expect(filterIds(features, { kernnetzIdStatus: "withKernnetzId" })).toEqual(["with-id"]);
+      expect(filterIds(features, { kernnetzIdStatus: "withoutKernnetzId" })).toEqual([
+         "empty-id",
+         "blank-id",
+         "null-id",
+         "missing-id"
+      ]);
+   });
+
+   it("keeps kernnetz ID filtering composable with network views and measure categories", () => {
+      const features = [
+         pipeline("startnetz-with-id", { kernnetzAntragsId: "KLU001-01", startnetz: true }),
+         pipeline("proposal-with-id", { kernnetzAntragsId: "KLN002-01", netzausbauvorschlag: true }),
+         pipeline("proposal-without-id", { kernnetzAntragsId: "", netzausbauvorschlag: true }),
+         pipeline("scenario-only-without-id", { kernnetzAntragsId: "", szenario1: true }),
+         pipeline("scenario-only-with-id", { kernnetzAntragsId: "KLN003-01", szenario1: true })
+      ];
+
+      expect(filterIds(features, { kernnetzIdStatus: "withoutKernnetzId" })).toEqual(["proposal-without-id"]);
+      expect(filterIds(features, { kernnetzIdStatus: "withoutKernnetzId", networkView: "all" })).toEqual([
+         "proposal-without-id",
+         "scenario-only-without-id"
+      ]);
+      expect(
+         filterIds(features, {
+            kernnetzIdStatus: "withoutKernnetzId",
+            measureType: "netzausbauvorschlag",
+            networkView: "all"
+         })
+      ).toEqual(["proposal-without-id"]);
+   });
+
    it.each([
-      ["startnetz", ["startnetz"]],
       ["standard", ["startnetz", "scenario-standard", "other-standard"]],
       ["scenario1", ["startnetz", "scenario-standard", "scenario-nonstandard"]],
       ["scenario2", ["startnetz", "scenario-2"]],
@@ -367,10 +423,6 @@ describe("filterPipelines", () => {
       setFilter(result, "networkView", "scenario3");
 
       expect(optionValues(result)).toEqual([ALL_VALUE, "startnetz", "netzausbauvorschlag"]);
-
-      setFilter(result, "networkView", "startnetz");
-
-      expect(optionValues(result)).toEqual([ALL_VALUE, "startnetz"]);
    });
 
    it("narrows measure categories by the explicit scenario marker filter", () => {
@@ -405,24 +457,23 @@ describe("filterPipelines", () => {
       expect(optionValues(result)).toEqual([ALL_VALUE, "startnetz", "netzausbauvorschlag"]);
    });
 
-   it("clears redundant measure category filters inside the startnetz view", () => {
+   it("normalizes stale startnetz network views back to the standard view", () => {
       const { result } = renderHook(() => usePipelineFilters(collection(measureTypeFeatures)));
 
-      setFilter(result, "networkView", "scenario1");
       setFilter(result, "measureType", "startnetz");
       setFilter(result, "networkView", "startnetz");
 
-      expect(result.current.filters.measureType).toBe(ALL_VALUE);
+      expect(result.current.filters.networkView).toBe("standard");
+      expect(result.current.filters.measureType).toBe("startnetz");
       expect(idsOf(result.current.filteredCollection.features)).toEqual(["startnetz"]);
+   });
 
-      setFilter(result, "networkView", "standard");
+   it("normalizes stale kernnetz ID status values back to all", () => {
+      const { result } = renderHook(() => usePipelineFilters(collection(measureTypeFeatures)));
 
-      expect(result.current.filters.measureType).toBe(ALL_VALUE);
-      expect(idsOf(result.current.filteredCollection.features)).toEqual([
-         "startnetz",
-         "scenario-standard",
-         "other-standard"
-      ]);
+      setFilter(result, "kernnetzIdStatus", "unsupported");
+
+      expect(result.current.filters.kernnetzIdStatus).toBe(ALL_VALUE);
    });
 
    it("resets a no-longer-available measure category when setting a scenario marker", () => {
@@ -473,21 +524,6 @@ describe("filterPipelines", () => {
       expect(idsOf(result.current.filteredCollection.features)).toEqual(["startnetz", "scenario-1"]);
    });
 
-   it("clears scenario marker filters when switching into the startnetz view", () => {
-      const { result } = renderHook(() =>
-         usePipelineFilters(
-            collection([pipeline("startnetz", { startnetz: true }), pipeline("scenario-1", { szenario1: true })])
-         )
-      );
-
-      setFilter(result, "networkView", "all");
-      setFilter(result, "scenario", "szenario1");
-      setFilter(result, "networkView", "startnetz");
-
-      expect(result.current.filters.scenario).toBe(ALL_VALUE);
-      expect(idsOf(result.current.filteredCollection.features)).toEqual(["startnetz"]);
-   });
-
    it("resets every filter back to the initial state", () => {
       const { result } = renderHook(() =>
          usePipelineFilters(
@@ -501,6 +537,7 @@ describe("filterPipelines", () => {
       setFilter(result, "networkView", "all");
       setFilter(result, "scenario", "szenario1");
       setFilter(result, "measureType", "scenarioOnly");
+      setFilter(result, "kernnetzIdStatus", "withoutKernnetzId");
       setFilter(result, "searchTerm", "Szenario 1");
       setYearRange(result, [2035, 2037]);
       resetFilters(result);

@@ -127,6 +127,7 @@ export default function PipelineWorkspace({ countries, pipelineCollection }) {
                }
                filters={filters.filters}
                highlightOgeExecutingOperator={highlightOgeExecutingOperator}
+               kernnetzIdOptions={filters.kernnetzIdOptions}
                metrics={filters.metrics}
                onHighlightOgeExecutingOperatorChange={setHighlightOgeExecutingOperator}
                onResetFilters={resetFilters}

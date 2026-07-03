@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import {
    ALL_VALUE,
+   KERNNETZ_ID_OPTIONS,
    MEASURE_TYPE_OPTIONS,
    NETWORK_VIEW_OPTIONS,
    SCENARIO_FILTER_NETWORK_VIEWS,
@@ -14,6 +15,7 @@ import { SCENARIO_KEYS, isScenarioFeature, isStandardFeature } from "@/lib/domai
 import { featureMatchesSearch, getSearchQuery, isSearchActive, toResultItems } from "@/lib/domain/search";
 
 export const initialPipelineFilters = {
+   kernnetzIdStatus: ALL_VALUE,
    lineType: ALL_VALUE,
    measureType: ALL_VALUE,
    networkView: "standard",
@@ -26,6 +28,8 @@ export const initialPipelineFilters = {
 };
 
 const MAX_AUTO_FIT_SEARCH_RESULTS = 30;
+const KERNNETZ_ID_VALUES = new Set(KERNNETZ_ID_OPTIONS.map(option => option.value));
+const NETWORK_VIEW_VALUES = new Set(NETWORK_VIEW_OPTIONS.map(option => option.value));
 const NETWORK_VIEWS_WITH_SCENARIO_FILTER = new Set(SCENARIO_FILTER_NETWORK_VIEWS);
 const SCENARIO_NETWORK_VIEW_TO_KEY = {
    scenario1: "szenario1",
@@ -112,6 +116,17 @@ function matchesMeasureType(feature, selected) {
    return hasMarker(feature, selected);
 }
 
+function hasKernnetzId(feature) {
+   return String(feature.properties.kernnetzAntragsId ?? "").trim() !== "";
+}
+
+function matchesKernnetzIdStatus(feature, selected) {
+   if (selected === ALL_VALUE) return true;
+   if (selected === "withKernnetzId") return hasKernnetzId(feature);
+   if (selected === "withoutKernnetzId") return !hasKernnetzId(feature);
+   return true;
+}
+
 function matchesOgeParticipation(props, ogeParticipationOnly) {
    return !ogeParticipationOnly || props.ogeBeteiligung === true;
 }
@@ -123,7 +138,6 @@ function matchesScenarioNetworkView(feature, networkView) {
 
 function matchesNetworkView(feature, selected) {
    if (selected === "all") return true;
-   if (selected === "startnetz") return isStartnetzFeature(feature);
    if (selected === "standard") return isStandardFeature(feature);
    if (SCENARIO_NETWORK_VIEW_TO_KEY[selected]) return matchesScenarioNetworkView(feature, selected);
 
@@ -158,11 +172,19 @@ function normalizeFilterCombination(filters, features) {
       next = { ...next, [key]: value };
    };
 
+   if (!NETWORK_VIEW_VALUES.has(next.networkView)) {
+      updateFilter("networkView", "standard");
+   }
+
+   if (!KERNNETZ_ID_VALUES.has(next.kernnetzIdStatus)) {
+      updateFilter("kernnetzIdStatus", ALL_VALUE);
+   }
+
    if (!shouldApplyScenarioFilter(next)) {
       updateFilter("scenario", ALL_VALUE);
    }
 
-   if (next.networkView === "startnetz" || !hasMeasureTypeOption(features, next, next.measureType)) {
+   if (!hasMeasureTypeOption(features, next, next.measureType)) {
       updateFilter("measureType", ALL_VALUE);
    }
 
@@ -198,6 +220,7 @@ export function filterPipelines(features, filters, query = getSearchQuery(filter
          matchesOption(props.leitungstyp, filters.lineType) &&
          matchesCommissioningYearRange(props, filters) &&
          matchesMeasureType(feature, filters.measureType) &&
+         matchesKernnetzIdStatus(feature, filters.kernnetzIdStatus) &&
          matchesOperators(feature, filters.operator) &&
          matchesOgeParticipation(props, filters.ogeParticipationOnly) &&
          featureMatchesSearch(feature, query, hasActiveSearch)
@@ -280,6 +303,7 @@ export function usePipelineFilters(collection) {
       options,
       resetFilters,
       results,
+      kernnetzIdOptions: KERNNETZ_ID_OPTIONS,
       measureTypeOptions,
       networkViewOptions: NETWORK_VIEW_OPTIONS,
       scenarioOptions: SCENARIO_OPTIONS,

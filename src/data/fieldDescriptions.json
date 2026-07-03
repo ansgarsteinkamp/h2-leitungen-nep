@@ -25,7 +25,7 @@
    },
    "leitungstyp": {
       "label": "Leitungstyp",
-      "description": "Art der Leitung: Umstellung einer bestehenden Leitung auf Wasserstoff oder Neubau.",
+      "description": "Art der Leitung: Umstellung einer bestehenden Leitung auf Wasserstoff oder Neubau. Eine Umstellung setzt voraus, dass die Leitung aus dem Methansystem freigemacht werden kann.",
       "type": "enum",
       "values": ["Umstellung", "Neubau"],
       "sourceFields": ["Typ", "Leitungsart"]
@@ -38,7 +38,7 @@
    },
    "netzausbauvorschlag": {
       "label": "Teil des Netzausbauvorschlags",
-      "description": "Maßnahme, die Teil des Netzausbauvorschlags Wasserstoff im NEP-Entwurf ist.",
+      "description": "Maßnahme, die Teil des Netzausbauvorschlags Wasserstoff im überarbeiteten NEP-Entwurf ist. Die BNetzA-Prüfung läuft; der Entwurf ist noch nicht final bestätigt.",
       "type": "boolean",
       "sourceFields": ["Netzausbauvorschlag der Netzbetreiber", "Netzausbau"]
    },

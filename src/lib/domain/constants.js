@@ -2,28 +2,24 @@ export const ALL_VALUE = "__all__";
 
 export const NETWORK_VIEW_OPTIONS = [
    {
-      value: "startnetz",
-      label: "Startnetz"
-   },
-   {
       value: "standard",
-      label: "Netzausbauvorschlag + Startnetz"
+      label: "Startnetz und Netzausbauvorschlag"
    },
    {
       value: "scenario1",
-      label: "Szenario 1 (2037) + Startnetz"
+      label: "Startnetz und Szenario 1 (2037)"
    },
    {
       value: "scenario2",
-      label: "Szenario 2 (2037) + Startnetz"
+      label: "Startnetz und Szenario 2 (2037)"
    },
    {
       value: "scenario3",
-      label: "Szenario 3 (2037) + Startnetz"
+      label: "Startnetz und Szenario 3 (2037)"
    },
    {
       value: "all",
-      label: "Alle Leitungsmaßnahmen"
+      label: "Alle Maßnahmen im Datensatz"
    }
 ];
 
@@ -34,15 +30,21 @@ export const SCENARIO_OPTIONS = [
    { value: "szenario3", label: "Szenario 3" }
 ];
 
-// Der Szenariofilter ist nur in breiten Netzansichten sichtbar; dedizierte Startnetz- und Szenario-Netzauswahlen
-// bilden bereits eine feste fachliche Menge.
+// Der Szenariofilter ist nur in breiten Netzansichten sichtbar; dedizierte Szenario-Netzansichten bilden bereits eine
+// feste fachliche Menge.
 export const SCENARIO_FILTER_NETWORK_VIEWS = ["standard", "all"];
 
 export const MEASURE_TYPE_OPTIONS = [
    { value: ALL_VALUE, label: "Alle" },
    { value: "startnetz", label: "Startnetz" },
    { value: "netzausbauvorschlag", label: "Netzausbauvorschlag" },
-   { value: "scenarioOnly", label: "Nur Szenarioergebnis" }
+   { value: "scenarioOnly", label: "Nur Modellierung 2037" }
+];
+
+export const KERNNETZ_ID_OPTIONS = [
+   { value: ALL_VALUE, label: "Alle" },
+   { value: "withKernnetzId", label: "Mit Kernnetz-ID" },
+   { value: "withoutKernnetzId", label: "Ohne Kernnetz-ID" }
 ];
 
 export const INITIAL_BOUNDS = [

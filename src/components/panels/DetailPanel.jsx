@@ -19,7 +19,8 @@ const SCENARIO_FIELDS = ["szenario1", "szenario2", "szenario3"];
 const LOCAL_FIELD_DESCRIPTIONS = {
    nepEinordnung: {
       label: "Einordnung",
-      description: "Leitet die fachliche NEP-Einordnung aus Startnetz, Netzausbauvorschlag und Szenarioergebnissen ab."
+      description:
+         "Leitet die fachliche Einordnung im überarbeiteten NEP-Entwurf aus Startnetz, Netzausbauvorschlag und Modellierungsergebnissen ab."
    }
 };
 
@@ -40,12 +41,12 @@ const DETAIL_GROUPS = [
    },
    {
       id: "nep",
-      title: "NEP-Einordnung",
+      title: "Einordnung im NEP",
       fields: ["nepEinordnung", "startnetz", "netzausbauvorschlag"]
    },
    {
       id: "szenarien",
-      title: "Szenarioergebnisse 2037",
+      title: "Modellierungsergebnisse 2037",
       fields: ["szenario1", "szenario2", "szenario3"]
    },
    {
@@ -105,9 +106,9 @@ function formatValue(key, value) {
 }
 
 function getNepClassification(props) {
-   if (props.startnetz === true) return "Startnetz";
-   if (props.netzausbauvorschlag === true) return "Netzausbauvorschlag";
-   if (SCENARIO_FIELDS.some(field => props[field] === true)) return "Nur Szenarioergebnis";
+   if (props.startnetz === true) return "Startnetzmaßnahme";
+   if (props.netzausbauvorschlag === true) return "Teil des Netzausbauvorschlags";
+   if (SCENARIO_FIELDS.some(field => props[field] === true)) return "Nur in Modellierungsergebnissen 2037";
    return EMPTY_VALUE;
 }
 

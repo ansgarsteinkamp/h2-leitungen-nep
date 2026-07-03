@@ -4,7 +4,13 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ALL_VALUE, MEASURE_TYPE_OPTIONS, NETWORK_VIEW_OPTIONS, SCENARIO_OPTIONS } from "@/lib/domain/constants";
+import {
+   ALL_VALUE,
+   KERNNETZ_ID_OPTIONS,
+   MEASURE_TYPE_OPTIONS,
+   NETWORK_VIEW_OPTIONS,
+   SCENARIO_OPTIONS
+} from "@/lib/domain/constants";
 import { initialPipelineFilters } from "@/hooks/usePipelineFilters";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import FilterPanel from "./FilterPanel";
@@ -30,6 +36,7 @@ const metrics = { costMioEur: 0, count: 0, lengthKm: 0 };
 function renderFilterPanel({
    filters = {},
    highlightOgeExecutingOperator = false,
+   kernnetzIdOptions = KERNNETZ_ID_OPTIONS,
    measureTypeOptions = MEASURE_TYPE_OPTIONS,
    networkViewOptions = NETWORK_VIEW_OPTIONS,
    onHighlightOgeExecutingOperatorChange = vi.fn(),
@@ -44,6 +51,7 @@ function renderFilterPanel({
          <FilterPanel
             filters={{ ...initialPipelineFilters, ...filters }}
             highlightOgeExecutingOperator={highlightOgeExecutingOperator}
+            kernnetzIdOptions={kernnetzIdOptions}
             measureTypeOptions={measureTypeOptions}
             metrics={metrics}
             onHighlightOgeExecutingOperatorChange={onHighlightOgeExecutingOperatorChange}
@@ -93,17 +101,17 @@ describe("FilterPanel", () => {
    it("shows help only for filters with explanatory domain logic", () => {
       renderFilterPanel();
 
-      expect(getHelpTrigger("Netzauswahl")).toBeTruthy();
+      expect(getHelpTrigger("Netzansicht")).toBeTruthy();
       expect(getHelpTrigger("In Szenario 2037 enthalten")).toBeTruthy();
-      expect(getHelpTrigger("NEP-Einordnung")).toBeTruthy();
+      expect(getHelpTrigger("Einordnung im NEP")).toBeTruthy();
+      expect(getHelpTrigger("Teil des Kernnetzes")).toBeTruthy();
+      expect(getHelpTrigger("Leitungstyp")).toBeTruthy();
+      expect(getHelpTrigger("Inbetriebnahmejahr")).toBeTruthy();
       expect(getHelpTrigger("Netzbetreiber oder Ansprechpartner")).toBeTruthy();
       expect(getHelpTrigger("Nur OGE-Bezug")).toBeTruthy();
       expect(getHelpTrigger("Hervorheben, wenn OGE durchführender FNB ist")).toBeTruthy();
 
       expect(getHelpTrigger("Kosten")).toBeTruthy();
-
-      expect(queryHelpTrigger("Leitungstyp")).toBeNull();
-      expect(queryHelpTrigger("Inbetriebnahmejahr")).toBeNull();
    });
 
    it("exposes OGE participation as a simple switch control", () => {
@@ -162,27 +170,27 @@ describe("FilterPanel", () => {
       renderFilterPanel({ filters: { networkView: "scenario1" } });
 
       const networkView = screen.getByRole("combobox", {
-         name: "Netzauswahl"
+         name: "Netzansicht"
       });
 
       expect(networkView).toHaveProperty("disabled", false);
-      expect(networkView.textContent).toContain("Szenario 1 (2037) + Startnetz");
+      expect(networkView.textContent).toContain("Startnetz und Szenario 1 (2037)");
    });
 
    it.each(NETWORK_VIEW_OPTIONS)("renders the $label network view label", option => {
       renderFilterPanel({ filters: { networkView: option.value } });
 
-      expect(screen.getByRole("combobox", { name: "Netzauswahl" }).textContent).toContain(option.label);
+      expect(screen.getByRole("combobox", { name: "Netzansicht" }).textContent).toContain(option.label);
    });
 
    it("shows the selected network view and keeps the scenario marker as an explicit filter", () => {
       renderFilterPanel({ filters: { networkView: "all", scenario: "szenario1" } });
 
       const networkView = screen.getByRole("combobox", {
-         name: "Netzauswahl"
+         name: "Netzansicht"
       });
 
-      expect(networkView.textContent).toContain("Alle Leitungsmaßnahmen");
+      expect(networkView.textContent).toContain("Alle Maßnahmen im Datensatz");
       expectPressed(getSegmentButton("In Szenario 2037 enthalten", "Szenario 1"));
    });
 
@@ -191,12 +199,28 @@ describe("FilterPanel", () => {
 
       renderFilterPanel({ setFilter });
 
-      expect(screen.queryByRole("combobox", { name: "NEP-Einordnung" })).toBeNull();
-      expectPressed(getSegmentButton("NEP-Einordnung", "Alle"));
+      expect(screen.queryByRole("combobox", { name: "Einordnung im NEP" })).toBeNull();
+      expectPressed(getSegmentButton("Einordnung im NEP", "Alle"));
 
-      fireEvent.click(getSegmentButton("NEP-Einordnung", "Startnetz"));
+      fireEvent.click(getSegmentButton("Einordnung im NEP", "Startnetz"));
 
       expect(setFilter).toHaveBeenCalledWith("measureType", "startnetz");
+   });
+
+   it("renders the kernnetz ID status as a compact visible filter after NEP classification", () => {
+      const setFilter = vi.fn();
+
+      renderFilterPanel({ setFilter });
+
+      expectPressed(getSegmentButton("Teil des Kernnetzes", "Alle"));
+
+      fireEvent.click(getSegmentButton("Teil des Kernnetzes", "Mit Kernnetz-ID"));
+
+      expect(setFilter).toHaveBeenCalledWith("kernnetzIdStatus", "withKernnetzId");
+
+      fireEvent.click(getSegmentButton("Teil des Kernnetzes", "Ohne Kernnetz-ID"));
+
+      expect(setFilter).toHaveBeenCalledWith("kernnetzIdStatus", "withoutKernnetzId");
    });
 
    it("omits unavailable measure category options from the visible filters", () => {
@@ -204,20 +228,7 @@ describe("FilterPanel", () => {
          measureTypeOptions: MEASURE_TYPE_OPTIONS.filter(option => option.value !== "scenarioOnly")
       });
 
-      expect(querySegmentButton("NEP-Einordnung", "Nur Szenarioergebnis")).toBeNull();
-   });
-
-   it("hides measure categories when the startnetz network view already fixes the category", () => {
-      renderFilterPanel({
-         filters: { networkView: "startnetz" },
-         measureTypeOptions: MEASURE_TYPE_OPTIONS.filter(option => [ALL_VALUE, "startnetz"].includes(option.value))
-      });
-
-      expect(screen.queryByRole("group", { name: "NEP-Einordnung" })).toBeNull();
-      expect(queryHelpTrigger("NEP-Einordnung")).toBeNull();
-      expect(screen.queryByRole("group", { name: "In Szenario 2037 enthalten" })).toBeNull();
-      expect(queryHelpTrigger("In Szenario 2037 enthalten")).toBeNull();
-      expect(screen.getByRole("group", { name: "Leitungstyp" })).toBeTruthy();
+      expect(querySegmentButton("Einordnung im NEP", "Nur Modellierung 2037")).toBeNull();
    });
 
    it("hides the scenario marker filter inside scenario network views", () => {

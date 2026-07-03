@@ -11,20 +11,26 @@ import { metricCostLabel, metricIntegerLabel, metricLengthLabel } from "@/lib/do
 import { cn } from "@/lib/utils";
 
 const NETWORK_VIEW_DESCRIPTION =
-   "Legt fest, welche fachliche Menge von Leitungsmaßnahmen auf der Karte angezeigt wird. Szenario-Auswahlen zeigen Startnetzmaßnahmen plus Maßnahmen aus dem jeweiligen Wasserstoff-Modellierungsergebnis 2037.";
+   'Setzt die fachliche Grundmenge der Karte. Die Standardansicht zeigt Startnetz und Netzausbauvorschlag; Szenario-Ansichten zeigen ein Modellierungsergebnis 2037 zuzüglich Startnetz. Die Option "Alle Maßnahmen im Datensatz" zeigt zusätzlich reine Modellierungsergebnisse, die weder Startnetz noch Teil des Netzausbauvorschlags sind.';
 const SCENARIO_DESCRIPTION =
-   "Schränkt die aktuelle Auswahl auf Maßnahmen ein, die im gewählten Wasserstoff-Szenario 2037 enthalten sind. Dieser Filter fügt keine Startnetzmaßnahmen hinzu.";
+   "Zusätzlicher Schnittmengenfilter innerhalb der aktuellen Grundmenge. Er zeigt Maßnahmen, die im gewählten Wasserstoff-Szenario 2037 enthalten sind; anders als die Szenario-Netzansichten fügt er keine Startnetzmaßnahmen hinzu.";
 const MEASURE_TYPE_DESCRIPTION =
-   "Filtert nach der fachlichen Einordnung im NEP 2025: Startnetzmaßnahme, Teil des Netzausbauvorschlags oder Maßnahme, die nur in mindestens einem Szenarioergebnis 2037 enthalten ist.";
+   "Filtert innerhalb der gewählten Netzansicht nach Rolle im NEP. Startnetz ist Modellierungsbasis, nicht Teil des Netzausbauvorschlags; reine Modellierungsergebnisse 2037 sind keine Bauentscheidung.";
+const KERNNETZ_ID_DESCRIPTION =
+   "Zeigt, ob für eine Maßnahme eine Kernnetz-ID hinterlegt ist. Die Kernnetz-ID ist ein Referenzschlüssel zur Kernnetz-Zuordnung; sie ist kein Nachweis für Baurecht, Bauentscheidung, Umsetzungsstand oder die aktuelle Einordnung im NEP.";
+const LINE_TYPE_DESCRIPTION =
+   "Unterscheidet Neubau und Umstellung. Umstellung bedeutet vorgesehene Nutzung einer bestehenden Erdgasleitung für Wasserstoff und setzt voraus, dass die Leitung aus dem Methansystem freigemacht werden kann.";
+const COMMISSIONING_YEAR_DESCRIPTION =
+   "Filtert nach dem planerischen Inbetriebnahmejahr aus den Maßnahmendaten. Das Jahr ist ein Planwert, kein tatsächliches oder zugesichertes Inbetriebnahmedatum.";
 const OPERATOR_FILTER_DESCRIPTION =
-   "Der Filter berücksichtigt Unternehmen, die als durchführende Netzbetreiber oder als Ansprechpartner genannt sind. Die Nennung als Ansprechpartner bedeutet nicht zwingend Umsetzungsverantwortung.";
+   "Filtert nach Unternehmen, die als durchführende Netzbetreiber oder als Ansprechpartner genannt sind. Ansprechpartner ist eine Kontaktrolle und bedeutet nicht automatisch Umsetzungs- oder Investitionsverantwortung.";
 const OGE_PARTICIPATION_DESCRIPTION =
-   "Zeigt nur Maßnahmen an, bei denen OGE als Ansprechpartner oder durchführender Netzbetreiber genannt ist.";
+   "Zeigt nur Maßnahmen, bei denen OGE als Ansprechpartner oder durchführender Netzbetreiber genannt ist. Das ist breiter als die Hervorhebung der durchführenden FNB und keine Aussage zu Eigentum oder alleiniger Verantwortung.";
 const OGE_EXECUTING_OPERATOR_HIGHLIGHT_LABEL = "Hervorheben, wenn OGE durchführender FNB ist";
 const OGE_EXECUTING_OPERATOR_HIGHLIGHT_DESCRIPTION =
-   "Hebt Leitungen hervor, bei denen OGE als durchführender Netzbetreiber benannt ist. OGE als Ansprechpartner wird dabei nicht berücksichtigt.";
+   "Darstellung, kein Filter: hebt Leitungen hervor, bei denen OGE als durchführender Netzbetreiber benannt ist. OGE als Ansprechpartner wird dabei nicht berücksichtigt.";
 const METRIC_COST_DESCRIPTION =
-   "Summe der in den Maßnahmendaten angegebenen Kosten der aktuellen Auswahl. Enthalten sind die kartierten Leitungsmaßnahmen; Verdichterstationen und sonstige Investitionspositionen ohne Leitungsgeometrie sind nicht enthalten.";
+   "Summe der in den Maßnahmendaten angegebenen Kosten der aktuellen Auswahl. Enthalten sind kartierte Leitungsmaßnahmen; Verdichterstationen und sonstige Investitionspositionen ohne Leitungsgeometrie sind nicht enthalten.";
 
 const FILTER_PANEL_CLASS =
    "flex min-h-0 flex-col gap-4 overflow-auto focus-visible:ring-3 focus-visible:ring-ring/65 focus-visible:outline-none dark:focus-visible:ring-ring/50";
@@ -46,10 +52,6 @@ const LINE_TYPE_SYMBOL_COLORS = [PIPELINE_SYMBOL_COLORS.oge, PIPELINE_SYMBOL_COL
 
 function shouldShowScenarioMarkerFilter(networkView) {
    return SCENARIO_FILTER_NETWORK_VIEWS.includes(networkView);
-}
-
-function shouldShowMeasureTypeFilter(networkView) {
-   return networkView !== "startnetz";
 }
 
 function createChipSegmentGroup(group) {
@@ -278,7 +280,7 @@ function YearRangeFilter({ filters, options, setYearRange }) {
    if (!isNumericYear(minYear) || !isNumericYear(maxYear)) {
       return (
          <div className="grid gap-2">
-            <FilterLabel id={labelId} label="Inbetriebnahmejahr" />
+            <FilterLabel description={COMMISSIONING_YEAR_DESCRIPTION} id={labelId} label="Inbetriebnahmejahr" />
             <p className="text-xs text-muted-foreground">Keine Jahresangaben verfügbar</p>
          </div>
       );
@@ -294,7 +296,7 @@ function YearRangeFilter({ filters, options, setYearRange }) {
    return (
       <div className="grid gap-3">
          <div className="flex min-w-0 items-center justify-between gap-3">
-            <FilterLabel id={labelId} label="Inbetriebnahmejahr" />
+            <FilterLabel description={COMMISSIONING_YEAR_DESCRIPTION} id={labelId} label="Inbetriebnahmejahr" />
             <output
                aria-label="Ausgewählter Bereich Inbetriebnahmejahr"
                aria-live="polite"
@@ -360,6 +362,7 @@ function OperatorFilterGroup({
 function FilterControls({
    filters,
    highlightOgeExecutingOperator,
+   kernnetzIdOptions,
    measureTypeOptions,
    networkViewOptions,
    onHighlightOgeExecutingOperatorChange,
@@ -370,28 +373,22 @@ function FilterControls({
    setFilter
 }) {
    const showScenarioMarkerFilter = shouldShowScenarioMarkerFilter(filters.networkView);
-   const showMeasureTypeFilter = shouldShowMeasureTypeFilter(filters.networkView);
    const segmentGroups = [
       createChipSegmentGroup({
-         filterKey: "lineType",
-         label: "Leitungstyp",
-         options: options.lineTypes,
-         swatches: true,
-         value: filters.lineType
+         description: MEASURE_TYPE_DESCRIPTION,
+         filterKey: "measureType",
+         label: "Einordnung im NEP",
+         options: measureTypeOptions,
+         value: filters.measureType
+      }),
+      createChipSegmentGroup({
+         description: KERNNETZ_ID_DESCRIPTION,
+         filterKey: "kernnetzIdStatus",
+         label: "Teil des Kernnetzes",
+         options: kernnetzIdOptions,
+         value: filters.kernnetzIdStatus
       })
    ];
-
-   if (showMeasureTypeFilter) {
-      segmentGroups.unshift(
-         createChipSegmentGroup({
-            description: MEASURE_TYPE_DESCRIPTION,
-            filterKey: "measureType",
-            label: "NEP-Einordnung",
-            options: measureTypeOptions,
-            value: filters.measureType
-         })
-      );
-   }
 
    if (showScenarioMarkerFilter) {
       segmentGroups.push(
@@ -405,12 +402,23 @@ function FilterControls({
       );
    }
 
+   segmentGroups.push(
+      createChipSegmentGroup({
+         description: LINE_TYPE_DESCRIPTION,
+         filterKey: "lineType",
+         label: "Leitungstyp",
+         options: options.lineTypes,
+         swatches: true,
+         value: filters.lineType
+      })
+   );
+
    return (
       <div className={FILTER_GROUP_CLASS}>
-         <section className={FILTER_SECTION_CLASS} aria-label="Netzauswahl">
+         <section className={FILTER_SECTION_CLASS} aria-label="Netzansicht">
             <SelectField
                description={NETWORK_VIEW_DESCRIPTION}
-               label="Netzauswahl"
+               label="Netzansicht"
                onChange={value => setFilter("networkView", value)}
                options={networkViewOptions}
                value={filters.networkView}
@@ -453,6 +461,7 @@ export default function FilterPanel({
    className,
    filters,
    highlightOgeExecutingOperator = false,
+   kernnetzIdOptions,
    metrics,
    onHighlightOgeExecutingOperatorChange = () => {},
    onResetFilters,
@@ -474,6 +483,7 @@ export default function FilterPanel({
          <FilterControls
             filters={filters}
             highlightOgeExecutingOperator={highlightOgeExecutingOperator}
+            kernnetzIdOptions={kernnetzIdOptions}
             measureTypeOptions={measureTypeOptions}
             networkViewOptions={networkViewOptions}
             onHighlightOgeExecutingOperatorChange={onHighlightOgeExecutingOperatorChange}
