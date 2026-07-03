@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { latLngBounds } from "leaflet";
 import { useMap } from "react-leaflet";
 
 import { INITIAL_BOUNDS } from "@/lib/domain/constants";
@@ -9,6 +10,25 @@ const SEARCH_CAMERA_PADDING = [48, 48];
 const SEARCH_MAX_FIT_ZOOM = 8;
 const SELECTION_CAMERA_PADDING = [80, 80];
 const SELECTION_MAX_FIT_ZOOM = 7;
+
+function focusSelectionBounds(map, selectionBounds) {
+   const fitZoom = map.getBoundsZoom(selectionBounds, false, SELECTION_CAMERA_PADDING);
+   const targetZoom = Math.min(fitZoom, SELECTION_MAX_FIT_ZOOM);
+
+   if (map.getZoom() > targetZoom) {
+      map.panTo(latLngBounds(selectionBounds).getCenter(), {
+         animate: true,
+         duration: 0.35
+      });
+      return;
+   }
+
+   map.fitBounds(selectionBounds, {
+      animate: true,
+      maxZoom: SELECTION_MAX_FIT_ZOOM,
+      padding: SELECTION_CAMERA_PADDING
+   });
+}
 
 export default function MapCameraEffects({ resetViewKey, searchActive, searchBounds, selection }) {
    const map = useMap();
@@ -44,11 +64,7 @@ export default function MapCameraEffects({ resetViewKey, searchActive, searchBou
 
          const selectionBounds = featureToLatLngs(selection.item);
          if (selectionBounds.length) {
-            map.fitBounds(selectionBounds, {
-               animate: true,
-               maxZoom: SELECTION_MAX_FIT_ZOOM,
-               padding: SELECTION_CAMERA_PADDING
-            });
+            focusSelectionBounds(map, selectionBounds);
          }
 
          return;
