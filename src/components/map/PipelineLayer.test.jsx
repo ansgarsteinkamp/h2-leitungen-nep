@@ -14,11 +14,23 @@ import {
 import PipelineLayer from "./PipelineLayer";
 
 const leafletMockState = vi.hoisted(() => ({
-   layers: new Map()
+   layers: new Map(),
+   map: {
+      container: {
+         addEventListener: vi.fn(),
+         removeEventListener: vi.fn()
+      },
+      off: vi.fn(),
+      on: vi.fn()
+   }
 }));
 
 afterEach(() => {
    leafletMockState.layers.clear();
+   leafletMockState.map.container.addEventListener.mockClear();
+   leafletMockState.map.container.removeEventListener.mockClear();
+   leafletMockState.map.off.mockClear();
+   leafletMockState.map.on.mockClear();
    cleanup();
 });
 
@@ -36,6 +48,7 @@ vi.mock("react-leaflet", () => ({
             };
             const layer = {
                bindTooltip: vi.fn(),
+               bringToFront: vi.fn(),
                closeTooltip: vi.fn(),
                feature,
                getElement: () => element,
@@ -47,11 +60,14 @@ vi.mock("react-leaflet", () => ({
             handlers.add?.({ target: layer });
             entry = { feature, handlers, layer };
             layerEntriesRef.current.set(featureId, entry);
-            leafletMockState.layers.set(featureId, layer);
          } else {
             entry.feature = feature;
             entry.layer.feature = feature;
          }
+
+         const styleValue = typeof style === "function" ? style(feature) : style;
+         const className = styleValue?.className ?? "default";
+         leafletMockState.layers.set(`${className}:${featureId}`, entry);
 
          return entry;
       });
@@ -66,11 +82,14 @@ vi.mock("react-leaflet", () => ({
          >
             {layers.map(({ feature, handlers, layer }) => (
                <button
-                  data-color={style(feature).color}
-                  data-weight={style(feature).weight}
+                  data-class-name={(typeof style === "function" ? style(feature) : style).className}
+                  data-color={(typeof style === "function" ? style(feature) : style).color}
+                  data-opacity={(typeof style === "function" ? style(feature) : style).opacity}
+                  data-weight={(typeof style === "function" ? style(feature) : style).weight}
                   key={feature.properties.id}
-                  onMouseOut={() => handlers.mouseout?.({ target: layer })}
-                  onMouseOver={() => handlers.mouseover?.({ target: layer })}
+                  onClick={() => interactive && handlers.click?.({ target: layer })}
+                  onMouseOut={() => interactive && handlers.mouseout?.({ target: layer })}
+                  onMouseOver={() => interactive && handlers.mouseover?.({ target: layer })}
                   type="button"
                >
                   {feature.properties.id}
@@ -87,8 +106,9 @@ vi.mock("react-leaflet", () => ({
       );
    },
    useMap: () => ({
-      off: vi.fn(),
-      on: vi.fn()
+      getContainer: () => leafletMockState.map.container,
+      off: leafletMockState.map.off,
+      on: leafletMockState.map.on
    })
 }));
 
@@ -125,20 +145,23 @@ describe("PipelineLayer", () => {
       const otherPane = screen.getByTestId("pane-pipelines");
       const ogePane = screen.getByTestId("pane-pipelines-oge");
       const activePane = screen.getByTestId("pane-pipeline-active-overlay");
+      const hitboxPane = screen.getByTestId("pane-pipeline-hitbox");
 
       expect(otherPane.style.zIndex).toBe("420");
       expect(ogePane.style.zIndex).toBe("430");
       expect(activePane.style.zIndex).toBe("440");
+      expect(hitboxPane.style.zIndex).toBe("450");
       expect(within(otherPane).getByTestId("geojson").getAttribute("data-feature-ids")).toBe("other");
       expect(within(ogePane).getByTestId("geojson").getAttribute("data-feature-ids")).toBe("oge");
       expect(within(activePane).getByTestId("geojson").getAttribute("data-feature-ids")).toBe("other");
+      expect(within(hitboxPane).getByTestId("geojson").getAttribute("data-feature-ids")).toBe("other,oge");
    });
 
    it("keeps OGE pipelines above other pipelines inside the active overlay", () => {
       const pipelines = collection([pipeline("oge", true), pipeline("other", false)]);
 
       render(<PipelineLayer onSelectPipeline={vi.fn()} pipelines={pipelines} selectedPipelineId="oge" />);
-      fireEvent.mouseOver(within(screen.getByTestId("pane-pipelines")).getByRole("button", { name: "other" }));
+      fireEvent.mouseOver(within(screen.getByTestId("pane-pipeline-hitbox")).getByRole("button", { name: "other" }));
 
       expect(
          within(screen.getByTestId("pane-pipeline-active-overlay"))
@@ -202,7 +225,7 @@ describe("PipelineLayer", () => {
       const { rerender } = render(
          <PipelineLayer onSelectPipeline={vi.fn()} pipelines={pipelines} selectedPipelineId={null} />
       );
-      const existingLayer = leafletMockState.layers.get("oge-executing");
+      const existingLayer = leafletMockState.layers.get("default:oge-executing").layer;
 
       rerender(
          <PipelineLayer
@@ -212,7 +235,9 @@ describe("PipelineLayer", () => {
             selectedPipelineId={null}
          />
       );
-      fireEvent.mouseOver(screen.getByRole("button", { name: "oge-executing" }));
+      fireEvent.mouseOver(
+         within(screen.getByTestId("pane-pipeline-hitbox")).getByRole("button", { name: "oge-executing" })
+      );
 
       expect(existingLayer.setStyle).toHaveBeenLastCalledWith(
          expect.objectContaining({
@@ -227,6 +252,7 @@ describe("PipelineLayer", () => {
 
       expect(screen.queryByTestId("pane-pipeline-active-overlay")).toBeNull();
       expect(screen.queryByTestId("pane-pipeline-selection-halo")).toBeNull();
+      expect(screen.queryByTestId("pane-pipeline-hitbox")).toBeNull();
       expect(within(screen.getByTestId("pane-pipelines")).getByTestId("geojson").getAttribute("data-interactive")).toBe(
          "false"
       );
@@ -236,8 +262,62 @@ describe("PipelineLayer", () => {
       expect(
          within(screen.getByTestId("pane-pipelines")).getByRole("button", { name: "other" }).getAttribute("data-color")
       ).toBe(PIPELINE_CONTEXT_COLORS.noOge);
-      expect(leafletMockState.layers.get("other").bindTooltip).not.toHaveBeenCalled();
-      expect(leafletMockState.layers.get("other").getElement().setAttribute).toHaveBeenCalledWith("tabindex", "-1");
-      expect(leafletMockState.layers.get("other").getElement().setAttribute).toHaveBeenCalledWith("focusable", "false");
+      expect(leafletMockState.layers.get("pipeline-context-line:other").layer.bindTooltip).not.toHaveBeenCalled();
+      expect(
+         leafletMockState.layers.get("pipeline-context-line:other").layer.getElement().setAttribute
+      ).toHaveBeenCalledWith("tabindex", "-1");
+      expect(
+         leafletMockState.layers.get("pipeline-context-line:other").layer.getElement().setAttribute
+      ).toHaveBeenCalledWith("focusable", "false");
+   });
+
+   it("uses hitbox layers for pointer interaction while keeping visible lines inert", () => {
+      const onSelectPipeline = vi.fn();
+      render(<PipelineLayer onSelectPipeline={onSelectPipeline} pipelines={collection()} selectedPipelineId={null} />);
+
+      const visibleOther = leafletMockState.layers.get("default:other").layer;
+      const hitboxOther = leafletMockState.layers.get("pipeline-hitbox:other").layer;
+      const hitboxGeoJson = within(screen.getByTestId("pane-pipeline-hitbox")).getByTestId("geojson");
+      const hitboxButton = within(screen.getByTestId("pane-pipeline-hitbox")).getByRole("button", { name: "other" });
+
+      expect(visibleOther.bindTooltip).not.toHaveBeenCalled();
+      expect(hitboxOther.bindTooltip).toHaveBeenCalledTimes(1);
+      expect(within(screen.getByTestId("pane-pipelines")).getByTestId("geojson").getAttribute("data-interactive")).toBe(
+         "false"
+      );
+      expect(hitboxGeoJson.getAttribute("data-interactive")).toBe("true");
+      expect(hitboxButton.getAttribute("data-class-name")).toBe("pipeline-hitbox");
+      expect(hitboxButton.getAttribute("data-opacity")).toBe("0.001");
+      expect(hitboxButton.getAttribute("data-weight")).toBe("16");
+
+      fireEvent.mouseOver(hitboxButton);
+
+      expect(visibleOther.setStyle).toHaveBeenLastCalledWith(expect.objectContaining({ weight: 5.75 }));
+      expect(hitboxOther.bringToFront).toHaveBeenCalled();
+
+      fireEvent.click(hitboxButton);
+
+      expect(onSelectPipeline).toHaveBeenCalledWith(
+         expect.objectContaining({ properties: expect.objectContaining({ id: "other" }) })
+      );
+   });
+
+   it("keeps selected hitboxes aligned with the selected visual pipeline priority", () => {
+      render(<PipelineLayer onSelectPipeline={vi.fn()} pipelines={collection()} selectedPipelineId="other" />);
+
+      expect(leafletMockState.layers.get("pipeline-hitbox:other").layer.bringToFront).toHaveBeenCalled();
+   });
+
+   it("cleans up open tooltips when the map or browser context changes", () => {
+      render(<PipelineLayer onSelectPipeline={vi.fn()} pipelines={collection()} selectedPipelineId={null} />);
+
+      expect(leafletMockState.map.on).toHaveBeenCalledWith("click movestart zoomstart dragstart", expect.any(Function));
+      expect(leafletMockState.map.container.addEventListener).toHaveBeenCalledWith("mouseleave", expect.any(Function));
+
+      const closeHandler = leafletMockState.map.on.mock.calls.find(([events]) => events.includes("movestart"))[1];
+      fireEvent.mouseOver(within(screen.getByTestId("pane-pipeline-hitbox")).getByRole("button", { name: "other" }));
+      closeHandler();
+
+      expect(leafletMockState.layers.get("pipeline-hitbox:other").layer.closeTooltip).toHaveBeenCalled();
    });
 });

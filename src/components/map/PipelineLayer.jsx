@@ -14,6 +14,17 @@ const MAP_TOOLTIP_OPTIONS = {
    pane: "tooltipPane",
    sticky: true
 };
+const HITBOX_STYLE = {
+   className: "pipeline-hitbox",
+   color: "#000000",
+   dashArray: null,
+   fillColor: "#000000",
+   fillOpacity: 0.001,
+   lineCap: "round",
+   lineJoin: "round",
+   opacity: 0.001,
+   weight: 16
+};
 const PIPELINE_PRESENTATION_CONTEXT = "context";
 
 const createTooltip = feature => {
@@ -55,6 +66,12 @@ const makeLayerInert = layer => {
    }
 };
 
+const bindInertLayer = (_feature, layer) => {
+   layer.on({
+      add: () => makeLayerInert(layer)
+   });
+};
+
 export default function PipelineLayer({
    highlightOgeExecutingOperator = false,
    onSelectPipeline,
@@ -66,6 +83,7 @@ export default function PipelineLayer({
    const isContextPresentation = presentation === PIPELINE_PRESENTATION_CONTEXT;
    const ogeGeoJsonRef = useRef(null);
    const otherGeoJsonRef = useRef(null);
+   const hitboxGeoJsonRef = useRef(null);
    const [hoveredPipelineId, setHoveredPipelineId] = useState(null);
    const hoveredPipelineIdRef = useRef(null);
    const openTooltipLayerRef = useRef(null);
@@ -79,6 +97,10 @@ export default function PipelineLayer({
       [pipelines]
    );
    const pipelineStyleOptions = useMemo(() => ({ highlightOgeExecutingOperator }), [highlightOgeExecutingOperator]);
+   const hitboxPipelineData = useMemo(
+      () => createPipelineFeatureCollection(pipelines, sortPipelinesByDisplayPriority(pipelines.features)),
+      [pipelines]
+   );
    const selectedPipeline = useMemo(() => {
       if (isContextPresentation) return null;
       if (!selectedPipelineId) return null;
@@ -123,6 +145,13 @@ export default function PipelineLayer({
       otherGeoJsonRef.current?.eachLayer(callback);
       ogeGeoJsonRef.current?.eachLayer(callback);
    }, []);
+   const eachHitboxLayer = useCallback(callback => {
+      hitboxGeoJsonRef.current?.eachLayer(callback);
+   }, []);
+   const closeAllTooltips = useCallback(() => {
+      closeOpenTooltip();
+      eachHitboxLayer(layer => layer.closeTooltip());
+   }, [closeOpenTooltip, eachHitboxLayer]);
    const getCurrentPipelineStyle = useCallback((feature, activeSelectedPipelineId, activeHoveredPipelineId = null) => {
       return getPipelineStyle(
          feature,
@@ -174,8 +203,13 @@ export default function PipelineLayer({
 
          if (selectedLayer) bringToFront(selectedLayer);
          if (hoveredLayer) bringToFront(hoveredLayer);
+         eachHitboxLayer(layer => {
+            const featureId = layer.feature?.properties.id;
+            if (featureId === activeSelectedPipelineId) bringToFront(layer);
+            if (featureId === activeHoveredPipelineId) bringToFront(layer);
+         });
       },
-      [eachPipelineLayer, getCurrentPipelineStyle, isContextPresentation]
+      [eachHitboxLayer, eachPipelineLayer, getCurrentPipelineStyle, isContextPresentation]
    );
 
    useEffect(() => {
@@ -184,20 +218,35 @@ export default function PipelineLayer({
       const closeTooltipOnMapMove = () => {
          hoveredPipelineIdRef.current = null;
          setHoveredPipelineId(null);
-         closeOpenTooltip();
+         closeAllTooltips();
          refreshPipelineStyles(selectedPipelineIdRef.current);
       };
+      const closeTooltipOnWindowBlur = () => closeTooltipOnMapMove();
+      const closeTooltipOnVisibilityChange = () => {
+         if (document.hidden) closeTooltipOnMapMove();
+      };
+      const mapContainer = map.getContainer();
 
-      map.on("movestart zoomstart dragstart", closeTooltipOnMapMove);
+      map.on("click movestart zoomstart dragstart", closeTooltipOnMapMove);
+      mapContainer.addEventListener("mouseleave", closeTooltipOnMapMove);
+      document.addEventListener("visibilitychange", closeTooltipOnVisibilityChange);
+      window.addEventListener("pagehide", closeTooltipOnWindowBlur);
+      window.addEventListener("pointercancel", closeTooltipOnWindowBlur);
+      window.addEventListener("blur", closeTooltipOnWindowBlur);
 
       return () => {
-         map.off("movestart zoomstart dragstart", closeTooltipOnMapMove);
+         map.off("click movestart zoomstart dragstart", closeTooltipOnMapMove);
+         mapContainer.removeEventListener("mouseleave", closeTooltipOnMapMove);
+         document.removeEventListener("visibilitychange", closeTooltipOnVisibilityChange);
+         window.removeEventListener("pagehide", closeTooltipOnWindowBlur);
+         window.removeEventListener("pointercancel", closeTooltipOnWindowBlur);
+         window.removeEventListener("blur", closeTooltipOnWindowBlur);
       };
-   }, [closeOpenTooltip, isContextPresentation, map, refreshPipelineStyles]);
+   }, [closeAllTooltips, isContextPresentation, map, refreshPipelineStyles]);
 
    useEffect(() => {
       if (previousPipelinesRef.current !== pipelines) {
-         closeOpenTooltip();
+         closeAllTooltips();
          hoveredPipelineIdRef.current = null;
          setHoveredPipelineId(null);
          previousPipelinesRef.current = pipelines;
@@ -206,16 +255,9 @@ export default function PipelineLayer({
       selectedPipelineIdRef.current = selectedPipelineId;
 
       refreshPipelineStyles(selectedPipelineId, hoveredPipelineIdRef.current);
-   }, [closeOpenTooltip, pipelineStyleOptions, pipelines, refreshPipelineStyles, selectedPipelineId]);
+   }, [closeAllTooltips, pipelineStyleOptions, pipelines, refreshPipelineStyles, selectedPipelineId]);
 
    const bindPipeline = (feature, layer) => {
-      if (isContextPresentation) {
-         layer.on({
-            add: () => makeLayerInert(layer)
-         });
-         return;
-      }
-
       layer.bindTooltip(createTooltip(feature), MAP_TOOLTIP_OPTIONS);
 
       const pipelineId = feature.properties.id;
@@ -232,21 +274,15 @@ export default function PipelineLayer({
          openTooltipLayerRef.current = event.target;
          hoveredPipelineIdRef.current = pipelineId;
          setHoveredPipelineId(pipelineId);
-         event.target.setStyle(getCurrentPipelineStyle(feature, selectedPipelineIdRef.current, pipelineId));
-         bringToFront(event.target);
+         refreshPipelineStyles(selectedPipelineIdRef.current, pipelineId);
       };
 
       const hidePipelineTooltip = event => {
          hoveredPipelineIdRef.current = null;
          setHoveredPipelineId(null);
          clearLayerTooltip(event.target);
-         event.target.setStyle(getCurrentPipelineStyle(feature, selectedPipelineIdRef.current));
-
-         if (pipelineId === selectedPipelineIdRef.current) {
-            bringToFront(event.target);
-         } else {
-            bringSelectedPipelineToFront();
-         }
+         refreshPipelineStyles(selectedPipelineIdRef.current);
+         bringSelectedPipelineToFront();
       };
 
       layer.on({
@@ -275,8 +311,8 @@ export default function PipelineLayer({
                key={`pipelines-other:${pipelineDataKey}`}
                ref={otherGeoJsonRef}
                data={otherPipelineData}
-               onEachFeature={bindPipeline}
-               interactive={!isContextPresentation}
+               onEachFeature={bindInertLayer}
+               interactive={false}
                style={getBasePipelineStyle}
             />
          </Pane>
@@ -285,11 +321,23 @@ export default function PipelineLayer({
                key={`pipelines-oge:${pipelineDataKey}`}
                ref={ogeGeoJsonRef}
                data={ogePipelineData}
-               onEachFeature={bindPipeline}
-               interactive={!isContextPresentation}
+               onEachFeature={bindInertLayer}
+               interactive={false}
                style={getBasePipelineStyle}
             />
          </Pane>
+         {!isContextPresentation ? (
+            <Pane name="pipeline-hitbox" style={{ zIndex: 450 }}>
+               <GeoJSON
+                  key={`pipeline-hitbox:${pipelineDataKey}`}
+                  ref={hitboxGeoJsonRef}
+                  data={hitboxPipelineData}
+                  interactive
+                  onEachFeature={bindPipeline}
+                  style={HITBOX_STYLE}
+               />
+            </Pane>
+         ) : null}
          {/* Leaflet can only reorder paths within one pane, so active paths get a small top overlay. */}
          {activePipelineData ? (
             <Pane name="pipeline-active-overlay" style={{ zIndex: 440 }}>
