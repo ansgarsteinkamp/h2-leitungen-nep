@@ -9,5 +9,4 @@ dist/
 
 *.local
 
-quelldaten.geojson
-quelldaten_v2.geojson
+quelldaten*.geojson

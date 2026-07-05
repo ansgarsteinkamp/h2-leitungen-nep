@@ -1,8 +1,8 @@
 # Fachwissen zu NEP-Gas/Wasserstoff-Filtern
 
-Stand dieser internen Arbeitsnotiz: 2026-07-03. Review erforderlich nach 2026-07-10, weil sich der laufende BNetzA-Prozess danach ändern kann.
+Stand dieser Arbeitsnotiz: 2026-07-05. Review erforderlich nach 2026-07-10, weil sich der laufende BNetzA-Prozess danach ändern kann.
 
-Diese Notiz hält das fachliche Verständnis hinter den Filterbegriffen der Anwendung fest. Sie ist als Arbeitsgedächtnis für weitere UI- und Logikentscheidungen gedacht. Der überarbeitete Entwurf des Netzentwicklungsplans Gas und Wasserstoff 2025 wurde am 2026-06-01 der Bundesnetzagentur zur Bestätigung vorgelegt. Die BNetzA konsultiert den überarbeiteten Entwurf bis zum 2026-07-10; am 2026-07-03 ist der NEP daher noch nicht final bestätigt. Formulierungen in der App sollten deshalb nicht suggerieren, dass jede Maßnahme bereits endgültig genehmigt oder zur Umsetzung verpflichtet ist.
+Diese Notiz hält das fachliche Verständnis hinter den Filterbegriffen der Anwendung fest. Sie ist als Arbeitsgedächtnis für weitere UI- und Logikentscheidungen gedacht. Der überarbeitete Entwurf des Netzentwicklungsplans Gas und Wasserstoff 2025 wurde am 2026-06-01 der Bundesnetzagentur zur Bestätigung vorgelegt. Die BNetzA konsultiert den überarbeiteten Entwurf bis zum 2026-07-10; während der laufenden Konsultation ist der NEP daher noch nicht final bestätigt. Formulierungen in der App sollten deshalb nicht suggerieren, dass jede Maßnahme bereits endgültig genehmigt oder zur Umsetzung verpflichtet ist.
 
 ## Prozesskette
 
@@ -201,26 +201,7 @@ Die GeoJSON-Daten werden beim Upload normalisiert. Relevante Marker:
 - `ogeBeteiligung`: wird beim Import aus `durchfuehrendeNetzbetreiber` und `ansprechpartner` abgeleitet.
 - `ogeIstDurchfuehrenderNetzbetreiber`: wird beim Import nur aus `durchfuehrendeNetzbetreiber` abgeleitet.
 
-Realdatencheck mit `quelldaten_v2.geojson` am 2026-07-03:
-
-- 331 Leitungsfeatures.
-- Leitungstypen: Neubau, Umstellung.
-- Inbetriebnahmejahre: 2025 bis 2036, keine fehlenden Jahre.
-- Startnetz: 90 Features.
-- Mit Kernnetz-ID: 265 Features.
-- Ohne Kernnetz-ID: 66 Features.
-- Standardansicht (`startnetz || netzausbauvorschlag`): 289 Features.
-- Standardansicht mit Kernnetz-ID: 261 Features.
-- Standardansicht ohne Kernnetz-ID: 28 Features.
-- Startnetz und Szenario 1 (2037): 326 Features.
-- Startnetz und Szenario 2 (2037): 308 Features.
-- Startnetz und Szenario 3 (2037): 226 Features.
-- Alle Maßnahmen im Datensatz: 331 Features.
-- Nur in Modellierungsergebnissen 2037 bei Szenario 1: 42 Features.
-- OGE-Bezug: 71 Features.
-- OGE als durchführender Netzbetreiber nach Ableitung: 32 Features.
-
-Die lokale GeoJSON ist nicht geeignet, die gesamten 20,3 Mrd. Euro des Wasserstoff-Netzausbauvorschlags direkt nachzurechnen, weil die offiziellen Gesamtinvestitionen auch Verdichterpositionen enthalten. Eine interne Datenauswertung ergab für `netzausbauvorschlag` in der lokalen GeoJSON 199 Leitungsfeatures, ca. 7.010,2 km und ca. 18.248,3 Mio. Euro. Das liegt nahe an der Tabellenposition "Leitungen inkl. GDRM-Anlagen" von ca. 18,3 Mrd. Euro, aber unter der Gesamtinvestition von ca. 20,3 Mrd. Euro inklusive ca. 2,0 Mrd. Euro Verdichterstationen. Die Szenario-Längensummen der lokalen GeoJSON passen dagegen sehr eng zu den NEP-Tabellen: Szenario 1 ca. 10.429,6 km, Szenario 2 ca. 10.198,6 km, Szenario 3 ca. 7.432,8 km.
+Realdatenchecks mit der lokalen Quelldatei (Feature-Zählungen und Summen je Filterzustand) werden bewusst nicht in diesem öffentlichen Repository festgehalten; die Quelldatei selbst ist nicht Teil des Repos. Methodischer Merkposten ohne Zahlen: Die aus einer Leitungs-GeoJSON summierten Investitionen sind nicht direkt mit den offiziellen Gesamtinvestitionen des NEP vergleichbar, weil die offiziellen Gesamtwerte auch Verdichterpositionen enthalten; Längensummen je Szenario eignen sich dagegen gut zum Plausibilisieren gegen die öffentlichen NEP-Tabellen.
 
 ## Datenvertrag v3 und Filtersemantik auf Maßnahmen-Ebene
 
@@ -230,9 +211,9 @@ Zentrale Semantikentscheidung (2026-07-05): Filter werden strikt auf Maßnahmen-
 
 Weitere Regeln:
 
-- `officialIds` trägt die offiziellen NEP-Maßnahmen-IDs; die technische `id` eines Standort-Parents kann synthetisch sein (z. B. `verdichterstandort:achim`). Suche und Anzeige berücksichtigen `officialIds`, `massnahmen[].id` und `kernnetzAntragsIds` (`ids` spiegelt `officialIds` und wird nicht separat durchsucht).
-- Die Kennzahlen werden auf Maßnahmen-Ebene summiert: "Maßnahmen" zählt offizielle Maßnahmen (v3 ungefiltert: 434), nicht Top-Level-Features (418). Bei aktiven Filtern fließen nur die Einzelmaßnahmen ein, die alle Kriterien erfüllen — ein Verdichterstandort, der nur wegen einer passenden Maßnahme sichtbar bleibt, zählt nicht mit seinem vollen Bündel (Entscheidung 2026-07-05).
-- Die Kennzahl "Länge" summiert nur Leitungsmaßnahmen; Kosten werden aus den Einzelmaßnahmen summiert. Datencheck 2026-07-05: Die Parent-Aggregate (`kostenMioEur`, `verdichterleistungMw`) entsprechen bei allen 19 Verdichterstandorten exakt den Kindersummen.
+- `officialIds` trägt die offiziellen NEP-Maßnahmen-IDs; die technische `id` eines Standort-Parents kann synthetisch sein (z. B. `verdichterstandort:beispielort`). Suche und Anzeige berücksichtigen `officialIds`, `massnahmen[].id` und `kernnetzAntragsIds` (`ids` spiegelt `officialIds` und wird nicht separat durchsucht).
+- Die Kennzahlen werden auf Maßnahmen-Ebene summiert: "Maßnahmen" zählt offizielle Einzelmaßnahmen, nicht Top-Level-Features. Bei aktiven Filtern fließen nur die Einzelmaßnahmen ein, die alle Kriterien erfüllen — ein Verdichterstandort, der nur wegen einer passenden Maßnahme sichtbar bleibt, zählt nicht mit seinem vollen Bündel (Entscheidung 2026-07-05).
+- Die Kennzahl "Länge" summiert nur Leitungsmaßnahmen; Kosten werden aus den Einzelmaßnahmen summiert. Die Parent-Aggregate (`kostenMioEur`, `verdichterleistungMw`) sind laut Datenvertrag redundante Summen der Einzelmaßnahmen und fließen nicht separat in die Kennzahlen ein.
 - Der Filter "Maßnahmenart" fasst `verdichterstandort` und `verdichter_aggregat` als "Verdichter" zusammen und wird nur angezeigt, wenn der Datensatz mehr als eine Maßnahmenart enthält.
 - Der frühere "Leitungstyp"-Filter heißt "Umstellung oder Neubau" und wertet `umstellungOderNeubau` mit Fallback auf `leitungstyp` aus.
 - `finalInvestmentDecision` ist in v3 nicht mehr enthalten und wird nicht mehr angezeigt.
@@ -259,7 +240,7 @@ Aktuell umgesetzt:
 - Der Tooltip zum Inbetriebnahmejahr erklärt, dass das Jahr ein planerischer Wert aus den Maßnahmendaten ist.
 - "OGE-Bezug" bleibt unverändert.
 - Die Hervorhebung "OGE durchführender FNB" ist bewusst als Darstellung und nicht als Filter erklärt; "Nur OGE-Bezug" bleibt dagegen der breitere Filter über Ansprechpartner oder durchführende Netzbetreiber.
-- Die Hervorhebung wirkt auf alles, was auf der Karte liegt: Leitungen und Verdichterstandorte. Dass sie bei Verdichterstandorten nie sichtbar wird, liegt an den Daten des NEP 2025 (nur 4 von 19 Standorten haben überhaupt einen durchführenden FNB, keiner davon OGE); GDRM-Anlagen haben keine Geometrie und erscheinen gar nicht auf der Karte (Datencheck 2026-07-05).
+- Die Hervorhebung wirkt auf alles, was auf der Karte liegt: Leitungen und Verdichterstandorte. Ob sie bei Verdichterstandorten sichtbar wird, hängt allein vom Datenstand ab, nicht von der Logik; GDRM-Anlagen haben keine Geometrie und erscheinen gar nicht auf der Karte.
 - Orte-Punkte ohne sichtbares Label sind nur für den Hover-Tooltip interaktiv; sie zeigen den Karten-Cursor statt eines Zeigers, und die Marker werden bei Wechsel des Tooltip-Zustands neu aufgebaut, weil Leaflet sonst verwaiste Tooltip-Fokus-Listener zurücklässt (TypeError bei Klick; Fix 2026-07-05).
 - Der Filter "Maßnahmenart" nutzt die Reihenfolge Alle, Leitungen, Verdichter, GDRM, Sonstige mit den bewusst kurzen Chip-Labels "GDRM" und "Sonstige"; der Tooltip erklärt die Langform "GDRM-Anlagen (Gasdruckregel- und Messanlagen)" (Entscheidung 2026-07-05).
 - Der Button "Filter und Karte zurücksetzen" sitzt als Primary-Icon-Button mit Tooltip rechts neben der Kennzahlen-Card — außerhalb der Card, weil er auf Filter und Karte wirkt und nicht Teil der Kennzahlen ist (Entscheidung 2026-07-05).
