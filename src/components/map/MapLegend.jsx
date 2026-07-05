@@ -97,7 +97,7 @@ export default function MapLegend({ showCompressorSites = false, showOgeExecutin
                ? participationEntries.map(participation => (
                     <li key={`site:${participation.key}`} className="inline-flex items-center gap-2">
                        <SiteLegendSymbol color={PIPELINE_SYMBOL_COLORS[participation.key]} />
-                       {`${participation.label} Verdichterstandort`}
+                       {`${participation.label} Verdichter`}
                     </li>
                  ))
                : null}
