@@ -342,6 +342,148 @@ describe("parsePipelineGeoJson", () => {
       ).toThrow(/mindestens zwei/);
    });
 
+   it("accepts v3 features with point geometry, null geometry and nested measures", () => {
+      const parsed = parsePipelineGeoJson(
+         collection([
+            feature(),
+            {
+               type: "Feature",
+               geometry: null,
+               properties: {
+                  id: "H2-500-01",
+                  name: "GDRM-Anlage Test",
+                  featureTyp: "gdrm_anlage",
+                  startnetz: false,
+                  netzausbauvorschlag: true,
+                  ibnJahr: 2032,
+                  anlagenleistungM3h: "500000"
+               }
+            },
+            {
+               type: "Feature",
+               geometry: { type: "Point", coordinates: [9.05814, 53.02735] },
+               properties: {
+                  id: "verdichterstandort:test",
+                  name: "Verdichterstation Test",
+                  featureTyp: "verdichterstandort",
+                  geometrieStatus: "vorhanden",
+                  startnetz: false,
+                  netzausbauvorschlag: true,
+                  officialIds: ["H2-2003-01", "H2-2103-01"],
+                  ids: ["H2-2003-01", "H2-2103-01"],
+                  massnahmen: [
+                     {
+                        id: "H2-2003-01",
+                        name: "Verdichterstation Test",
+                        startnetz: false,
+                        netzausbauvorschlag: true,
+                        ibnJahr: 2032,
+                        durchfuehrendeNetzbetreiber: ["Open Grid Europe GmbH"]
+                     },
+                     {
+                        id: "H2-2103-01",
+                        name: "Verdichterstation Test",
+                        startnetz: false,
+                        netzausbauvorschlag: false,
+                        szenario1: true,
+                        ibnJahr: 2034,
+                        durchfuehrendeNetzbetreiber: ["Nowega GmbH"]
+                     }
+                  ]
+               }
+            }
+         ])
+      );
+
+      const gdrm = parsed.features[1];
+      expect(gdrm.geometry).toBeNull();
+      expect(gdrm.properties.geometrieStatus).toBe("fehlt");
+      expect(gdrm.properties.featureTyp).toBe("gdrm_anlage");
+      expect(gdrm.properties.anlagenleistungM3h).toBe(500000);
+
+      const site = parsed.features[2];
+      expect(site.geometry.coordinates).toEqual([9.05814, 53.02735]);
+      expect(site.properties.massnahmen).toHaveLength(2);
+      expect(site.properties.massnahmen[0].featureTyp).toBe("verdichter_massnahme");
+      expect(site.properties.massnahmen[0].ogeIstDurchfuehrenderNetzbetreiber).toBe(true);
+      expect(site.properties.massnahmen[1].standardAnzeige).toBe(false);
+      expect(site.properties.standardAnzeige).toBe(true);
+   });
+
+   it("defaults missing featureTyp to leitung and rejects unknown feature types", () => {
+      const parsed = parsePipelineGeoJson(collection([feature()]));
+
+      expect(parsed.features[0].properties.featureTyp).toBe("leitung");
+
+      expect(() =>
+         parsePipelineGeoJson(collection([feature({ properties: { ...baseProperties, featureTyp: "raffinerie" } })]))
+      ).toThrow(/featureTyp/);
+   });
+
+   it("rejects point geometries on pipelines and line geometries on other feature types", () => {
+      expect(() =>
+         parsePipelineGeoJson(collection([feature({ geometry: { type: "Point", coordinates: [7.1, 51.2] } })]))
+      ).toThrow(/Punktgeometrie/);
+
+      expect(() =>
+         parsePipelineGeoJson(collection([feature({ properties: { ...baseProperties, featureTyp: "gdrm_anlage" } })]))
+      ).toThrow(/Liniengeometrie/);
+   });
+
+   it("rejects point geometries on feature types other than compressor sites", () => {
+      expect(() =>
+         parsePipelineGeoJson(
+            collection([
+               feature({
+                  geometry: { type: "Point", coordinates: [7.1, 51.2] },
+                  properties: { ...baseProperties, featureTyp: "gdrm_anlage", geometrieStatus: "vorhanden" }
+               })
+            ])
+         )
+      ).toThrow(/Nur Verdichterstandorte/);
+   });
+
+   it("rejects a geometrieStatus that contradicts the actual geometry", () => {
+      expect(() =>
+         parsePipelineGeoJson(collection([feature({ properties: { ...baseProperties, geometrieStatus: "fehlt" } })]))
+      ).toThrow(/geometrieStatus/);
+
+      expect(() =>
+         parsePipelineGeoJson(
+            collection([
+               {
+                  type: "Feature",
+                  geometry: null,
+                  properties: {
+                     ...baseProperties,
+                     featureTyp: "sonstiges",
+                     geometrieStatus: "vorhanden"
+                  }
+               }
+            ])
+         )
+      ).toThrow(/geometrieStatus/);
+   });
+
+   it("requires leitungstyp only for pipeline features", () => {
+      const properties = { ...baseProperties };
+      delete properties.leitungstyp;
+
+      expect(() => parsePipelineGeoJson(collection([feature({ properties })]))).toThrow(/leitungstyp/);
+
+      const parsed = parsePipelineGeoJson(
+         collection([
+            {
+               type: "Feature",
+               geometry: null,
+               properties: { ...properties, featureTyp: "sonstiges" }
+            }
+         ])
+      );
+
+      expect(parsed.features[0].properties.featureTyp).toBe("sonstiges");
+   });
+
    it("rejects blank names and non-integer commissioning years", () => {
       expect(() =>
          parsePipelineGeoJson(

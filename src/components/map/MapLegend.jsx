@@ -37,7 +37,19 @@ function HighlightLegendSymbol() {
    );
 }
 
-export default function MapLegend({ showOgeExecutingOperatorHighlight = false, onHide }) {
+function SiteLegendSymbol({ color }) {
+   return (
+      <span className="inline-flex w-5 justify-center">
+         <span
+            aria-hidden="true"
+            className="size-3 rounded-full border border-[var(--map-place-marker-stroke)]"
+            style={{ backgroundColor: color, opacity: LEGEND_SYMBOL_OPACITY }}
+         />
+      </span>
+   );
+}
+
+export default function MapLegend({ showCompressorSites = false, showOgeExecutingOperatorHighlight = false, onHide }) {
    return (
       <aside
          aria-label="Kartenlegende"
@@ -68,6 +80,14 @@ export default function MapLegend({ showOgeExecutingOperatorHighlight = false, o
                   {entry.label}
                </li>
             ))}
+            {showCompressorSites
+               ? participationEntries.map(participation => (
+                    <li key={`site:${participation.key}`} className="inline-flex items-center gap-2">
+                       <SiteLegendSymbol color={PIPELINE_SYMBOL_COLORS[participation.key]} />
+                       {`${participation.label} Verdichterstandort`}
+                    </li>
+                 ))
+               : null}
             {showOgeExecutingOperatorHighlight ? (
                <li className="mt-1 inline-flex items-center gap-2 border-t border-border/60 pt-1.5">
                   <HighlightLegendSymbol />

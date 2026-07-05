@@ -7,7 +7,7 @@ import { MAP_EXPORT_EXCLUDE_PROPS } from "@/components/map/mapExport";
 import { cn } from "@/lib/utils";
 
 const MAP_CONTENT_OPTIONS = [
-   { icon: Route, label: "Leitungen", value: "pipelines" },
+   { icon: Route, label: "Maßnahmen", value: "pipelines" },
    { icon: MapPin, label: "Orte", value: "places" }
 ];
 

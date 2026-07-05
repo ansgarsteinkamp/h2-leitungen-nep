@@ -157,6 +157,10 @@ export default function PlaceLayer({ places }) {
          <Pane name="place-markers" style={{ zIndex: 470 }}>
             {places.map(place => {
                const showTooltip = !labeledPlaceIds.has(place.id);
+               // Der Key enthält den Tooltip-Zustand: Wechselt er beim Zoomen, wird der Marker neu
+               // aufgebaut. Leaflet entfernt sonst weder die Tooltip-Fokus-Listener noch passt
+               // react-leaflet `interactive` an bestehenden Layern an (TypeError bei Klick).
+               const markerKey = `${place.id}:${showTooltip ? "tooltip" : "label"}`;
 
                if (isStoragePlace(place)) {
                   return (
@@ -164,7 +168,7 @@ export default function PlaceLayer({ places }) {
                         icon={STORAGE_MARKER_ICON}
                         interactive={showTooltip}
                         keyboard={false}
-                        key={place.id}
+                        key={markerKey}
                         position={[place.latitude, place.longitude]}
                      >
                         {showTooltip ? <PlaceTooltip place={place} /> : null}
@@ -176,7 +180,7 @@ export default function PlaceLayer({ places }) {
                   <CircleMarker
                      center={[place.latitude, place.longitude]}
                      interactive={showTooltip}
-                     key={place.id}
+                     key={markerKey}
                      pathOptions={getPlaceMarkerStyle(place)}
                      radius={getPlaceMarkerRadius(place, !showTooltip)}
                   >

@@ -1,3 +1,5 @@
+import { getOfficialIds } from "@/lib/domain/pipeline";
+
 const NUMBER_FORMAT = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 1 });
 const INTEGER_FORMAT = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 0 });
 const COST_FORMAT = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 1 });
@@ -33,9 +35,20 @@ export const cleanText = value => {
    return String(value);
 };
 
-export const pipelineTitle = feature => feature.properties.name || feature.properties.id || "H₂-Leitung";
+export const pipelineTitle = feature => feature.properties.name || feature.properties.id || "H₂-Maßnahme";
+
+const commissioningYearsLabel = props => {
+   if (props.ibnJahr) return `IBN ${props.ibnJahr}`;
+   if (Array.isArray(props.ibnJahre) && props.ibnJahre.length > 0) return `IBN ${props.ibnJahre.join("/")}`;
+   return null;
+};
 
 export const pipelineMeta = feature => {
    const props = feature.properties;
-   return [props.id, props.leitungstyp, props.ibnJahr ? `IBN ${props.ibnJahr}` : null].filter(Boolean).join(" · ");
+   // Offizielle Maßnahmen-IDs haben Vorrang vor der technischen Feature-ID; bei
+   // Verdichterstandorten ist props.id ein synthetischer Wert wie "verdichterstandort:…".
+   const idLabel = getOfficialIds(feature).join(", ") || props.id;
+   return [idLabel, props.massnahmenart ?? props.leitungstyp, commissioningYearsLabel(props)]
+      .filter(Boolean)
+      .join(" · ");
 };

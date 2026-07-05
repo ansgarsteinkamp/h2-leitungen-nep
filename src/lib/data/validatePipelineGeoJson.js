@@ -1,7 +1,17 @@
 import { normalizeOperatorName } from "@/lib/domain/operators";
-import { hasOgeExecutingOperator, hasOgeParticipation, isStandardFeature, splitListValue } from "@/lib/domain/pipeline";
+import {
+   FEATURE_TYPES,
+   FEATURE_TYPE_LEITUNG,
+   FEATURE_TYPE_VERDICHTERSTANDORT,
+   FEATURE_TYPE_VERDICHTER_MASSNAHME,
+   getFeatureTyp,
+   hasOgeExecutingOperator,
+   hasOgeParticipation,
+   isStandardFeature,
+   splitListValue
+} from "@/lib/domain/pipeline";
 
-const REQUIRED_PROPERTIES = ["id", "name", "leitungstyp", "startnetz", "netzausbauvorschlag", "ibnJahr"];
+const REQUIRED_PROPERTIES = ["id", "name", "startnetz", "netzausbauvorschlag"];
 
 const ARRAY_PROPERTIES = ["bundeslaender", "durchfuehrendeNetzbetreiber", "ansprechpartner"];
 
@@ -20,10 +30,27 @@ const BOOLEAN_PROPERTIES = [
 const REQUIRED_BOOLEAN_PROPERTIES = ["startnetz", "netzausbauvorschlag"];
 const MARKER_BOOLEAN_PROPERTIES = ["szenario1", "szenario2", "szenario3"];
 
-const NUMBER_PROPERTIES = ["ibnJahr", "laengeKm", "dnMm", "dpBar", "kostenMioEur"];
+const NUMBER_PROPERTIES = [
+   "ibnJahr",
+   "laengeKm",
+   "dnMm",
+   "dpBar",
+   "kostenMioEur",
+   "verdichterleistungMw",
+   "anlagenleistungM3h"
+];
 const OPERATOR_LIST_PROPERTIES = ["durchfuehrendeNetzbetreiber", "ansprechpartner"];
+const ID_LIST_PROPERTIES = ["officialIds", "ids", "kernnetzAntragsIds"];
+const DATE_PROPERTIES = ["inbetriebnahmeBis", "inbetriebnahmeNachKernnetzgenehmigung"];
+const DATE_LIST_PROPERTIES = ["inbetriebnahmeBisWerte", "inbetriebnahmeNachKernnetzgenehmigungWerte"];
 
-const stripBom = text => text.replace(/^\uFEFF/, "");
+const KNOWN_FEATURE_TYPES = new Set(FEATURE_TYPES);
+const GEOMETRIE_STATUS_VALUES = new Set(["vorhanden", "fehlt", "aggregiert"]);
+const LINE_GEOMETRY_TYPES = new Set(["LineString", "MultiLineString"]);
+
+const BOM = String.fromCharCode(0xfeff);
+
+const stripBom = text => (text.startsWith(BOM) ? text.slice(1) : text);
 
 const isBlank = value => value === null || value === undefined || String(value).trim() === "";
 
@@ -34,6 +61,11 @@ const toArray = value => {
    if (isBlank(value)) return [];
 
    return splitListValue(value);
+};
+
+const toIdArray = value => {
+   const items = Array.isArray(value) ? value : isBlank(value) ? [] : [value];
+   return items.map(item => String(item ?? "").trim()).filter(item => item !== "");
 };
 
 const toBoolean = (value, { allowMarkers = false } = {}) => {
@@ -81,28 +113,57 @@ const isPosition = value =>
 
 const normalizePosition = ([lon, lat]) => [toCoordinate(lon), toCoordinate(lat)];
 
-function validatePosition(position, featureIndex, path) {
+function validatePosition(position, label, path) {
    if (!isPosition(position)) {
-      throw new Error(`Feature ${featureIndex + 1}: Koordinate ${path} muss Länge und Breite als Zahlen enthalten.`);
+      throw new Error(`${label}: Koordinate ${path} muss Länge und Breite als Zahlen enthalten.`);
    }
 
    const [lon, lat] = normalizePosition(position);
    if (lon < -180 || lon > 180 || lat < -90 || lat > 90) {
-      throw new Error(`Feature ${featureIndex + 1}: Koordinate ${path} liegt außerhalb gültiger Längen-/Breitengrade.`);
+      throw new Error(`${label}: Koordinate ${path} liegt außerhalb gültiger Längen-/Breitengrade.`);
    }
 }
 
-function normalizeGeometry(geometry, featureIndex) {
-   if (!geometry || typeof geometry !== "object") {
-      throw new Error(`Feature ${featureIndex + 1} enthält keine gültige Geometrie.`);
+function normalizeGeometry(geometry, featureTyp, label) {
+   if (geometry === null || geometry === undefined) return null;
+
+   if (typeof geometry !== "object") {
+      throw new Error(`${label} enthält keine gültige Geometrie.`);
+   }
+
+   if (geometry.type === "Point") {
+      if (featureTyp === FEATURE_TYPE_LEITUNG) {
+         throw new Error(
+            `${label}: Leitungen benötigen eine LineString- oder MultiLineString-Geometrie, keine Punktgeometrie.`
+         );
+      }
+
+      // Laut v3-Vertrag sind Punktgeometrien für Verdichterstandorte vorgesehen; GDRM-Anlagen,
+      // Aggregate und Sonstiges haben geometry: null. Die Karte rendert Points als Verdichter.
+      if (featureTyp !== FEATURE_TYPE_VERDICHTERSTANDORT) {
+         throw new Error(
+            `${label}: Nur Verdichterstandorte dürfen eine Punktgeometrie haben (featureTyp "${featureTyp}").`
+         );
+      }
+
+      validatePosition(geometry.coordinates, label, "des Punkts");
+
+      return {
+         ...geometry,
+         coordinates: normalizePosition(geometry.coordinates)
+      };
+   }
+
+   if (LINE_GEOMETRY_TYPES.has(geometry.type) && featureTyp !== FEATURE_TYPE_LEITUNG) {
+      throw new Error(`${label}: Nur Leitungen dürfen eine Liniengeometrie haben (featureTyp "${featureTyp}").`);
    }
 
    if (geometry.type === "LineString" && Array.isArray(geometry.coordinates)) {
       if (geometry.coordinates.length < 2) {
-         throw new Error(`Feature ${featureIndex + 1}: LineString muss mindestens zwei Koordinaten enthalten.`);
+         throw new Error(`${label}: LineString muss mindestens zwei Koordinaten enthalten.`);
       }
 
-      geometry.coordinates.forEach((position, index) => validatePosition(position, featureIndex, `[${index}]`));
+      geometry.coordinates.forEach((position, index) => validatePosition(position, label, `[${index}]`));
 
       return {
          ...geometry,
@@ -112,18 +173,18 @@ function normalizeGeometry(geometry, featureIndex) {
 
    if (geometry.type === "MultiLineString" && Array.isArray(geometry.coordinates)) {
       if (geometry.coordinates.length === 0) {
-         throw new Error(`Feature ${featureIndex + 1}: MultiLineString muss mindestens eine Linie enthalten.`);
+         throw new Error(`${label}: MultiLineString muss mindestens eine Linie enthalten.`);
       }
 
       geometry.coordinates.forEach((line, lineIndex) => {
          if (!Array.isArray(line) || line.length < 2) {
             throw new Error(
-               `Feature ${featureIndex + 1}: MultiLineString-Linie ${lineIndex + 1} muss mindestens zwei Koordinaten enthalten.`
+               `${label}: MultiLineString-Linie ${lineIndex + 1} muss mindestens zwei Koordinaten enthalten.`
             );
          }
 
          line.forEach((position, positionIndex) =>
-            validatePosition(position, featureIndex, `[${lineIndex}][${positionIndex}]`)
+            validatePosition(position, label, `[${lineIndex}][${positionIndex}]`)
          );
       });
 
@@ -134,17 +195,17 @@ function normalizeGeometry(geometry, featureIndex) {
    }
 
    throw new Error(
-      `Feature ${featureIndex + 1} muss eine gültige LineString- oder MultiLineString-Geometrie enthalten.`
+      `${label} muss eine gültige LineString-, MultiLineString- oder Punktgeometrie enthalten oder geometry: null setzen.`
    );
 }
 
-function getIsoDateYear(value, featureIndex, key) {
+function getIsoDateYear(value, label, key) {
    if (isBlank(value)) return null;
 
    const raw = String(value).trim();
    const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
    if (!match) {
-      throw new Error(`Feature ${featureIndex + 1}: ${key} muss ein gültiges Datum im Format JJJJ-MM-TT sein.`);
+      throw new Error(`${label}: ${key} muss ein gültiges Datum im Format JJJJ-MM-TT sein.`);
    }
 
    const [, yearText, monthText, dayText] = match;
@@ -155,20 +216,29 @@ function getIsoDateYear(value, featureIndex, key) {
    const valid = date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 
    if (!valid) {
-      throw new Error(`Feature ${featureIndex + 1}: ${key} muss ein gültiges Datum im Format JJJJ-MM-TT sein.`);
+      throw new Error(`${label}: ${key} muss ein gültiges Datum im Format JJJJ-MM-TT sein.`);
    }
 
    return year;
 }
 
-function normalizeProperties(properties, featureIndex) {
+function normalizeFeatureTyp(properties, label) {
+   const featureTyp = getFeatureTyp(properties);
+   if (!KNOWN_FEATURE_TYPES.has(featureTyp)) {
+      throw new Error(`${label}: Unbekannter featureTyp "${featureTyp}".`);
+   }
+
+   return featureTyp;
+}
+
+function normalizeMeasureProperties(properties, label) {
    if (!properties || typeof properties !== "object") {
-      throw new Error(`Feature ${featureIndex + 1} enthält keine Eigenschaften.`);
+      throw new Error(`${label} enthält keine Eigenschaften.`);
    }
 
    const missing = REQUIRED_PROPERTIES.filter(key => !(key in properties));
    if (missing.length > 0) {
-      throw new Error(`Feature ${featureIndex + 1}: Es fehlen erwartete Felder: ${missing.join(", ")}.`);
+      throw new Error(`${label}: Es fehlen erwartete Felder: ${missing.join(", ")}.`);
    }
 
    const normalized = { ...properties };
@@ -188,7 +258,7 @@ function normalizeProperties(properties, featureIndex) {
                return;
             }
 
-            throw new Error(`Feature ${featureIndex + 1}: ${key} muss ein gültiger Ja/Nein-Wert sein.`);
+            throw new Error(`${label}: ${key} muss ein gültiger Ja/Nein-Wert sein.`);
          }
       }
    });
@@ -199,22 +269,91 @@ function normalizeProperties(properties, featureIndex) {
 
    normalized.id = String(normalized.id ?? "").trim();
    if (!normalized.id) {
-      throw new Error(`Feature ${featureIndex + 1}: Die ID darf nicht leer sein.`);
+      throw new Error(`${label}: Die ID darf nicht leer sein.`);
    }
    if (isBlank(normalized.name)) {
-      throw new Error(`Feature ${featureIndex + 1}: Der Name darf nicht leer sein.`);
+      throw new Error(`${label}: Der Name darf nicht leer sein.`);
    }
    if (!isBlank(rawIbnJahr) && normalized.ibnJahr === null) {
-      throw new Error(`Feature ${featureIndex + 1}: ibnJahr muss ein gültiges Jahr sein.`);
+      throw new Error(`${label}: ibnJahr muss ein gültiges Jahr sein.`);
    }
-   if (normalized.ibnJahr !== null && !Number.isInteger(normalized.ibnJahr)) {
-      throw new Error(`Feature ${featureIndex + 1}: ibnJahr muss ein ganzzahliges Jahr sein.`);
+   if (normalized.ibnJahr !== null && normalized.ibnJahr !== undefined && !Number.isInteger(normalized.ibnJahr)) {
+      throw new Error(`${label}: ibnJahr muss ein ganzzahliges Jahr sein.`);
    }
-   getIsoDateYear(normalized.inbetriebnahmeBis, featureIndex, "inbetriebnahmeBis");
+   DATE_PROPERTIES.forEach(key => getIsoDateYear(normalized[key], label, key));
 
    normalized.standardAnzeige = isStandardFeature(normalized);
    normalized.ogeBeteiligung = hasOgeParticipation(normalized);
    normalized.ogeIstDurchfuehrenderNetzbetreiber = hasOgeExecutingOperator(normalized);
+
+   return normalized;
+}
+
+function normalizeNestedMeasures(measures, label) {
+   if (measures === null || measures === undefined) return [];
+   if (!Array.isArray(measures)) {
+      throw new Error(`${label}: massnahmen muss eine Liste von Einzelmaßnahmen sein.`);
+   }
+
+   return measures.map((measure, index) => {
+      const measureLabel = `${label}, Maßnahme ${index + 1}`;
+      const normalized = normalizeMeasureProperties(measure, measureLabel);
+      normalized.featureTyp = FEATURE_TYPE_VERDICHTER_MASSNAHME;
+      return normalized;
+   });
+}
+
+function normalizeGeometrieStatus(properties, geometry, label) {
+   const rawStatus = String(properties.geometrieStatus ?? "").trim();
+   if (!rawStatus) return geometry ? "vorhanden" : "fehlt";
+
+   if (!GEOMETRIE_STATUS_VALUES.has(rawStatus)) {
+      throw new Error(`${label}: geometrieStatus muss "vorhanden", "fehlt" oder "aggregiert" sein.`);
+   }
+   if (rawStatus === "vorhanden" && !geometry) {
+      throw new Error(`${label}: geometrieStatus "vorhanden" passt nicht zu geometry: null.`);
+   }
+   if (rawStatus !== "vorhanden" && geometry) {
+      throw new Error(`${label}: geometrieStatus "${rawStatus}" passt nicht zu einer vorhandenen Geometrie.`);
+   }
+
+   return rawStatus;
+}
+
+function normalizeProperties(properties, geometry, featureIndex) {
+   const label = `Feature ${featureIndex + 1}`;
+   const featureTyp = normalizeFeatureTyp(properties ?? {}, label);
+   const normalized = normalizeMeasureProperties(properties, label);
+   normalized.featureTyp = featureTyp;
+
+   if (featureTyp === FEATURE_TYPE_LEITUNG && !("leitungstyp" in normalized)) {
+      throw new Error(`${label}: Leitungen benötigen das Feld leitungstyp.`);
+   }
+
+   ID_LIST_PROPERTIES.forEach(key => {
+      if (key in normalized) normalized[key] = toIdArray(normalized[key]);
+   });
+   DATE_LIST_PROPERTIES.forEach(key => {
+      if (key in normalized) {
+         normalized[key] = toIdArray(normalized[key]);
+         normalized[key].forEach(value => getIsoDateYear(value, label, key));
+      }
+   });
+   if ("ibnJahre" in normalized) {
+      normalized.ibnJahre = toIdArray(normalized.ibnJahre).map(value => {
+         const year = toNumber(value);
+         if (year === null || !Number.isInteger(year)) {
+            throw new Error(`${label}: ibnJahre darf nur ganzzahlige Jahre enthalten.`);
+         }
+         return year;
+      });
+   }
+
+   if (featureTyp === FEATURE_TYPE_VERDICHTERSTANDORT) {
+      normalized.massnahmen = normalizeNestedMeasures(normalized.massnahmen, label);
+   }
+
+   normalized.geometrieStatus = normalizeGeometrieStatus(normalized, geometry, label);
 
    return normalized;
 }
@@ -233,7 +372,7 @@ export function parsePipelineGeoJson(text) {
    }
 
    if (collection.features.length === 0) {
-      throw new Error("Die Datei enthält keine Leitungen.");
+      throw new Error("Die Datei enthält keine Maßnahmen.");
    }
 
    const ids = new Set();
@@ -241,19 +380,25 @@ export function parsePipelineGeoJson(text) {
    return {
       ...collection,
       features: collection.features.map((feature, index) => {
+         const label = `Feature ${index + 1}`;
          if (feature?.type !== "Feature") {
             throw new Error(`Eintrag ${index + 1} muss ein GeoJSON Feature sein.`);
          }
+         if (!feature.properties || typeof feature.properties !== "object") {
+            throw new Error(`${label} enthält keine Eigenschaften.`);
+         }
 
-         const properties = normalizeProperties(feature.properties, index);
+         const featureTyp = normalizeFeatureTyp(feature.properties, label);
+         const geometry = normalizeGeometry(feature.geometry, featureTyp, label);
+         const properties = normalizeProperties(feature.properties, geometry, index);
          if (ids.has(properties.id)) {
-            throw new Error(`Feature ${index + 1}: Die ID "${properties.id}" ist doppelt vergeben.`);
+            throw new Error(`${label}: Die ID "${properties.id}" ist doppelt vergeben.`);
          }
          ids.add(properties.id);
 
          return {
             ...feature,
-            geometry: normalizeGeometry(feature.geometry, index),
+            geometry,
             properties
          };
       })

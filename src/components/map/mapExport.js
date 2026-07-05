@@ -1,4 +1,4 @@
-const EXPORT_FILENAME_TITLE = "Karte der H₂-Leitungen";
+const EXPORT_FILENAME_TITLE = "Karte der H₂-Maßnahmen";
 const EXPORT_PIXEL_RATIO = 2;
 const SVG_STYLE_SELECTOR = "svg path, svg line, svg polyline, svg polygon, svg circle, svg ellipse, svg rect, svg text";
 const SVG_STYLE_PROPERTIES = [

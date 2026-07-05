@@ -118,7 +118,7 @@ export default function PipelineWorkspace({ countries, pipelineCollection }) {
    return (
       <main className="app-shell min-h-svh bg-background p-4 text-foreground max-lg:p-3">
          <Topbar />
-         <section className="mx-auto grid max-w-440 grid-cols-[25rem_minmax(0,1fr)] items-stretch gap-4 min-[1360px]:h-[calc(100svh-112px)] min-[1360px]:grid-cols-[27rem_minmax(340px,1fr)_26.5rem] max-lg:grid-cols-1">
+         <section className="mx-auto grid max-w-440 grid-cols-[29rem_minmax(0,1fr)] items-stretch gap-4 min-[1360px]:h-[calc(100svh-112px)] min-[1360px]:grid-cols-[29rem_minmax(340px,1fr)_26.5rem] max-lg:grid-cols-1">
             <FilterPanel
                className={
                   selection.selection
@@ -168,7 +168,9 @@ export default function PipelineWorkspace({ countries, pipelineCollection }) {
                onCloseSelection={closeSelection}
                onSearchTermChange={searchPipelines}
                onSelectResult={selectResult}
+               onShowSearchFallback={filters.showSearchFallback}
                results={filters.results}
+               searchFallbackCount={filters.searchFallbackCount}
                searchTerm={filters.filters.searchTerm}
                selection={selection.selection}
             />

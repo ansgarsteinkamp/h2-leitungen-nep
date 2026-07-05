@@ -105,7 +105,7 @@ describe("FilterPanel", () => {
       expect(getHelpTrigger("In Szenario 2037 enthalten")).toBeTruthy();
       expect(getHelpTrigger("Einordnung im NEP")).toBeTruthy();
       expect(getHelpTrigger("Teil des Kernnetzes")).toBeTruthy();
-      expect(getHelpTrigger("Leitungstyp")).toBeTruthy();
+      expect(getHelpTrigger("Umstellung oder Neubau")).toBeTruthy();
       expect(getHelpTrigger("Inbetriebnahmejahr")).toBeTruthy();
       expect(getHelpTrigger("Netzbetreiber oder Ansprechpartner")).toBeTruthy();
       expect(getHelpTrigger("Nur OGE-Bezug")).toBeTruthy();
@@ -308,6 +308,33 @@ describe("FilterPanel", () => {
       expect(screen.getByRole("switch", { name: "Nur OGE-Bezug" })).toHaveProperty("checked", true);
    });
 
+   it("shows the feature type filter only when the dataset has more than one feature type", () => {
+      const setFilter = vi.fn();
+
+      renderFilterPanel({ setFilter });
+
+      expect(screen.queryByRole("group", { name: "Maßnahmenart" })).toBeNull();
+
+      cleanup();
+      renderFilterPanel({
+         options: {
+            ...options,
+            featureTypes: [
+               { value: ALL_VALUE, label: "Alle" },
+               { value: "leitung", label: "Leitungen" },
+               { value: "verdichter", label: "Verdichter" }
+            ]
+         },
+         setFilter
+      });
+
+      expectPressed(getSegmentButton("Maßnahmenart", "Alle"));
+
+      fireEvent.click(getSegmentButton("Maßnahmenart", "Verdichter"));
+
+      expect(setFilter).toHaveBeenCalledWith("featureType", "verdichter");
+   });
+
    it("uses line type symbols without implying a single OGE participation color", () => {
       renderFilterPanel({
          options: {
@@ -320,14 +347,14 @@ describe("FilterPanel", () => {
          }
       });
 
-      expect(getSegmentButton("Leitungstyp", "Alle").querySelector("span[style]")).toBeNull();
+      expect(getSegmentButton("Umstellung oder Neubau", "Alle").querySelector("span[style]")).toBeNull();
 
-      const neubauStyles = [...getSegmentButton("Leitungstyp", "Neubau").querySelectorAll("span[style]")].map(item =>
-         item.getAttribute("style")
-      );
-      const umstellungStyles = [...getSegmentButton("Leitungstyp", "Umstellung").querySelectorAll("span[style]")].map(
-         item => item.getAttribute("style")
-      );
+      const neubauStyles = [
+         ...getSegmentButton("Umstellung oder Neubau", "Neubau").querySelectorAll("span[style]")
+      ].map(item => item.getAttribute("style"));
+      const umstellungStyles = [
+         ...getSegmentButton("Umstellung oder Neubau", "Umstellung").querySelectorAll("span[style]")
+      ].map(item => item.getAttribute("style"));
 
       expect(neubauStyles).toHaveLength(2);
       expect(umstellungStyles).toHaveLength(2);

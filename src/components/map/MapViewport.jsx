@@ -22,7 +22,7 @@ const cancelFrame = frameId => {
    clearTimeout(frameId);
 };
 
-const MAP_LABEL = "Interaktive Karte der H₂-Leitungen aus dem NEP 2025";
+const MAP_LABEL = "Interaktive Karte der H₂-Maßnahmen aus dem NEP 2025";
 
 const MAP_MAX_BOUNDS = [
    [45.5, 2.5],

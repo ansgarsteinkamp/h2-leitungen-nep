@@ -34,7 +34,7 @@ describe("MapViewport", () => {
    it("passes the viewport section as the PNG export target", () => {
       render(<MapViewport />);
 
-      const viewport = screen.getByRole("region", { name: "Interaktive Karte der H₂-Leitungen aus dem NEP 2025" });
+      const viewport = screen.getByRole("region", { name: "Interaktive Karte der H₂-Maßnahmen aus dem NEP 2025" });
 
       expect(downloadTargetRefs).toHaveLength(1);
       expect(downloadTargetRefs[0].current).toBe(viewport);

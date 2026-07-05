@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { featureMatchesSearch, getSearchQuery, toResultItems } from "./search";
+import { featureMatchesSearch, getSearchQuery, toResultItems, unitMatchesSearch } from "./search";
 
 function pipeline(id, properties = {}) {
    return {
@@ -71,5 +71,84 @@ describe("toResultItems", () => {
 
       expect(featureMatchesSearch(feature, getSearchQuery("Massnahme"), true)).toBe(true);
       expect(featureMatchesSearch(feature, getSearchQuery("Netzverstarkung"), true)).toBe(true);
+   });
+
+   it("finds compressor sites by official measure IDs and nested measure fields", () => {
+      const site = {
+         type: "Feature",
+         geometry: { type: "Point", coordinates: [9, 53] },
+         properties: {
+            id: "verdichterstandort:achim",
+            name: "Verdichterstation Achim",
+            featureTyp: "verdichterstandort",
+            officialIds: ["H2-2003-01", "H2-2103-01"],
+            ids: ["H2-2003-01", "H2-2103-01"],
+            kernnetzAntragsIds: ["KVS003-01"],
+            durchfuehrendeNetzbetreiber: [],
+            ansprechpartner: [],
+            massnahmen: [
+               {
+                  id: "H2-2003-01",
+                  name: "Verdichterstation Achim",
+                  ibnJahr: 2032,
+                  kernnetzAntragsId: "KVS003-01",
+                  szenario1: true,
+                  durchfuehrendeNetzbetreiber: ["Gasunie Deutschland Transport Services GmbH"]
+               },
+               { id: "H2-2103-01", name: "Verdichterstation Achim", ibnJahr: 2034 }
+            ]
+         }
+      };
+
+      ["H2-2103", "KVS003", "2034", "Szenario 1"].forEach(term => {
+         expect(featureMatchesSearch(site, getSearchQuery(term), true)).toBe(true);
+      });
+
+      // Offizielle IDs zählen als Identifier-Treffer und ranken vor Namens-Treffern.
+      expect(
+         resultIds([pipeline("H2-100-01", { name: "H2-2103-01-Anbindung" }), site], true, getSearchQuery("H2-2103-01"))
+      ).toEqual(["verdichterstandort:achim", "H2-100-01"]);
+   });
+
+   it("matches nested measures only through their own or site-wide fields", () => {
+      const site = {
+         type: "Feature",
+         geometry: { type: "Point", coordinates: [9, 53] },
+         properties: {
+            id: "verdichterstandort:achim",
+            name: "Verdichterstation Achim",
+            featureTyp: "verdichterstandort",
+            officialIds: ["H2-2003-01", "H2-2103-01"],
+            ids: ["H2-2003-01", "H2-2103-01"],
+            durchfuehrendeNetzbetreiber: ["Gasunie Deutschland Transport Services GmbH"],
+            ansprechpartner: [],
+            massnahmen: [
+               {
+                  id: "H2-2003-01",
+                  name: "Verdichterstation Achim",
+                  ibnJahr: 2032,
+                  durchfuehrendeNetzbetreiber: ["Gasunie Deutschland Transport Services GmbH"]
+               },
+               { id: "H2-2103-01", name: "Verdichterstation Achim", ibnJahr: 2034, szenario1: true }
+            ]
+         }
+      };
+      const [first, second] = site.properties.massnahmen;
+
+      // Die ID einer Maßnahme matcht nur diese Maßnahme, nicht ihre Geschwister —
+      // auch nicht über die gespiegelten Parent-Listen officialIds/ids.
+      const idQuery = getSearchQuery("H2-2103-01");
+      expect(unitMatchesSearch(site, second, idQuery, true)).toBe(true);
+      expect(unitMatchesSearch(site, first, idQuery, true)).toBe(false);
+
+      // Aggregierte Betreiberlisten des Parents zählen ebenfalls nicht standortweit.
+      const operatorQuery = getSearchQuery("Gasunie");
+      expect(unitMatchesSearch(site, first, operatorQuery, true)).toBe(true);
+      expect(unitMatchesSearch(site, second, operatorQuery, true)).toBe(false);
+
+      // Standortweite Felder wie der Name gelten dagegen für jede Maßnahme.
+      const nameQuery = getSearchQuery("Achim");
+      expect(unitMatchesSearch(site, first, nameQuery, true)).toBe(true);
+      expect(unitMatchesSearch(site, second, nameQuery, true)).toBe(true);
    });
 });

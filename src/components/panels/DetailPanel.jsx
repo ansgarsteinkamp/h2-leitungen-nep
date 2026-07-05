@@ -1,4 +1,4 @@
-import { Check, X } from "lucide-react";
+import { Check, ChevronDown, MapPinOff, X } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import { HelpTooltip } from "@/components/ui/help-tooltip";
@@ -12,6 +12,7 @@ import {
    pipelineMeta,
    pipelineTitle
 } from "@/lib/domain/formatters";
+import { getUmstellungOderNeubau, isVerdichterstandortFeature } from "@/lib/domain/pipeline";
 
 const DATE_FORMAT = new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
 const EMPTY_VALUE = "keine Angabe";
@@ -24,17 +25,36 @@ const LOCAL_FIELD_DESCRIPTIONS = {
    }
 };
 
+// Felder, deren Zeile ausgeblendet wird, wenn keine Angabe vorliegt: sie existieren nur für
+// bestimmte Maßnahmenarten und wären sonst überall sichtbares Rauschen.
+const OPTIONAL_FIELDS = new Set([
+   "anlagenleistungM3h",
+   "dnMm",
+   "dpBar",
+   "ibnJahre",
+   "inbetriebnahmeBisWerte",
+   "inbetriebnahmeNachKernnetzgenehmigung",
+   "inbetriebnahmeNachKernnetzgenehmigungWerte",
+   "kernnetzAntragsIds",
+   "kostenermittlung",
+   "laengeKm",
+   "officialIds",
+   "umstellungOderNeubau",
+   "verdichterleistungMw"
+]);
+
 const DETAIL_GROUPS = [
    {
       id: "basis",
       title: "Stammdaten, Status und Kennungen",
       fields: [
          "id",
+         "officialIds",
          "kurzel",
          "version",
-         "leitungstyp",
+         "massnahmenart",
+         "umstellungOderNeubau",
          "projektstatus",
-         "finalInvestmentDecision",
          "kernnetzAntragsId",
          "entsogTyndpProjektNr"
       ]
@@ -52,17 +72,17 @@ const DETAIL_GROUPS = [
    {
       id: "zeitplan",
       title: "Zeitplan",
-      fields: ["ibnJahr", "inbetriebnahmeBis"]
+      fields: ["ibnJahr", "ibnJahre", "inbetriebnahmeBis", "inbetriebnahmeNachKernnetzgenehmigung"]
    },
    {
       id: "technik",
       title: "Technische Kenndaten und Lage",
-      fields: ["laengeKm", "dnMm", "dpBar", "bundeslaender"]
+      fields: ["laengeKm", "dnMm", "dpBar", "verdichterleistungMw", "anlagenleistungM3h", "bundeslaender"]
    },
    {
       id: "wirtschaft",
       title: "Bedarfsabdeckung und Maßnahmenkosten",
-      fields: ["bedarfsabdeckung", "kostenMioEur", "erdgasverstaerkendeMassnahmen"]
+      fields: ["bedarfsabdeckung", "kostenMioEur", "kostenermittlung", "erdgasverstaerkendeMassnahmen"]
    },
    {
       id: "beteiligte",
@@ -75,6 +95,56 @@ const DETAIL_GROUPS = [
       fields: ["beschreibung", "sonstiges"]
    }
 ];
+
+// Verdichterstandorte: das Parent-Feature trägt fast nur Aggregate der Einzelmaßnahmen.
+// In der Detailansicht zeigt der Standort-Block deshalb nur echte Standort-Informationen;
+// alles Maßnahmenspezifische (inkl. NEP-Einordnung, Szenarien, Kernnetz-IDs) steht in den
+// aufklappbaren Maßnahmenkarten.
+const SITE_DETAIL_GROUPS = [
+   {
+      id: "standort",
+      title: "Standort",
+      fields: ["standortName", "bundeslaender"]
+   },
+   {
+      id: "beteiligte",
+      title: "Beteiligte",
+      fields: ["durchfuehrendeNetzbetreiber", "ansprechpartner", "ogeBeteiligung"]
+   },
+   {
+      id: "hinweise",
+      title: "Beschreibung und Hinweise",
+      fields: ["beschreibung", "sonstiges"]
+   }
+];
+
+// Feldauswahl für die aufklappbaren Einzelmaßnahmen eines Verdichterstandorts.
+const NESTED_MEASURE_FIELDS = [
+   "nepEinordnung",
+   "szenario1",
+   "szenario2",
+   "szenario3",
+   "umstellungOderNeubau",
+   "ibnJahr",
+   "inbetriebnahmeBis",
+   "inbetriebnahmeNachKernnetzgenehmigung",
+   "verdichterleistungMw",
+   "kostenMioEur",
+   "kostenermittlung",
+   "kernnetzAntragsId",
+   "durchfuehrendeNetzbetreiber",
+   "ansprechpartner",
+   "projektstatus",
+   "beschreibung",
+   "bedarfsabdeckung"
+];
+
+// Kurzlabels für die Kopfzeile einer eingeklappten Maßnahmenkarte.
+const SHORT_NEP_LABELS = {
+   Startnetzmaßnahme: "Startnetz",
+   "Teil des Netzausbauvorschlags": "Netzausbauvorschlag",
+   "Nur in Modellierungsergebnissen 2037": "Nur Modellierung 2037"
+};
 
 function isEmptyValue(value) {
    return (
@@ -97,10 +167,15 @@ function formatGermanDate(value) {
 function formatValue(key, value) {
    if (isEmptyValue(value)) return EMPTY_VALUE;
    if (fieldDescriptions[key]?.type === "date") return formatGermanDate(value);
+   if (key === "inbetriebnahmeBisWerte" || key === "inbetriebnahmeNachKernnetzgenehmigungWerte") {
+      return value.map(formatGermanDate).join(", ");
+   }
    if (Array.isArray(value)) return listLabel(value);
    if (key === "laengeKm") return numberLabel(value, "km");
    if (key === "dnMm") return numberLabel(value, "mm");
    if (key === "dpBar") return numberLabel(value, "bar");
+   if (key === "verdichterleistungMw") return numberLabel(value, "MW");
+   if (key === "anlagenleistungM3h") return numberLabel(value, "m³/h");
    if (key === "kostenMioEur") return costLabel(value);
    return cleanText(value);
 }
@@ -125,6 +200,10 @@ function BooleanValue({ value }) {
          <Icon aria-hidden="true" className="size-4" />
       </span>
    );
+}
+
+function shouldHideField(field, value) {
+   return OPTIONAL_FIELDS.has(field) && isEmptyValue(value);
 }
 
 function DetailRow({ field, value }) {
@@ -157,7 +236,22 @@ export default function DetailPanel({ selection, onClose }) {
 
    const feature = selection.item;
    const props = feature.properties;
-   const detailValues = { ...props, nepEinordnung: getNepClassification(props) };
+   const isSite = isVerdichterstandortFeature(feature);
+   const nestedMeasures = isSite ? (props.massnahmen ?? []) : [];
+   const detailGroups = isSite ? SITE_DETAIL_GROUPS : DETAIL_GROUPS;
+   const detailValues = {
+      ...props,
+      nepEinordnung: getNepClassification(props),
+      umstellungOderNeubau: getUmstellungOderNeubau(props),
+      // Eine einzelne officialId wiederholt nur die Feature-ID; angezeigt wird die Liste erst,
+      // wenn ein Feature mehrere offizielle Maßnahmen bündelt.
+      officialIds: Array.isArray(props.officialIds) && props.officialIds.length > 1 ? props.officialIds : null,
+      // Der Standortname wiederholt meist den Feature-Namen aus der Kopfzeile.
+      standortName: props.standortName !== props.name ? props.standortName : null
+   };
+   const metaLabel = isSite
+      ? `Verdichterstandort · ${nestedMeasures.length === 1 ? "1 Maßnahme" : `${nestedMeasures.length} Maßnahmen`}`
+      : pipelineMeta(feature);
 
    return (
       <section
@@ -168,7 +262,7 @@ export default function DetailPanel({ selection, onClose }) {
       >
          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3">
             <div className="grid min-w-0 gap-1">
-               <p className="m-0 text-[0.72rem] font-medium text-label-accent uppercase">{pipelineMeta(feature)}</p>
+               <p className="m-0 text-[0.72rem] font-medium text-label-accent uppercase">{metaLabel}</p>
                <h2 id="selection-panel-title" className="m-0 text-sm leading-snug font-medium text-card-foreground">
                   {pipelineTitle(feature)}
                </h2>
@@ -182,23 +276,140 @@ export default function DetailPanel({ selection, onClose }) {
                <X aria-hidden="true" className="size-4" />
             </button>
          </div>
+         <MissingGeometryHint geometrieStatus={props.geometrieStatus} />
          <div className="mt-4 grid gap-5">
-            {DETAIL_GROUPS.map(group => (
-               <section aria-labelledby={`detail-group-${group.id}`} className="grid gap-2.5" key={group.id}>
+            {isSite ? <SiteSummary measureCount={nestedMeasures.length} props={props} /> : null}
+            {detailGroups.map(group => {
+               const fields = group.fields.filter(
+                  field =>
+                     !shouldHideField(field, detailValues[field]) && !(isSite && isEmptyValue(detailValues[field]))
+               );
+               if (fields.length === 0) return null;
+
+               return (
+                  <section aria-labelledby={`detail-group-${group.id}`} className="grid gap-2.5" key={group.id}>
+                     <h3
+                        id={`detail-group-${group.id}`}
+                        className="m-0 text-[0.7rem] font-medium text-label-accent uppercase"
+                     >
+                        {group.title}
+                     </h3>
+                     <dl className="grid border-t border-border/50">
+                        {fields.map(field => (
+                           <DetailRow field={field} key={field} value={detailValues[field]} />
+                        ))}
+                     </dl>
+                  </section>
+               );
+            })}
+            {nestedMeasures.length > 0 ? (
+               <section aria-labelledby="detail-group-massnahmen" className="grid gap-2.5">
                   <h3
-                     id={`detail-group-${group.id}`}
+                     id="detail-group-massnahmen"
                      className="m-0 text-[0.7rem] font-medium text-label-accent uppercase"
                   >
-                     {group.title}
+                     Maßnahmen am Standort ({nestedMeasures.length})
                   </h3>
-                  <dl className="grid border-t border-border/50">
-                     {group.fields.map(field => (
-                        <DetailRow field={field} key={field} value={detailValues[field]} />
+                  <div className="grid gap-2.5">
+                     {nestedMeasures.map(measure => (
+                        <MeasureCard
+                           defaultOpen={nestedMeasures.length === 1}
+                           key={measure.id}
+                           measure={measure}
+                           siteName={props.name}
+                        />
                      ))}
-                  </dl>
+                  </div>
                </section>
-            ))}
+            ) : null}
          </div>
       </section>
+   );
+}
+
+// Features ohne Kartengeometrie ("fehlt": noch unverortet, "aggregiert": übergreifende Maßnahme
+// ohne einzelnen Standort) bekommen statt einer Detailzeile einen Hinweis unter der Kopfzeile.
+const GEOMETRY_HINTS = {
+   fehlt: "Diese Maßnahme ist aktuell nicht auf der Karte verortet und erscheint nur in Suche und Detailansicht.",
+   aggregiert:
+      "Diese übergreifende Maßnahme ist keinem einzelnen Standort zugeordnet und erscheint nur in Suche und Detailansicht."
+};
+
+function MissingGeometryHint({ geometrieStatus }) {
+   const hint = GEOMETRY_HINTS[geometrieStatus];
+   if (!hint) return null;
+
+   return (
+      <p className="m-0 mt-3 flex items-start gap-2 border border-border/70 bg-muted/60 px-3 py-2 text-xs leading-snug text-muted-foreground">
+         <MapPinOff aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+         <span>{hint}</span>
+      </p>
+   );
+}
+
+function SiteSummary({ measureCount, props }) {
+   const ibnYears = Array.isArray(props.ibnJahre) && props.ibnJahre.length > 0 ? props.ibnJahre.join(" / ") : null;
+   const items = [
+      { label: "Maßnahmen", value: String(measureCount) },
+      { label: ibnYears && ibnYears.includes("/") ? "IBN-Jahre" : "IBN-Jahr", value: ibnYears ?? EMPTY_VALUE },
+      { label: "Leistung gesamt", value: numberLabel(props.verdichterleistungMw, "MW") },
+      { label: "Kosten gesamt", value: costLabel(props.kostenMioEur) }
+   ];
+
+   return (
+      <section
+         aria-label="Zusammenfassung des Standorts"
+         className="grid grid-cols-2 gap-px border border-border bg-border/60"
+      >
+         {items.map(item => (
+            <div className="bg-muted/75 px-3 py-2" key={item.label}>
+               <p className="m-0 truncate text-[0.62rem] font-medium text-muted-foreground">{item.label}</p>
+               <p className="m-0 mt-0.5 text-xs font-medium wrap-break-word text-card-foreground">{item.value}</p>
+            </div>
+         ))}
+      </section>
+   );
+}
+
+function measureSummaryLabel(values) {
+   return [
+      SHORT_NEP_LABELS[values.nepEinordnung] ?? null,
+      values.ibnJahr ? `IBN ${values.ibnJahr}` : null,
+      isEmptyValue(values.verdichterleistungMw) ? null : numberLabel(values.verdichterleistungMw, "MW"),
+      isEmptyValue(values.kostenMioEur) ? null : costLabel(values.kostenMioEur)
+   ]
+      .filter(Boolean)
+      .join(" · ");
+}
+
+function MeasureCard({ defaultOpen = false, measure, siteName }) {
+   const values = {
+      ...measure,
+      nepEinordnung: getNepClassification(measure),
+      umstellungOderNeubau: getUmstellungOderNeubau(measure)
+   };
+   const fields = NESTED_MEASURE_FIELDS.filter(field => !isEmptyValue(values[field]));
+
+   return (
+      <details className="group border border-border/60 bg-muted/40" open={defaultOpen}>
+         <summary className="flex cursor-pointer list-none items-center gap-2.5 px-3 py-2.5 transition-colors hover:bg-primary/10 focus-visible:ring-3 focus-visible:ring-ring/65 focus-visible:outline-none dark:focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden">
+            <div className="grid min-w-0 flex-1 gap-0.5">
+               <p className="m-0 text-[0.7rem] font-medium text-label-accent">{measure.id}</p>
+               {measure.name && measure.name !== siteName ? (
+                  <p className="m-0 text-xs leading-snug font-medium text-card-foreground">{measure.name}</p>
+               ) : null}
+               <p className="m-0 text-[0.7rem] leading-snug text-muted-foreground">{measureSummaryLabel(values)}</p>
+            </div>
+            <ChevronDown
+               aria-hidden="true"
+               className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+            />
+         </summary>
+         <dl className="mx-3 mb-1 grid border-t border-border/50">
+            {fields.map(field => (
+               <DetailRow field={field} key={field} value={values[field]} />
+            ))}
+         </dl>
+      </details>
    );
 }

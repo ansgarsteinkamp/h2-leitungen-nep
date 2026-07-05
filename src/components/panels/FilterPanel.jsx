@@ -2,6 +2,7 @@ import { useId } from "react";
 import { Check, Euro, RotateCcw, Route, Ruler } from "lucide-react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { HelpTooltip } from "@/components/ui/help-tooltip";
 import { PipelineLineSymbolStack } from "@/components/ui/pipeline-line-symbol";
 import { Slider } from "@/components/ui/slider";
@@ -18,6 +19,8 @@ const MEASURE_TYPE_DESCRIPTION =
    "Filtert innerhalb der gewählten Netzansicht nach Rolle im NEP. Startnetz ist Modellierungsbasis, nicht Teil des Netzausbauvorschlags; reine Modellierungsergebnisse 2037 sind keine Bauentscheidung.";
 const KERNNETZ_ID_DESCRIPTION =
    "Zeigt, ob für eine Maßnahme eine Kernnetz-ID hinterlegt ist. Die Kernnetz-ID ist ein Referenzschlüssel zur Kernnetz-Zuordnung; sie ist kein Nachweis für Baurecht, Bauentscheidung, Umsetzungsstand oder die aktuelle Einordnung im NEP.";
+const FEATURE_TYPE_DESCRIPTION =
+   "Filtert nach der Art der Maßnahme: Leitungen, Verdichter (Standorte und aggregierte Verdichtermaßnahmen), GDRM-Anlagen (Gasdruckregel- und Messanlagen) oder sonstige Maßnahmen. GDRM-Anlagen und einige weitere Maßnahmen haben aktuell keine Kartengeometrie und erscheinen nur in Trefferliste und Detailansicht.";
 const LINE_TYPE_DESCRIPTION =
    "Unterscheidet Neubau und Umstellung. Umstellung bedeutet vorgesehene Nutzung einer bestehenden Erdgasleitung für Wasserstoff und setzt voraus, dass die Leitung aus dem Methansystem freigemacht werden kann.";
 const COMMISSIONING_YEAR_DESCRIPTION =
@@ -28,9 +31,13 @@ const OGE_PARTICIPATION_DESCRIPTION =
    "Zeigt nur Maßnahmen, bei denen OGE als Ansprechpartner oder durchführender Netzbetreiber genannt ist. Das ist breiter als die Hervorhebung der durchführenden FNB und keine Aussage zu Eigentum oder alleiniger Verantwortung.";
 const OGE_EXECUTING_OPERATOR_HIGHLIGHT_LABEL = "Hervorheben, wenn OGE durchführender FNB ist";
 const OGE_EXECUTING_OPERATOR_HIGHLIGHT_DESCRIPTION =
-   "Darstellung, kein Filter: hebt Leitungen hervor, bei denen OGE als durchführender Netzbetreiber benannt ist. OGE als Ansprechpartner wird dabei nicht berücksichtigt.";
+   "Darstellung, kein Filter: hebt Leitungen und Verdichterstandorte auf der Karte hervor, bei denen OGE als durchführender Netzbetreiber benannt ist. OGE als Ansprechpartner wird dabei nicht berücksichtigt.";
+const METRIC_COUNT_DESCRIPTION =
+   "Anzahl der offiziellen NEP-Maßnahmen, die den aktiven Filtern entsprechen. Ein Verdichterstandort bündelt mehrere Einzelmaßnahmen; gezählt werden nur die passenden.";
+const METRIC_LENGTH_DESCRIPTION =
+   "Summe der geplanten Leitungslängen der aktuellen Auswahl. Nur Leitungsmaßnahmen tragen zur Länge bei; GDRM-Anlagen und Verdichter sind nicht enthalten.";
 const METRIC_COST_DESCRIPTION =
-   "Summe der in den Maßnahmendaten angegebenen Kosten der aktuellen Auswahl. Enthalten sind kartierte Leitungsmaßnahmen; Verdichterstationen und sonstige Investitionspositionen ohne Leitungsgeometrie sind nicht enthalten.";
+   "Summe der in den Maßnahmendaten angegebenen Kosten aller Einzelmaßnahmen, die den aktiven Filtern entsprechen — über alle Maßnahmenarten, einschließlich Maßnahmen ohne Kartengeometrie.";
 
 const FILTER_PANEL_CLASS =
    "flex min-h-0 flex-col gap-4 overflow-auto focus-visible:ring-3 focus-visible:ring-ring/65 focus-visible:outline-none dark:focus-visible:ring-ring/50";
@@ -41,7 +48,8 @@ const SEGMENT_BUTTON_CLASS =
    "inline-flex min-h-9 min-w-0 items-center justify-center gap-2 rounded-md border border-border bg-muted px-3 text-[0.72rem] text-foreground transition-colors hover:border-primary/70 hover:bg-primary/20 hover:text-secondary focus-visible:ring-3 focus-visible:ring-ring/65 focus-visible:outline-none max-lg:min-h-10 dark:focus-visible:ring-ring/50";
 const ACTIVE_SEGMENT_BUTTON_CLASS = "border-primary/80 bg-primary/15 text-card-foreground";
 const RESET_BUTTON_CLASS =
-   "inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md border border-primary/60 bg-primary/15 px-3.5 text-[0.72rem] font-medium text-card-foreground transition-colors hover:border-primary hover:bg-primary/20 hover:text-secondary focus-visible:ring-3 focus-visible:ring-ring/65 focus-visible:outline-none dark:focus-visible:ring-ring/50";
+   "grid size-9 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary/85 focus-visible:ring-3 focus-visible:ring-ring/65 focus-visible:outline-none dark:focus-visible:ring-ring/50";
+const RESET_BUTTON_LABEL = "Filter und Karte zurücksetzen";
 const DEFAULT_SEGMENT_LAYOUT_CLASS = "grid grid-cols-[repeat(auto-fit,minmax(8.25rem,1fr))] gap-2";
 const WRAPPING_CHIP_SEGMENT_PROPS = {
    optionButtonClassName: "w-fit max-w-full shrink-0",
@@ -63,8 +71,19 @@ function createChipSegmentGroup(group) {
 
 function MetricsDashboard({ metrics }) {
    const items = [
-      { icon: Route, label: "Leitungen", value: metricIntegerLabel(metrics.count) },
-      { icon: Ruler, label: "Länge", value: metricLengthLabel(metrics.lengthKm), suffix: "km" },
+      {
+         description: METRIC_COUNT_DESCRIPTION,
+         icon: Route,
+         label: "Maßnahmen",
+         value: metricIntegerLabel(metrics.count)
+      },
+      {
+         description: METRIC_LENGTH_DESCRIPTION,
+         icon: Ruler,
+         label: "Länge",
+         value: metricLengthLabel(metrics.lengthKm),
+         suffix: "km"
+      },
       {
          className: "max-[380px]:col-span-2",
          description: METRIC_COST_DESCRIPTION,
@@ -76,8 +95,11 @@ function MetricsDashboard({ metrics }) {
    ];
 
    return (
-      <section className="border border-border bg-muted/75 px-3.5 py-3" aria-label="Kennzahlen der aktuellen Ansicht">
-         <div className="grid grid-cols-[0.85fr_1fr_1.25fr] divide-x divide-border/75 max-[380px]:grid-cols-2 max-[380px]:divide-x-0 max-[380px]:gap-y-3">
+      <section
+         className="min-w-0 flex-1 border border-border bg-muted/75 px-3.5 py-3"
+         aria-label="Kennzahlen der aktuellen Ansicht"
+      >
+         <div className="grid grid-cols-3 divide-x divide-border/75 max-[380px]:grid-cols-2 max-[380px]:divide-x-0 max-[380px]:gap-y-3">
             {items.map(item => (
                <MetricTile key={item.label} {...item} />
             ))}
@@ -91,7 +113,7 @@ function MetricTile({ className, description, icon: Icon, label, value, suffix }
       <div className={cn("min-w-0 px-3 first:pl-0 last:pr-0 max-[380px]:px-2", className)}>
          <div className="mb-1 flex items-center gap-1.5 text-muted-foreground">
             <Icon aria-hidden="true" className="size-3.5 shrink-0" />
-            <span className="truncate text-[0.66rem] font-medium uppercase">{label}</span>
+            <span className="truncate text-[0.66rem] font-medium">{label}</span>
             {description ? (
                <HelpTooltip className="size-4" contentClassName="max-w-80" label={label}>
                   {description}
@@ -366,14 +388,27 @@ function FilterControls({
    measureTypeOptions,
    networkViewOptions,
    onHighlightOgeExecutingOperatorChange,
-   onResetFilters,
    options,
    setYearRange,
    scenarioOptions,
    setFilter
 }) {
    const showScenarioMarkerFilter = shouldShowScenarioMarkerFilter(filters.networkView);
-   const segmentGroups = [
+   const segmentGroups = [];
+
+   if (options.featureTypes?.length > 0) {
+      segmentGroups.push(
+         createChipSegmentGroup({
+            description: FEATURE_TYPE_DESCRIPTION,
+            filterKey: "featureType",
+            label: "Maßnahmenart",
+            options: options.featureTypes,
+            value: filters.featureType
+         })
+      );
+   }
+
+   segmentGroups.push(
       createChipSegmentGroup({
          description: MEASURE_TYPE_DESCRIPTION,
          filterKey: "measureType",
@@ -388,7 +423,7 @@ function FilterControls({
          options: kernnetzIdOptions,
          value: filters.kernnetzIdStatus
       })
-   ];
+   );
 
    if (showScenarioMarkerFilter) {
       segmentGroups.push(
@@ -406,7 +441,7 @@ function FilterControls({
       createChipSegmentGroup({
          description: LINE_TYPE_DESCRIPTION,
          filterKey: "lineType",
-         label: "Leitungstyp",
+         label: "Umstellung oder Neubau",
          options: options.lineTypes,
          swatches: true,
          value: filters.lineType
@@ -440,20 +475,25 @@ function FilterControls({
             options={options}
             setFilter={setFilter}
          />
-
-         <div className="mt-auto border-t border-border/80 pt-4">
-            <ResetFiltersButton onResetFilters={onResetFilters} />
-         </div>
       </div>
    );
 }
 
 function ResetFiltersButton({ onResetFilters }) {
    return (
-      <button className={RESET_BUTTON_CLASS} onClick={onResetFilters} type="button">
-         <RotateCcw aria-hidden="true" className="size-4" />
-         <span>Filter und Karte zurücksetzen</span>
-      </button>
+      <Tooltip>
+         <TooltipTrigger asChild>
+            <button
+               aria-label={RESET_BUTTON_LABEL}
+               className={RESET_BUTTON_CLASS}
+               onClick={onResetFilters}
+               type="button"
+            >
+               <RotateCcw aria-hidden="true" className="size-4" />
+            </button>
+         </TooltipTrigger>
+         <TooltipContent side="right">{RESET_BUTTON_LABEL}</TooltipContent>
+      </Tooltip>
    );
 }
 
@@ -479,7 +519,10 @@ export default function FilterPanel({
          id="filter-panel"
          tabIndex={-1}
       >
-         <MetricsDashboard metrics={metrics} />
+         <div className="flex items-center gap-3">
+            <MetricsDashboard metrics={metrics} />
+            <ResetFiltersButton onResetFilters={onResetFilters} />
+         </div>
          <FilterControls
             filters={filters}
             highlightOgeExecutingOperator={highlightOgeExecutingOperator}
@@ -487,7 +530,6 @@ export default function FilterPanel({
             measureTypeOptions={measureTypeOptions}
             networkViewOptions={networkViewOptions}
             onHighlightOgeExecutingOperatorChange={onHighlightOgeExecutingOperatorChange}
-            onResetFilters={onResetFilters}
             options={options}
             scenarioOptions={scenarioOptions}
             setFilter={setFilter}

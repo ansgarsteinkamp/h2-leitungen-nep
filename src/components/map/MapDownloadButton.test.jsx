@@ -120,7 +120,7 @@ describe("MapDownloadButton", () => {
       expect(options.filter(excluded.firstElementChild)).toBe(false);
 
       expect(createObjectUrlSpy).toHaveBeenCalledWith(expect.any(Blob));
-      expect(clickedDownloadFilename).toMatch(/^\d{4}_\d{2}_\d{2} Karte der H₂-Leitungen\.png$/);
+      expect(clickedDownloadFilename).toMatch(/^\d{4}_\d{2}_\d{2} Karte der H₂-Maßnahmen\.png$/);
       expect(document.querySelector("a[download]")).toBeNull();
 
       expect(requestAnimationFrameSpy).toHaveBeenCalledTimes(2);
@@ -150,7 +150,7 @@ describe("MapDownloadButton", () => {
    });
 
    it("builds the PNG filename from the local calendar date", () => {
-      expect(createMapExportFilename(new Date(2026, 4, 27, 23, 30))).toBe("2026_05_27 Karte der H₂-Leitungen.png");
+      expect(createMapExportFilename(new Date(2026, 4, 27, 23, 30))).toBe("2026_05_27 Karte der H₂-Maßnahmen.png");
    });
 
    it("restores temporary export styles when snapshot creation fails", async () => {

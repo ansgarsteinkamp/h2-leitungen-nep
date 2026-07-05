@@ -142,11 +142,11 @@ describe("map theme tokens", () => {
       const darkTheme = themeDeclarations("\\.dark");
 
       expect(rootTheme.get("--map-pipeline-oge").toLowerCase()).toBe("#52a436");
-      expect(rootTheme.get("--map-pipeline-no-oge").toLowerCase()).toBe("#d2eae6");
+      expect(rootTheme.get("--map-pipeline-no-oge").toLowerCase()).toBe("#c3e1db");
       expect(rootTheme.get("--map-pipeline-selection-halo-oge")).toBe("#3f8429");
       expect(rootTheme.get("--map-pipeline-selection-halo-no-oge")).toBe("#75b8af");
       expect(rootTheme.get("--map-pipeline-symbol-oge").toLowerCase()).toBe("#52a436");
-      expect(rootTheme.get("--map-pipeline-symbol-no-oge")).toBe("#bedfd9");
+      expect(rootTheme.get("--map-pipeline-symbol-no-oge")).toBe("#b0d7d0");
       expect(rootTheme.get("--map-pipeline-context-oge")).toBe("#6aa85a");
       expect(rootTheme.get("--map-pipeline-context-no-oge")).toBe("#9ed8d7");
       expect(rootTheme.get("--map-pipeline-oge-executing-operator-highlight")).toBe("#d7ac72");

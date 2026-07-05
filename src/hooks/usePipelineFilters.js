@@ -9,12 +9,20 @@ import {
    SCENARIO_OPTIONS
 } from "@/lib/domain/constants";
 import { featureCollectionToLatLngs } from "@/lib/domain/coordinates";
-import { buildFilterOptions, getFeatureOperators } from "@/lib/domain/facets";
+import { buildFilterOptions, getFeatureTypeFilterValue, matchesFeatureType } from "@/lib/domain/facets";
 import { sumPipelineMetrics } from "@/lib/domain/metrics";
-import { SCENARIO_KEYS, isScenarioFeature, isStandardFeature } from "@/lib/domain/pipeline";
-import { featureMatchesSearch, getSearchQuery, isSearchActive, toResultItems } from "@/lib/domain/search";
+import {
+   SCENARIO_KEYS,
+   getMeasureUnits,
+   getPipelineParticipants,
+   getUmstellungOderNeubau,
+   isScenarioFeature,
+   isStandardFeature
+} from "@/lib/domain/pipeline";
+import { getSearchQuery, isSearchActive, toResultItems, unitMatchesSearch } from "@/lib/domain/search";
 
 export const initialPipelineFilters = {
+   featureType: ALL_VALUE,
    kernnetzIdStatus: ALL_VALUE,
    lineType: ALL_VALUE,
    measureType: ALL_VALUE,
@@ -48,12 +56,11 @@ function getCommissioningYearValue(value) {
    return Number.isFinite(year) ? year : null;
 }
 
-function getCommissioningYear(feature) {
-   return getCommissioningYearValue(feature.properties.ibnJahr);
-}
-
 function getCommissioningYearBounds(features) {
-   const years = features.map(getCommissioningYear).filter(year => year !== null);
+   const years = features
+      .flatMap(getMeasureUnits)
+      .map(unit => getCommissioningYearValue(unit.ibnJahr))
+      .filter(year => year !== null);
    if (years.length === 0) return null;
 
    return {
@@ -82,12 +89,14 @@ function matchesCommissioningYearRange(props, filters) {
    return true;
 }
 
-function matchesOperators(feature, selected) {
-   return selected === ALL_VALUE || getFeatureOperators(feature).includes(selected);
+// Alle folgenden Prädikate arbeiten auf Maßnahmen-Ebene: `unit` ist ein Properties-Objekt einer
+// Einzelmaßnahme (bei Verdichterstandorten ein Eintrag aus massnahmen[], sonst die Feature-Properties).
+function matchesOperators(unit, selected) {
+   return selected === ALL_VALUE || getPipelineParticipants(unit).includes(selected);
 }
 
-function matchesScenario(props, selected) {
-   return selected === ALL_VALUE || props[selected] === true;
+function matchesScenario(unit, selected) {
+   return selected === ALL_VALUE || unit[selected] === true;
 }
 
 function canUseScenarioFilter(networkView) {
@@ -98,64 +107,61 @@ function shouldApplyScenarioFilter(filters) {
    return canUseScenarioFilter(filters.networkView);
 }
 
-function hasMarker(feature, marker) {
-   return feature.properties[marker] === true;
+function isStartnetzUnit(unit) {
+   return unit.startnetz === true;
 }
 
-function isStartnetzFeature(feature) {
-   return hasMarker(feature, "startnetz");
+function isScenarioOnlyUnit(unit) {
+   return !isStandardFeature(unit) && SCENARIO_KEYS.some(key => isScenarioFeature(unit, key));
 }
 
-function isScenarioOnlyFeature(feature) {
-   return !isStandardFeature(feature) && SCENARIO_KEYS.some(key => isScenarioFeature(feature, key));
-}
-
-function matchesMeasureType(feature, selected) {
+function matchesMeasureType(unit, selected) {
    if (selected === ALL_VALUE) return true;
-   if (selected === "scenarioOnly") return isScenarioOnlyFeature(feature);
-   return hasMarker(feature, selected);
+   if (selected === "scenarioOnly") return isScenarioOnlyUnit(unit);
+   return unit[selected] === true;
 }
 
-function hasKernnetzId(feature) {
-   return String(feature.properties.kernnetzAntragsId ?? "").trim() !== "";
+function hasKernnetzId(unit) {
+   return String(unit.kernnetzAntragsId ?? "").trim() !== "";
 }
 
-function matchesKernnetzIdStatus(feature, selected) {
+function matchesKernnetzIdStatus(unit, selected) {
    if (selected === ALL_VALUE) return true;
-   if (selected === "withKernnetzId") return hasKernnetzId(feature);
-   if (selected === "withoutKernnetzId") return !hasKernnetzId(feature);
+   if (selected === "withKernnetzId") return hasKernnetzId(unit);
+   if (selected === "withoutKernnetzId") return !hasKernnetzId(unit);
    return true;
 }
 
-function matchesOgeParticipation(props, ogeParticipationOnly) {
-   return !ogeParticipationOnly || props.ogeBeteiligung === true;
+function matchesOgeParticipation(unit, ogeParticipationOnly) {
+   return !ogeParticipationOnly || unit.ogeBeteiligung === true;
 }
 
-function matchesScenarioNetworkView(feature, networkView) {
+function matchesScenarioNetworkView(unit, networkView) {
    const scenarioKey = SCENARIO_NETWORK_VIEW_TO_KEY[networkView];
-   return isStartnetzFeature(feature) || isScenarioFeature(feature, scenarioKey);
+   return isStartnetzUnit(unit) || isScenarioFeature(unit, scenarioKey);
 }
 
-function matchesNetworkView(feature, selected) {
+function matchesNetworkView(unit, selected) {
    if (selected === "all") return true;
-   if (selected === "standard") return isStandardFeature(feature);
-   if (SCENARIO_NETWORK_VIEW_TO_KEY[selected]) return matchesScenarioNetworkView(feature, selected);
+   if (selected === "standard") return isStandardFeature(unit);
+   if (SCENARIO_NETWORK_VIEW_TO_KEY[selected]) return matchesScenarioNetworkView(unit, selected);
 
-   return isStandardFeature(feature);
+   return isStandardFeature(unit);
 }
 
-function matchesNetworkContext(feature, filters) {
+function matchesNetworkContext(unit, filters) {
    return (
-      matchesNetworkView(feature, filters.networkView) &&
-      (!shouldApplyScenarioFilter(filters) || matchesScenario(feature.properties, filters.scenario))
+      matchesNetworkView(unit, filters.networkView) &&
+      (!shouldApplyScenarioFilter(filters) || matchesScenario(unit, filters.scenario))
    );
 }
 
 export function getMeasureTypeOptionsForFilters(features, filters) {
+   const units = features.flatMap(getMeasureUnits);
    return MEASURE_TYPE_OPTIONS.filter(
       option =>
          option.value === ALL_VALUE ||
-         features.some(feature => matchesNetworkContext(feature, filters) && matchesMeasureType(feature, option.value))
+         units.some(unit => matchesNetworkContext(unit, filters) && matchesMeasureType(unit, option.value))
    );
 }
 
@@ -174,6 +180,13 @@ function normalizeFilterCombination(filters, features) {
 
    if (!NETWORK_VIEW_VALUES.has(next.networkView)) {
       updateFilter("networkView", "standard");
+   }
+
+   if (
+      next.featureType !== ALL_VALUE &&
+      !features.some(feature => getFeatureTypeFilterValue(feature) === next.featureType)
+   ) {
+      updateFilter("featureType", ALL_VALUE);
    }
 
    if (!KERNNETZ_ID_VALUES.has(next.kernnetzIdStatus)) {
@@ -209,23 +222,34 @@ function normalizeFilterCombination(filters, features) {
    return next;
 }
 
+// Strikte Filtersemantik: Ein Feature matcht, wenn mindestens eine seiner Einzelmaßnahmen alle
+// aktiven Kriterien gleichzeitig erfüllt. Parent-Aggregate von Verdichterstandorten werden bewusst
+// nicht ausgewertet, damit kombinierte Filter keine falsch-positiven Standorte liefern.
+export function unitMatchesFilters(unit, filters) {
+   return (
+      matchesNetworkContext(unit, filters) &&
+      matchesOption(getUmstellungOderNeubau(unit), filters.lineType) &&
+      matchesCommissioningYearRange(unit, filters) &&
+      matchesMeasureType(unit, filters.measureType) &&
+      matchesKernnetzIdStatus(unit, filters.kernnetzIdStatus) &&
+      matchesOperators(unit, filters.operator) &&
+      matchesOgeParticipation(unit, filters.ogeParticipationOnly)
+   );
+}
+
+// Suche und Filter müssen von derselben Einzelmaßnahme erfüllt werden: Ein Verdichterstandort
+// erscheint nicht, wenn nur eine ausgeblendete Maßnahme den Suchbegriff matcht (Entscheidung
+// 2026-07-05).
 export function filterPipelines(features, filters, query = getSearchQuery(filters.searchTerm)) {
    const hasActiveSearch = isSearchActive(query);
 
-   return features.filter(feature => {
-      const props = feature.properties;
-
-      return (
-         matchesNetworkContext(feature, filters) &&
-         matchesOption(props.leitungstyp, filters.lineType) &&
-         matchesCommissioningYearRange(props, filters) &&
-         matchesMeasureType(feature, filters.measureType) &&
-         matchesKernnetzIdStatus(feature, filters.kernnetzIdStatus) &&
-         matchesOperators(feature, filters.operator) &&
-         matchesOgeParticipation(props, filters.ogeParticipationOnly) &&
-         featureMatchesSearch(feature, query, hasActiveSearch)
-      );
-   });
+   return features.filter(
+      feature =>
+         matchesFeatureType(feature, filters.featureType) &&
+         getMeasureUnits(feature).some(
+            unit => unitMatchesFilters(unit, filters) && unitMatchesSearch(feature, unit, query, hasActiveSearch)
+         )
+   );
 }
 
 export function filterPipelineCollection(collection, filters, query = getSearchQuery(filters.searchTerm)) {
@@ -261,7 +285,25 @@ export function usePipelineFilters(collection) {
       return { items: toResultItems(filteredCollection, hasActiveSearch, query) };
    }, [filteredCollection, hasActiveSearch, query]);
 
-   const metrics = useMemo(() => sumPipelineMetrics(filteredCollection), [filteredCollection]);
+   const metrics = useMemo(
+      () =>
+         sumPipelineMetrics(
+            filteredCollection,
+            (unit, feature) =>
+               unitMatchesFilters(unit, filters) && unitMatchesSearch(feature, unit, query, hasActiveSearch)
+         ),
+      [filteredCollection, filters, hasActiveSearch, query]
+   );
+
+   // Für den Hinweis im leeren Suchergebnis: Gäbe es in der Netzansicht "Alle Maßnahmen im
+   // Datensatz" (ohne Szenariofilter) Treffer für denselben Suchbegriff?
+   const searchFallbackCount = useMemo(() => {
+      if (!hasActiveSearch || filteredCollection.features.length > 0) return 0;
+      if (filters.networkView === "all") return 0;
+
+      return filterPipelines(collection.features, { ...filters, networkView: "all", scenario: ALL_VALUE }, query)
+         .length;
+   }, [collection.features, filteredCollection, filters, hasActiveSearch, query]);
 
    useEffect(() => {
       let ignore = false;
@@ -294,6 +336,9 @@ export function usePipelineFilters(collection) {
       commitFilters({ ...filters, yearFrom: nextYearFrom, yearTo: nextYearTo });
    };
    const resetFilters = () => commitFilters(initialPipelineFilters);
+   // Aktion zum Fallback-Hinweis im leeren Suchergebnis: wechselt in die Netzansicht "Alle
+   // Maßnahmen im Datensatz" (ohne Szenariofilter), Suchbegriff und übrige Filter bleiben erhalten.
+   const showSearchFallback = () => commitFilters({ ...filters, networkView: "all", scenario: ALL_VALUE });
 
    return {
       filteredCollection,
@@ -303,12 +348,14 @@ export function usePipelineFilters(collection) {
       options,
       resetFilters,
       results,
+      searchFallbackCount,
       kernnetzIdOptions: KERNNETZ_ID_OPTIONS,
       measureTypeOptions,
       networkViewOptions: NETWORK_VIEW_OPTIONS,
       scenarioOptions: SCENARIO_OPTIONS,
       searchBounds,
       setFilter,
-      setYearRange
+      setYearRange,
+      showSearchFallback
    };
 }

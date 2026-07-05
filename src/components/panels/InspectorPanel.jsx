@@ -2,6 +2,7 @@ import { Search, X } from "lucide-react";
 import { useRef } from "react";
 
 import DetailPanel from "@/components/panels/DetailPanel";
+import { pipelineMeta } from "@/lib/domain/formatters";
 import { cn } from "@/lib/utils";
 
 function ResultItem({ result, onSelect }) {
@@ -18,7 +19,7 @@ function ResultItem({ result, onSelect }) {
          >
             <strong className="min-w-0 text-xs font-medium wrap-break-word text-card-foreground">{label}</strong>
             <small className="min-w-0 text-[0.68rem] wrap-break-word text-muted-foreground">
-               {[props.id, props.leitungstyp, props.ibnJahr].filter(Boolean).join(" · ")}
+               {pipelineMeta(result.item)}
             </small>
          </button>
       </li>
@@ -31,7 +32,9 @@ export default function InspectorPanel({
    onCloseSelection,
    onSearchTermChange,
    onSelectResult,
+   onShowSearchFallback,
    results,
+   searchFallbackCount = 0,
    searchTerm,
    selection
 }) {
@@ -58,7 +61,7 @@ export default function InspectorPanel({
             <div className="grid min-h-10 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-md border border-primary/45 bg-field/75 px-3 text-muted-foreground shadow-none transition-colors hover:border-primary/65 focus-within:border-ring focus-within:bg-popover focus-within:ring-2 focus-within:ring-ring/65 dark:shadow-[0_0_0_1px_rgba(217,119,87,0.05)] dark:focus-within:border-primary/90 dark:focus-within:ring-primary/20">
                <Search aria-hidden="true" className="size-3.5" />
                <input
-                  aria-label="Suche nach ID, Leitung, Betreiber oder Status"
+                  aria-label="Suche nach ID, Maßnahme, Betreiber oder Status"
                   className="min-w-0 border-0 bg-transparent text-[0.8rem] leading-5 text-popover-foreground outline-none placeholder:text-muted-foreground/55"
                   onChange={event => onSearchTermChange(event.target.value)}
                   placeholder="Suche"
@@ -95,8 +98,17 @@ export default function InspectorPanel({
                      ))}
                   </ul>
                ) : (
-                  <div className="flex min-h-16 items-center justify-center px-3 text-xs text-muted-foreground/80">
-                     Keine Treffer
+                  <div className="grid min-h-16 content-center justify-items-center gap-1.5 px-3 py-4 text-center text-xs text-muted-foreground/80">
+                     <span>Keine Treffer</span>
+                     {searchFallbackCount > 0 ? (
+                        <button
+                           className="rounded px-2 py-1 text-[0.8rem] font-medium text-primary transition-colors hover:bg-primary/10 hover:text-secondary focus-visible:ring-3 focus-visible:ring-ring/65 focus-visible:outline-none dark:focus-visible:ring-ring/50"
+                           onClick={onShowSearchFallback}
+                           type="button"
+                        >
+                           Treffer in der vollständigen Netzansicht anzeigen
+                        </button>
+                     ) : null}
                   </div>
                )}
             </section>

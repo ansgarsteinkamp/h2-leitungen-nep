@@ -30,6 +30,44 @@
       "values": ["Umstellung", "Neubau"],
       "sourceFields": ["Typ", "Leitungsart"]
    },
+   "featureTyp": {
+      "label": "Datensatztyp",
+      "description": "Technische Typisierung des Eintrags im Datensatz: leitung, gdrm_anlage, verdichterstandort, verdichter_aggregat oder sonstiges.",
+      "type": "enum",
+      "values": ["leitung", "gdrm_anlage", "verdichterstandort", "verdichter_aggregat", "sonstiges"],
+      "sourceFields": ["featureTyp"]
+   },
+   "massnahmenart": {
+      "label": "Maßnahmenart",
+      "description": "Fachliche Art der Maßnahme, z. B. Leitung, GDRM-Anlage, Verdichterstandort oder Sonstiges.",
+      "type": "string",
+      "sourceFields": ["Maßnahmenart"]
+   },
+   "umstellungOderNeubau": {
+      "label": "Umstellung oder Neubau",
+      "description": "Ob die Maßnahme eine Umstellung bestehender Infrastruktur auf Wasserstoff oder ein Neubau ist. Eine Umstellung setzt voraus, dass die Anlage aus dem Methansystem freigemacht werden kann.",
+      "type": "string",
+      "sourceFields": ["Umstellung / Neubau"]
+   },
+   "geometrieStatus": {
+      "label": "Kartengeometrie",
+      "description": "Beschreibt, ob für die Maßnahme eine Kartengeometrie hinterlegt ist. Maßnahmen ohne Geometrie sind fachlich vorhanden, werden aber nicht auf der Karte dargestellt.",
+      "type": "enum",
+      "values": ["vorhanden", "fehlt", "aggregiert"],
+      "sourceFields": ["geometrieStatus"]
+   },
+   "officialIds": {
+      "label": "Offizielle Maßnahmen-IDs",
+      "description": "Offizielle NEP-Maßnahmen-IDs, die dieser Eintrag bündelt. Ein Verdichterstandort fasst mehrere Einzelmaßnahmen zusammen.",
+      "type": "string[]",
+      "sourceFields": ["officialIds"]
+   },
+   "standortName": {
+      "label": "Standortname",
+      "description": "Name des Verdichterstandorts, der mehrere Einzelmaßnahmen bündelt.",
+      "type": "string",
+      "sourceFields": ["standortName"]
+   },
    "startnetz": {
       "label": "Startnetzmaßnahme",
       "description": "Wasserstoff-Kernnetzmaßnahme, die im NEP 2025 als Startnetzmaßnahme geführt wird. Die angezeigte planerische Inbetriebnahme kann davon abweichen.",
@@ -78,6 +116,30 @@
       "type": "date",
       "sourceFields": ["Planerische Inbetriebnahme bis"]
    },
+   "inbetriebnahmeNachKernnetzgenehmigung": {
+      "label": "Inbetriebnahme laut Kernnetzgenehmigung",
+      "description": "Inbetriebnahmedatum gemäß Kernnetzgenehmigung, soweit angegeben. Es kann vom planerischen Zieldatum im NEP abweichen.",
+      "type": "date",
+      "sourceFields": ["Inbetriebnahme nach Kernnetzgenehmigung"]
+   },
+   "ibnJahre": {
+      "label": "Inbetriebnahmejahre",
+      "description": "Bei Verdichterstandorten: Inbetriebnahmejahre der am Standort gebündelten Einzelmaßnahmen.",
+      "type": "number[]",
+      "sourceFields": ["IBN"]
+   },
+   "inbetriebnahmeBisWerte": {
+      "label": "Planerische Inbetriebnahmen",
+      "description": "Bei Verdichterstandorten: planerische Inbetriebnahmedaten der am Standort gebündelten Einzelmaßnahmen.",
+      "type": "date[]",
+      "sourceFields": ["Planerische Inbetriebnahme bis"]
+   },
+   "inbetriebnahmeNachKernnetzgenehmigungWerte": {
+      "label": "Inbetriebnahmen laut Kernnetzgenehmigung",
+      "description": "Bei Verdichterstandorten: Inbetriebnahmedaten gemäß Kernnetzgenehmigung der am Standort gebündelten Einzelmaßnahmen.",
+      "type": "date[]",
+      "sourceFields": ["Inbetriebnahme nach Kernnetzgenehmigung"]
+   },
    "laengeKm": {
       "label": "Leitungslänge",
       "description": "Geplante Länge der Leitung in Kilometern.",
@@ -98,6 +160,20 @@
       "type": "number",
       "unit": "bar",
       "sourceFields": ["Druckstufe (DP) in bar"]
+   },
+   "verdichterleistungMw": {
+      "label": "Verdichterleistung",
+      "description": "Geplante Verdichterleistung in Megawatt. Bei Verdichterstandorten die Summe der am Standort gebündelten Einzelmaßnahmen.",
+      "type": "number",
+      "unit": "MW",
+      "sourceFields": ["Verdichterleistung in MW"]
+   },
+   "anlagenleistungM3h": {
+      "label": "Anlagenleistung",
+      "description": "Geplante Anlagenleistung in Normkubikmetern pro Stunde, z. B. bei GDRM-Anlagen.",
+      "type": "number",
+      "unit": "m³/h",
+      "sourceFields": ["Anlagenleistung in m³/h"]
    },
    "bundeslaender": {
       "label": "Bundesländer",
@@ -130,11 +206,11 @@
       "type": "string",
       "sourceFields": ["Ids zugehöriger erdgasverstärkender Maßnahmen (durch \" / \" getrennt)"]
    },
-   "finalInvestmentDecision": {
-      "label": "Final Investment Decision (FID)",
-      "description": "Vorliegende Final Investment Decision (FID) zur Maßnahme. Leere Werte bedeuten keine Angabe in den Daten.",
-      "type": "boolean|null",
-      "sourceFields": ["Final Investment Decision"]
+   "kostenermittlung": {
+      "label": "Kostenermittlung",
+      "description": "Art oder Grundlage der Kostenermittlung zur angegebenen Kostenschätzung.",
+      "type": "string",
+      "sourceFields": ["Kostenermittlung"]
    },
    "durchfuehrendeNetzbetreiber": {
       "label": "Durchführende Netzbetreiber",
@@ -164,6 +240,12 @@
       "label": "Kernnetz-ID",
       "description": "Kernnetz-ID der Maßnahme, z. B. KLU024-01, KLN061-01 oder AND099-01. Bei reinen NEP-Maßnahmen bleibt das Feld leer.",
       "type": "string",
+      "sourceFields": ["Antrags-ID Kernnetz"]
+   },
+   "kernnetzAntragsIds": {
+      "label": "Kernnetz-IDs",
+      "description": "Bei Verdichterstandorten: Kernnetz-IDs der am Standort gebündelten Einzelmaßnahmen.",
+      "type": "string[]",
       "sourceFields": ["Antrags-ID Kernnetz"]
    },
    "entsogTyndpProjektNr": {

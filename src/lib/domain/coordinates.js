@@ -3,6 +3,7 @@ const positionToLatLng = ([lon, lat]) => [lat, lon];
 const collectPositions = geometry => {
    if (!geometry) return [];
 
+   if (geometry.type === "Point" && Array.isArray(geometry.coordinates)) return [geometry.coordinates];
    if (geometry.type === "LineString" && Array.isArray(geometry.coordinates)) return geometry.coordinates;
    if (geometry.type === "MultiLineString" && Array.isArray(geometry.coordinates)) return geometry.coordinates.flat();
 

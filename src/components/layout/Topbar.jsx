@@ -8,7 +8,7 @@ export default function Topbar() {
                Zweiter Entwurf des NEP Gas und Wasserstoff 2025
             </p>
             <h1 className="m-0 text-base leading-tight font-medium text-card-foreground 3xs:text-lg xs:text-2xl">
-               Interaktive Karte der H₂-Leitungen
+               Interaktive Karte der H₂-Maßnahmen
             </h1>
          </div>
          <div className="max-xs:order-1 max-xs:self-center">

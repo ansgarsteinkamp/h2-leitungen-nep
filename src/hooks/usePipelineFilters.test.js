@@ -51,6 +51,46 @@ function collection(features) {
    return { type: "FeatureCollection", features };
 }
 
+function compressorMeasure(id, properties = {}) {
+   return {
+      id,
+      name: `Verdichtermaßnahme ${id}`,
+      featureTyp: "verdichter_massnahme",
+      startnetz: false,
+      netzausbauvorschlag: false,
+      szenario1: false,
+      szenario2: false,
+      szenario3: false,
+      ibnJahr: null,
+      durchfuehrendeNetzbetreiber: [],
+      ansprechpartner: [],
+      ...properties
+   };
+}
+
+function compressorSite(id, measures) {
+   const years = [...new Set(measures.map(measure => measure.ibnJahr).filter(Boolean))];
+
+   return {
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [9, 53] },
+      properties: {
+         id,
+         name: `Standort ${id}`,
+         featureTyp: "verdichterstandort",
+         startnetz: measures.some(measure => measure.startnetz),
+         netzausbauvorschlag: measures.some(measure => measure.netzausbauvorschlag),
+         szenario1: measures.some(measure => measure.szenario1),
+         szenario2: measures.some(measure => measure.szenario2),
+         szenario3: measures.some(measure => measure.szenario3),
+         ibnJahr: years.length === 1 ? years[0] : null,
+         ibnJahre: years,
+         officialIds: measures.map(measure => measure.id),
+         massnahmen: measures
+      }
+   };
+}
+
 function idsOf(features) {
    return features.map(feature => feature.properties.id);
 }
@@ -645,6 +685,138 @@ describe("filterPipelines", () => {
       expect(result.current.filters.yearFrom).toBe(ALL_VALUE);
       expect(result.current.filters.yearTo).toBe(ALL_VALUE);
       expect(idsOf(result.current.filteredCollection.features)).toEqual(["with-year", "without-year", "later"]);
+   });
+
+   it("evaluates combined filters strictly per nested compressor measure", () => {
+      const site = compressorSite("standort-a", [
+         compressorMeasure("H2-2001-01", { netzausbauvorschlag: true, szenario1: true, ibnJahr: 2028 }),
+         compressorMeasure("H2-2002-01", { netzausbauvorschlag: true, ibnJahr: 2030 })
+      ]);
+
+      // Einzelkriterien werden je von einer Maßnahme erfüllt, die Kombination von keiner:
+      // Aggregat-Logik würde den Standort fälschlich anzeigen, strikte Logik blendet ihn aus.
+      expect(filterIds([site], { scenario: "szenario1", yearFrom: 2030, yearTo: 2030 })).toEqual([]);
+      expect(filterIds([site], { scenario: "szenario1", yearFrom: 2028, yearTo: 2028 })).toEqual(["standort-a"]);
+      expect(filterIds([site], { yearFrom: 2030, yearTo: 2030 })).toEqual(["standort-a"]);
+   });
+
+   it("requires search and filters to match the same nested compressor measure", () => {
+      const site = compressorSite("standort-suche", [
+         compressorMeasure("H2-2003-01", { netzausbauvorschlag: true, ibnJahr: 2032 }),
+         compressorMeasure("H2-2103-01", { szenario1: true, ibnJahr: 2034 })
+      ]);
+
+      // Die gesuchte Maßnahme liegt außerhalb der Standardansicht: kein Treffer statt eines
+      // Standorts, dessen Kennzahlen eine andere Maßnahme beschreiben würden.
+      expect(filterIds([site], { searchTerm: "H2-2103-01" })).toEqual([]);
+      expect(filterIds([site], { networkView: "all", searchTerm: "H2-2103-01" })).toEqual(["standort-suche"]);
+      // Standortweite Felder wie der Name matchen jede Maßnahme des Standorts.
+      expect(filterIds([site], { searchTerm: "Standort standort-suche" })).toEqual(["standort-suche"]);
+   });
+
+   it("keeps metrics and the fallback hint consistent with the searched measure", () => {
+      const site = compressorSite("standort-suche", [
+         compressorMeasure("H2-2003-01", { netzausbauvorschlag: true, ibnJahr: 2032, kostenMioEur: 146 }),
+         compressorMeasure("H2-2103-01", { szenario1: true, ibnJahr: 2034, kostenMioEur: 707 })
+      ]);
+      const { result } = renderHook(() => usePipelineFilters(collection([site])));
+
+      setFilter(result, "searchTerm", "H2-2103-01");
+
+      expect(idsOf(result.current.filteredCollection.features)).toEqual([]);
+      expect(result.current.metrics).toEqual({ count: 0, lengthKm: 0, costMioEur: 0 });
+      expect(result.current.searchFallbackCount).toBe(1);
+
+      setFilter(result, "networkView", "all");
+
+      expect(idsOf(result.current.filteredCollection.features)).toEqual(["standort-suche"]);
+      expect(result.current.metrics).toEqual({ count: 1, lengthKm: 0, costMioEur: 707 });
+      expect(result.current.searchFallbackCount).toBe(0);
+   });
+
+   it("switches to the full network view via the search fallback action", () => {
+      const site = compressorSite("standort-suche", [
+         compressorMeasure("H2-2003-01", { netzausbauvorschlag: true, ibnJahr: 2032 }),
+         compressorMeasure("H2-2103-01", { szenario1: true, ibnJahr: 2034 })
+      ]);
+      const { result } = renderHook(() => usePipelineFilters(collection([site])));
+
+      setFilter(result, "scenario", "szenario2");
+      setFilter(result, "searchTerm", "H2-2103-01");
+
+      expect(idsOf(result.current.filteredCollection.features)).toEqual([]);
+      expect(result.current.searchFallbackCount).toBe(1);
+
+      act(() => result.current.showSearchFallback());
+
+      // Netzansicht "Alle" und Szenariofilter zurückgesetzt — sonst bliebe der versprochene
+      // Treffer unerreichbar. Suchbegriff bleibt erhalten.
+      expect(result.current.filters.networkView).toBe("all");
+      expect(result.current.filters.scenario).toBe(ALL_VALUE);
+      expect(result.current.filters.searchTerm).toBe("H2-2103-01");
+      expect(idsOf(result.current.filteredCollection.features)).toEqual(["standort-suche"]);
+      expect(result.current.searchFallbackCount).toBe(0);
+   });
+
+   it("matches compressor sites when at least one nested measure satisfies the network view", () => {
+      const site = compressorSite("standort-b", [
+         compressorMeasure("H2-2003-01", { szenario2: true, ibnJahr: 2034 }),
+         compressorMeasure("H2-2004-01", { ibnJahr: 2034 })
+      ]);
+
+      expect(filterIds([site])).toEqual([]);
+      expect(filterIds([site], { networkView: "scenario2" })).toEqual(["standort-b"]);
+      expect(filterIds([site], { networkView: "all" })).toEqual(["standort-b"]);
+   });
+
+   it("filters compressor sites by nested operators instead of parent aggregates", () => {
+      const site = compressorSite("standort-c", [
+         compressorMeasure("H2-2005-01", {
+            netzausbauvorschlag: true,
+            ibnJahr: 2032,
+            durchfuehrendeNetzbetreiber: ["Open Grid Europe GmbH"]
+         }),
+         compressorMeasure("H2-2006-01", {
+            netzausbauvorschlag: true,
+            ibnJahr: 2034,
+            durchfuehrendeNetzbetreiber: ["Nowega GmbH"]
+         })
+      ]);
+
+      expect(filterIds([site], { operator: "Open Grid Europe GmbH" })).toEqual(["standort-c"]);
+      expect(filterIds([site], { operator: "Open Grid Europe GmbH", yearFrom: 2034, yearTo: 2034 })).toEqual([]);
+   });
+
+   it("filters by feature type and resets unavailable feature types", () => {
+      const features = [
+         pipeline("leitung-a", { startnetz: true }),
+         compressorSite("standort-d", [compressorMeasure("H2-2007-01", { netzausbauvorschlag: true, ibnJahr: 2032 })])
+      ];
+
+      expect(filterIds(features, { featureType: "leitung" })).toEqual(["leitung-a"]);
+      expect(filterIds(features, { featureType: "verdichter" })).toEqual(["standort-d"]);
+
+      const { result } = renderHook(() => usePipelineFilters(collection([pipeline("leitung-a", { startnetz: true })])));
+
+      setFilter(result, "featureType", "verdichter");
+
+      expect(result.current.filters.featureType).toBe(ALL_VALUE);
+   });
+
+   it("derives year facets and bounds from nested compressor measures", () => {
+      const { result } = renderHook(() =>
+         usePipelineFilters(
+            collection([
+               pipeline("leitung-a", { startnetz: true, ibnJahr: 2030 }),
+               compressorSite("standort-e", [
+                  compressorMeasure("H2-2008-01", { netzausbauvorschlag: true, ibnJahr: 2028 }),
+                  compressorMeasure("H2-2009-01", { netzausbauvorschlag: true, ibnJahr: 2036 })
+               ])
+            ])
+         )
+      );
+
+      expect(result.current.options.years).toEqual([2028, 2030, 2036]);
    });
 
    it("keeps a deliberate all-data view when scenario marker filters are reset", () => {

@@ -176,11 +176,11 @@
    --field: #ffffff;
    --ring: #35aeb5;
    --map-pipeline-oge: #52a436;
-   --map-pipeline-no-oge: #d2eae6;
+   --map-pipeline-no-oge: #c3e1db;
    --map-pipeline-selection-halo-oge: #3f8429;
    --map-pipeline-selection-halo-no-oge: #75b8af;
    --map-pipeline-symbol-oge: #52a436;
-   --map-pipeline-symbol-no-oge: #bedfd9;
+   --map-pipeline-symbol-no-oge: #b0d7d0;
    --map-pipeline-context-oge: #6aa85a;
    --map-pipeline-context-no-oge: #9ed8d7;
    --map-pipeline-fallback: #013c74;
@@ -366,6 +366,13 @@
 .leaflet-interactive:focus-visible {
    outline: 2px solid var(--primary);
    outline-offset: 2px;
+}
+
+/* Orte-Punkte sind nur für den Hover-Tooltip interaktiv; ein Klick löst nichts aus.
+   Der Pfeil-Cursor hebt sie von der Greifhand der Karte ab, ohne wie der
+   Zeigefinger-Cursor einen Klick zu versprechen. */
+.leaflet-place-markers-pane .leaflet-interactive {
+   cursor: default;
 }
 
 .light .country-boundary {

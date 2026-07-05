@@ -41,6 +41,15 @@ export const MEASURE_TYPE_OPTIONS = [
    { value: "scenarioOnly", label: "Nur Modellierung 2037" }
 ];
 
+// Werte entsprechen featureTyp aus v3; "verdichter" fasst Standorte und Aggregatmaßnahmen zusammen.
+export const FEATURE_TYPE_FILTER_OPTIONS = [
+   { value: ALL_VALUE, label: "Alle" },
+   { value: "leitung", label: "Leitungen" },
+   { value: "verdichter", label: "Verdichter" },
+   { value: "gdrm_anlage", label: "GDRM" },
+   { value: "sonstiges", label: "Sonstige" }
+];
+
 export const KERNNETZ_ID_OPTIONS = [
    { value: ALL_VALUE, label: "Alle" },
    { value: "withKernnetzId", label: "Mit Kernnetz-ID" },

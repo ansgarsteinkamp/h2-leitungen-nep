@@ -156,7 +156,7 @@ UI-Risiko: Umstellungsleitungen sollten nicht als unabhängig realisierbare Einz
 
 ### GDRM-Anlagen und nicht-lineare Netzelemente
 
-Die Leitungsdaten bilden nur einen Teil der Infrastruktur ab. Gas-Druckregel- und Messanlagen (GDRM-Anlagen), Verdichter, Speicheranbindungen, Importpunkte und Ausspeisepunkte sind für die technische Netzfunktion ebenfalls relevant. Bei Maßnahmenbezeichnungen wie "inkl. GDRM-Anlagen" sind Kosten und Funktion daher nicht vollständig aus der Leitungslänge ableitbar.
+Die Leitungsdaten bilden nur einen Teil der Infrastruktur ab. Gasdruckregel- und Messanlagen (GDRM-Anlagen), Verdichter, Speicheranbindungen, Importpunkte und Ausspeisepunkte sind für die technische Netzfunktion ebenfalls relevant. Bei Maßnahmenbezeichnungen wie "inkl. GDRM-Anlagen" sind Kosten und Funktion daher nicht vollständig aus der Leitungslänge ableitbar.
 
 Für Auswertungen bedeutet das: Kilometerwerte erklären nicht allein das Investitionsvolumen. Kurze Maßnahmen können hohe Kosten haben, wenn Anlagen, Verdichter oder komplexe Kopplungspunkte enthalten sind; lange Leitungsabschnitte können im Verhältnis günstiger erscheinen, wenn sie überwiegend aus Umstellung bestehen.
 
@@ -222,6 +222,21 @@ Realdatencheck mit `quelldaten_v2.geojson` am 2026-07-03:
 
 Die lokale GeoJSON ist nicht geeignet, die gesamten 20,3 Mrd. Euro des Wasserstoff-Netzausbauvorschlags direkt nachzurechnen, weil die offiziellen Gesamtinvestitionen auch Verdichterpositionen enthalten. Eine interne Datenauswertung ergab für `netzausbauvorschlag` in der lokalen GeoJSON 199 Leitungsfeatures, ca. 7.010,2 km und ca. 18.248,3 Mio. Euro. Das liegt nahe an der Tabellenposition "Leitungen inkl. GDRM-Anlagen" von ca. 18,3 Mrd. Euro, aber unter der Gesamtinvestition von ca. 20,3 Mrd. Euro inklusive ca. 2,0 Mrd. Euro Verdichterstationen. Die Szenario-Längensummen der lokalen GeoJSON passen dagegen sehr eng zu den NEP-Tabellen: Szenario 1 ca. 10.429,6 km, Szenario 2 ca. 10.198,6 km, Szenario 3 ca. 7.432,8 km.
 
+## Datenvertrag v3 und Filtersemantik auf Maßnahmen-Ebene
+
+Seit `quelldaten_v3.geojson` ist der Datensatz nicht mehr leitungszentriert. Der Typindikator ist `featureTyp` (`leitung`, `gdrm_anlage`, `verdichterstandort`, `verdichter_aggregat`, `sonstiges`); v2-Dateien ohne `featureTyp` werden weiterhin akzeptiert und als Leitungen behandelt. Zulässige Geometrien sind `MultiLineString`/`LineString` (nur Leitungen), `Point` (Verdichterstandorte) und `geometry: null`; den fachlichen Zustand beschreibt `geometrieStatus` (`vorhanden`, `fehlt`, `aggregiert`). Features ohne Geometrie erscheinen nicht auf der Karte, bleiben aber in Suche, Kennzahlen und Detailansicht.
+
+Zentrale Semantikentscheidung (2026-07-05): Filter werden strikt auf Maßnahmen-Ebene ausgewertet. Ein Verdichterstandort-Parent bündelt mehrere Einzelmaßnahmen in `massnahmen[]`; seine eigenen Booleans sind nur Aggregate. Der Standort matcht einen Filterzustand genau dann, wenn mindestens eine Einzelmaßnahme alle aktiven Kriterien gleichzeitig erfüllt. Damit können kombinierte Filter (z. B. Szenario 1 und Inbetriebnahmejahr) keine falsch-positiven Standorte liefern, bei denen jedes Kriterium von einer anderen Maßnahme stammt. Jahresfacetten und -grenzen werden aus den Einzelmaßnahmen (`massnahmen[].ibnJahr`) abgeleitet.
+
+Weitere Regeln:
+
+- `officialIds` trägt die offiziellen NEP-Maßnahmen-IDs; die technische `id` eines Standort-Parents kann synthetisch sein (z. B. `verdichterstandort:achim`). Suche und Anzeige berücksichtigen `officialIds`, `ids`, `massnahmen[].id` und `kernnetzAntragsIds`.
+- Die Kennzahlen werden auf Maßnahmen-Ebene summiert: "Maßnahmen" zählt offizielle Maßnahmen (v3 ungefiltert: 434), nicht Top-Level-Features (418). Bei aktiven Filtern fließen nur die Einzelmaßnahmen ein, die alle Kriterien erfüllen — ein Verdichterstandort, der nur wegen einer passenden Maßnahme sichtbar bleibt, zählt nicht mit seinem vollen Bündel (Entscheidung 2026-07-05).
+- Die Kennzahl "Länge" summiert nur Leitungsmaßnahmen; Kosten werden aus den Einzelmaßnahmen summiert. Datencheck 2026-07-05: Die Parent-Aggregate (`kostenMioEur`, `verdichterleistungMw`) entsprechen bei allen 19 Verdichterstandorten exakt den Kindersummen.
+- Der Filter "Maßnahmenart" fasst `verdichterstandort` und `verdichter_aggregat` als "Verdichter" zusammen und wird nur angezeigt, wenn der Datensatz mehr als eine Maßnahmenart enthält.
+- Der frühere "Leitungstyp"-Filter heißt "Umstellung oder Neubau" und wertet `umstellungOderNeubau` mit Fallback auf `leitungstyp` aus.
+- `finalInvestmentDecision` ist in v3 nicht mehr enthalten und wird nicht mehr angezeigt.
+
 ## Aktuelle UI-Entscheidungen und offene Punkte
 
 Aktuell umgesetzt:
@@ -238,12 +253,24 @@ Aktuell umgesetzt:
 - Der Filter "Teil des Kernnetzes" wurde als eigene Achse direkt nach "Einordnung im NEP" vorgesehen. Er filtert datenpräzise nach vorhandener oder fehlender `kernnetzAntragsId` mit den Optionen "Alle", "Mit Kernnetz-ID" und "Ohne Kernnetz-ID".
 - Wichtig: "Teil des Kernnetzes" ist als nutzerverständliches Gruppenlabel gemeint; die Optionen und der Tooltip stellen klar, dass die App nach Kernnetz-ID filtert und daraus kein Nachweis für Baurecht, Bauentscheidung, Umsetzungsstand oder die aktuelle NEP-Einordnung folgt.
 - "Neue Maßnahmen NEP 2025" wurde nicht als globale Option gewählt, weil Maßnahmen ohne Kernnetz-ID in der Ansicht "Alle Maßnahmen im Datensatz" auch reine Modellierungsergebnisse enthalten können.
-- Die Filter-Leiste folgt fachlich der Reihenfolge: Netzansicht als Grundmenge, Einordnung im NEP als Rollenfilter, Teil des Kernnetzes als Kernnetz-ID-Achse, optionaler Szenariofilter als Schnittmenge, danach Leitungstyp, Inbetriebnahmejahr und Betreiber-/OGE-Filter.
+- Die Filter-Leiste folgt fachlich der Reihenfolge: Netzansicht als Grundmenge, Einordnung im NEP als Rollenfilter, Teil des Kernnetzes als Kernnetz-ID-Achse, optionaler Szenariofilter als Schnittmenge, danach "Umstellung oder Neubau", Inbetriebnahmejahr und Betreiber-/OGE-Filter.
 - Die Tooltips erklären ausdrücklich den Unterschied zwischen Szenario-Netzansichten und dem separaten Szenariofilter: Szenario-Netzansichten enthalten Startnetzmaßnahmen zusätzlich, der separate Szenariofilter fügt keine Startnetzmaßnahmen hinzu.
-- Der Tooltip zum Leitungstyp erklärt bei Umstellungen, dass die Leitung aus dem Methansystem freigemacht werden kann.
+- Der Tooltip zu "Umstellung oder Neubau" erklärt bei Umstellungen, dass die Leitung aus dem Methansystem freigemacht werden kann.
 - Der Tooltip zum Inbetriebnahmejahr erklärt, dass das Jahr ein planerischer Wert aus den Maßnahmendaten ist.
 - "OGE-Bezug" bleibt unverändert.
 - Die Hervorhebung "OGE durchführender FNB" ist bewusst als Darstellung und nicht als Filter erklärt; "Nur OGE-Bezug" bleibt dagegen der breitere Filter über Ansprechpartner oder durchführende Netzbetreiber.
+- Die Hervorhebung wirkt auf alles, was auf der Karte liegt: Leitungen und Verdichterstandorte. Dass sie bei Verdichterstandorten nie sichtbar wird, liegt an den Daten des NEP 2025 (nur 4 von 19 Standorten haben überhaupt einen durchführenden FNB, keiner davon OGE); GDRM-Anlagen haben keine Geometrie und erscheinen gar nicht auf der Karte (Datencheck 2026-07-05).
+- Orte-Punkte ohne sichtbares Label sind nur für den Hover-Tooltip interaktiv; sie zeigen den Karten-Cursor statt eines Zeigers, und die Marker werden bei Wechsel des Tooltip-Zustands neu aufgebaut, weil Leaflet sonst verwaiste Tooltip-Fokus-Listener zurücklässt (TypeError bei Klick; Fix 2026-07-05).
+- Der Filter "Maßnahmenart" nutzt die Reihenfolge Alle, Leitungen, Verdichter, GDRM, Sonstige mit den bewusst kurzen Chip-Labels "GDRM" und "Sonstige"; der Tooltip erklärt die Langform "GDRM-Anlagen (Gasdruckregel- und Messanlagen)" (Entscheidung 2026-07-05).
+- Der Button "Filter und Karte zurücksetzen" sitzt als Primary-Icon-Button mit Tooltip rechts neben der Kennzahlen-Card — außerhalb der Card, weil er auf Filter und Karte wirkt und nicht Teil der Kennzahlen ist (Entscheidung 2026-07-05).
+- Das Detailpanel zeigt keine Attributzeile "Kartengeometrie" mehr. Stattdessen erscheint nur bei Features ohne Geometrie eine Hinweisbox unter der Kopfzeile: bei `geometrieStatus: "fehlt"` "aktuell nicht auf der Karte verortet", bei `"aggregiert"` "keinem einzelnen Standort zugeordnet" (Entscheidung 2026-07-05).
+- Nutzersichtbare Texte vermeiden das Entwicklerwort "Feature"; Tooltips sprechen von Maßnahmen bzw. Einträgen im Datensatz (Entscheidung 2026-07-05).
+- Die Detailansicht eines Verdichterstandorts zeigt eine Summen-Kachelzeile (Maßnahmen, IBN-Jahre, Leistung gesamt, Kosten gesamt) plus echte Standortfelder; die Einzelmaßnahmen sind aufklappbare Karten, ab 2 Maßnahmen standardmäßig eingeklappt, bei genau 1 Maßnahme aufgeklappt. Aggregat-Booleans und gespiegelte ID-Listen des Parents erscheinen dort nicht mehr als Detailzeilen (Entscheidung 2026-07-05).
+- Der Karteninhalt-Umschalter unten links heißt "Maßnahmen" statt "Leitungen", weil die Ebene seit v3 auch Verdichterpunkte enthält; App-Titel und Karten-Export verwenden durchgängig "H₂-Maßnahmen".
+- Suche und Filter gelten für dieselbe Einzelmaßnahme (Entscheidung 2026-07-05): Eine Maßnahme matcht die Suche über ihre eigenen Felder oder die standortweiten Felder ihres Features (Name, Standort, Beschreibung, Bundesländer). Aggregatfelder der Verdichterstandort-Parents (officialIds, ids, Betreiberlisten, Booleans, Jahres- und Szenariomengen) zählen bewusst nicht standortweit, damit eine ausgeblendete Maßnahme den Standort nicht in die Ansicht hebt. Kennzahlen zählen nur Maßnahmen, die Suche und Filter gleichzeitig erfüllen.
+- Ist die Trefferliste bei aktiver Suche leer, prüft die App denselben Suchbegriff gegen die Netzansicht "Alle Maßnahmen im Datensatz" (ohne Szenariofilter) und zeigt bei Treffern unter "Keine Treffer" die Schaltfläche "Treffer in der vollständigen Netzansicht anzeigen" (Primärfarbe, medium). Ein Klick wechselt die Netzansicht auf "Alle Maßnahmen im Datensatz" und setzt den Szenariofilter zurück; Suchbegriff und übrige Filter bleiben erhalten. Bewusst kein automatisches Umschalten beim Tippen: Das würde den fachlichen Kontext (Kennzahlen, Karte) als Nebenwirkung einer Texteingabe unsichtbar ändern und könnte während der Eingabe hin- und herspringen (Entscheidung 2026-07-05).
+- Treffer-Meta-Zeilen zeigen offizielle Maßnahmen-IDs (`getOfficialIds`) statt der technischen Feature-ID; bei Verdichterstandorten mit genau einer Maßnahme erschien sonst die synthetische ID (Fix 2026-07-05).
+- Punktgeometrien sind laut v3-Vertrag Verdichterstandorten vorbehalten: Die Validierung lehnt Points für andere Featuretypen ab, und die Karte rendert nur `verdichterstandort`-Features als Verdichterpunkte (Fix 2026-07-05).
 
 Offene Diskussionspunkte:
 
