@@ -1,8 +1,8 @@
 # Fachwissen zu NEP-Gas/Wasserstoff-Filtern
 
-Stand dieser Arbeitsnotiz: 2026-07-05. Review erforderlich nach 2026-07-10, weil sich der laufende BNetzA-Prozess danach ändern kann.
+Stand dieser Fachnotiz: 2026-07-05. Review erforderlich nach 2026-07-10, weil sich der laufende BNetzA-Prozess danach ändern kann.
 
-Diese Notiz hält das fachliche Verständnis hinter den Filterbegriffen der Anwendung fest. Sie ist als Arbeitsgedächtnis für weitere UI- und Logikentscheidungen gedacht. Der überarbeitete Entwurf des Netzentwicklungsplans Gas und Wasserstoff 2025 wurde am 2026-06-01 der Bundesnetzagentur zur Bestätigung vorgelegt. Die BNetzA konsultiert den überarbeiteten Entwurf bis zum 2026-07-10; während der laufenden Konsultation ist der NEP daher noch nicht final bestätigt. Formulierungen in der App sollten deshalb nicht suggerieren, dass jede Maßnahme bereits endgültig genehmigt oder zur Umsetzung verpflichtet ist.
+Diese Notiz hält das fachliche Verständnis hinter den Filterbegriffen, der Filtersemantik und der Datenlogik der Anwendung fest. Der überarbeitete Entwurf des Netzentwicklungsplans Gas und Wasserstoff 2025 wurde am 2026-06-01 der Bundesnetzagentur zur Bestätigung vorgelegt. Die BNetzA konsultiert den überarbeiteten Entwurf bis zum 2026-07-10; während der laufenden Konsultation ist der NEP daher noch nicht final bestätigt. Formulierungen in der App sollten deshalb nicht suggerieren, dass jede Maßnahme bereits endgültig genehmigt oder zur Umsetzung verpflichtet ist.
 
 ## Prozesskette
 
@@ -27,7 +27,7 @@ Das Wasserstoff-Kernnetz ist dabei ein vorgelagerter Sonderprozess nach § 28q E
 
 Das Wasserstoff-Kernnetz ist nicht der NEP und nicht identisch mit dem Netzausbauvorschlag. Es ist eine gesetzlich beschleunigte erste Stufe eines überregionalen Wasserstofftransportnetzes. Ziel nach § 28q EnWG ist ein deutschlandweites, effizientes, schnell realisierbares, ausbaufähiges und klimafreundliches Wasserstoff-Kernnetz, das wesentliche Wasserstoffproduktionsstätten, Importpunkte, Verbrauchspunkte und Speicher verbindet.
 
-Wichtige Arbeitsdaten:
+Öffentliche Eckdaten:
 
 - Genehmigung durch die BNetzA: 2024-10-22.
 - Genehmigter Umfang laut öffentlicher BNetzA-Darstellung: rund 9.040 km.
@@ -62,7 +62,7 @@ Maßnahmen, die bis zum Stichtag bereits in Betrieb genommen wurden, können in 
 
 Für Wasserstoff knüpft das Startnetz an das genehmigte Wasserstoff-Kernnetz an. Nach § 28q Abs. 8 EnWG werden bestimmte frühe Kernnetzmaßnahmen im NEP nicht erneut überprüft: insbesondere Projekte mit planerischer Inbetriebnahme vor Ablauf des 2027-12-31, wenn mit ihrer Durchführung bis 2025-12-31 bereits begonnen wurde. Diese Maßnahmen werden im NEP als Wasserstoff-Startnetz zugrunde gelegt. Zusätzlich werden die Methan-Startnetz-Kriterien auch im Wasserstoffbereich angewendet, insbesondere FID und erforderliche öffentlich-rechtliche Genehmigungen zum Stichtag 2025-09-01.
 
-Wichtige Arbeitsdaten aus dem überarbeiteten NEP-Entwurf 2025:
+Öffentliche Eckdaten aus dem überarbeiteten NEP-Entwurf 2025:
 
 - Wasserstoff-Startnetz: ca. 2.201 km Leitungen, ca. 4,0 Mrd. Euro Investitionsvolumen.
 
@@ -76,7 +76,7 @@ Für die in dieser App sichtbaren Wasserstoff-Leitungen sind vor allem die Szena
 
 ### Szenario 1, 2 und 3
 
-Arbeitsverständnis nach den bisherigen Quellen:
+Fachliches Verständnis nach den bisherigen Quellen:
 
 - Szenario 1 (2037): hoher und breiter Wasserstoffhochlauf auf Basis von O45-H2. Wasserstoff wird bereits 2037 in allen Verbrauchssektoren angesetzt. Im überarbeiteten NEP-Entwurf weist Szenario 1 die höchste Gesamt-H2-Ausspeiseleistung aus; Szenario 2 hat dagegen den höheren Kraftwerksanteil. Die Wasserstoff-Leitungslänge des Modellierungsergebnisses 2037 liegt nahe bei Szenario 2, die Verdichterleistung aber höher.
 - Szenario 2 (2037): stärker elektrifizierter Pfad auf Basis von O45-Strom und eng mit Szenario B des NEP Strom abgestimmt. Wasserstoff wird 2037 im Wesentlichen für Kraftwerke und Industrie angesetzt; keine Wasserstoffnutzung in privaten Haushalten, GHD und Verkehr. Die Wasserstoff-Leitungslängen ähneln Szenario 1, unterscheiden sich aber bei Leistungs- und Verdichterannahmen.
@@ -111,7 +111,7 @@ Für Wasserstoff nennt der überarbeitete Entwurf sieben Kriterien H2(1) bis H2(
 - H2(6): Bestimmte Umstellungsmaßnahmen über das Kernnetz hinaus können dennoch aufgenommen werden, wenn sie nicht in allen drei Szenarien erforderlich sind, aber in allen drei Szenarien 2037 ohne erdgasverstärkende Maßnahmen umstellbar sind.
 - H2(7): Neubaumaßnahmen, die erst 2045 über den 2037-Vorschlag hinaus erforderlich werden, sind nicht Bestandteil des Netzausbauvorschlags.
 
-Wichtige Arbeitsdaten aus dem überarbeiteten NEP-Entwurf 2025:
+Öffentliche Eckdaten aus dem überarbeiteten NEP-Entwurf 2025:
 
 - Wasserstoff-Netzausbauvorschlag: ca. 7.040 km Leitungen, ca. 20,3 Mrd. Euro und ca. 255 MW Verdichterleistung.
 - Wasserstoff-Startnetz: ca. 2.201 km Leitungen, ca. 4,0 Mrd. Euro.
@@ -201,61 +201,24 @@ Die GeoJSON-Daten werden beim Upload normalisiert. Relevante Marker:
 - `ogeBeteiligung`: wird beim Import aus `durchfuehrendeNetzbetreiber` und `ansprechpartner` abgeleitet.
 - `ogeIstDurchfuehrenderNetzbetreiber`: wird beim Import nur aus `durchfuehrendeNetzbetreiber` abgeleitet.
 
-Realdatenchecks mit der lokalen Quelldatei (Feature-Zählungen und Summen je Filterzustand) werden bewusst nicht in diesem öffentlichen Repository festgehalten; die Quelldatei selbst ist nicht Teil des Repos. Methodischer Merkposten ohne Zahlen: Die aus einer Leitungs-GeoJSON summierten Investitionen sind nicht direkt mit den offiziellen Gesamtinvestitionen des NEP vergleichbar, weil die offiziellen Gesamtwerte auch Verdichterpositionen enthalten; Längensummen je Szenario eignen sich dagegen gut zum Plausibilisieren gegen die öffentlichen NEP-Tabellen.
+Für Plausibilisierungen gilt: Aus Leitungsdaten summierte Investitionen sind nicht direkt mit den offiziellen Gesamtinvestitionen des NEP vergleichbar, weil die offiziellen Gesamtwerte auch Verdichterpositionen enthalten; Längensummen je Szenario eignen sich dagegen gut zum Plausibilisieren gegen die öffentlichen NEP-Tabellen.
 
 ## Datenvertrag v3 und Filtersemantik auf Maßnahmen-Ebene
 
 Seit `quelldaten_v3.geojson` ist der Datensatz nicht mehr leitungszentriert. Der Typindikator ist `featureTyp` (`leitung`, `gdrm_anlage`, `verdichterstandort`, `verdichter_aggregat`, `sonstiges`); v2-Dateien ohne `featureTyp` werden weiterhin akzeptiert und als Leitungen behandelt. Zulässige Geometrien sind `MultiLineString`/`LineString` (nur Leitungen), `Point` (Verdichterstandorte) und `geometry: null`; den fachlichen Zustand beschreibt `geometrieStatus` (`vorhanden`, `fehlt`, `aggregiert`). Features ohne Geometrie erscheinen nicht auf der Karte, bleiben aber in Suche, Kennzahlen und Detailansicht.
 
-Zentrale Semantikentscheidung (2026-07-05): Filter werden strikt auf Maßnahmen-Ebene ausgewertet. Ein Verdichterstandort-Parent bündelt mehrere Einzelmaßnahmen in `massnahmen[]`; seine eigenen Booleans sind nur Aggregate. Der Standort matcht einen Filterzustand genau dann, wenn mindestens eine Einzelmaßnahme alle aktiven Kriterien gleichzeitig erfüllt. Damit können kombinierte Filter (z. B. Szenario 1 und Inbetriebnahmejahr) keine falsch-positiven Standorte liefern, bei denen jedes Kriterium von einer anderen Maßnahme stammt. Jahresfacetten und -grenzen werden aus den Einzelmaßnahmen (`massnahmen[].ibnJahr`) abgeleitet.
+Zentrale Semantik: Filter werden strikt auf Maßnahmen-Ebene ausgewertet. Ein Verdichterstandort-Parent bündelt mehrere Einzelmaßnahmen in `massnahmen[]`; seine eigenen Booleans sind nur Aggregate. Der Standort matcht einen Filterzustand genau dann, wenn mindestens eine Einzelmaßnahme alle aktiven Kriterien gleichzeitig erfüllt. Damit können kombinierte Filter (z. B. Szenario 1 und Inbetriebnahmejahr) keine falsch-positiven Standorte liefern, bei denen jedes Kriterium von einer anderen Maßnahme stammt. Jahresfacetten und -grenzen werden aus den Einzelmaßnahmen (`massnahmen[].ibnJahr`) abgeleitet.
 
 Weitere Regeln:
 
 - `officialIds` trägt die offiziellen NEP-Maßnahmen-IDs; die technische `id` eines Standort-Parents kann synthetisch sein (z. B. `verdichterstandort:beispielort`). Suche und Anzeige berücksichtigen `officialIds`, `massnahmen[].id` und `kernnetzAntragsIds` (`ids` spiegelt `officialIds` und wird nicht separat durchsucht).
-- Die Kennzahlen werden auf Maßnahmen-Ebene summiert: "Maßnahmen" zählt offizielle Einzelmaßnahmen, nicht Top-Level-Features. Bei aktiven Filtern fließen nur die Einzelmaßnahmen ein, die alle Kriterien erfüllen — ein Verdichterstandort, der nur wegen einer passenden Maßnahme sichtbar bleibt, zählt nicht mit seinem vollen Bündel (Entscheidung 2026-07-05).
+- Die Kennzahlen werden auf Maßnahmen-Ebene summiert: "Maßnahmen" zählt offizielle Einzelmaßnahmen, nicht Top-Level-Features. Bei aktiven Filtern fließen nur die Einzelmaßnahmen ein, die alle Kriterien erfüllen; ein Verdichterstandort, der nur wegen einer passenden Maßnahme sichtbar bleibt, zählt nicht mit seinem vollen Bündel.
 - Die Kennzahl "Länge" summiert nur Leitungsmaßnahmen; Kosten werden aus den Einzelmaßnahmen summiert. Die Parent-Aggregate (`kostenMioEur`, `verdichterleistungMw`) sind laut Datenvertrag redundante Summen der Einzelmaßnahmen und fließen nicht separat in die Kennzahlen ein.
 - Der Filter "Maßnahmenart" fasst `verdichterstandort` und `verdichter_aggregat` als "Verdichter" zusammen und wird nur angezeigt, wenn der Datensatz mehr als eine Maßnahmenart enthält.
 - Der frühere "Leitungstyp"-Filter heißt "Umstellung oder Neubau" und wertet `umstellungOderNeubau` mit Fallback auf `leitungstyp` aus.
 - `finalInvestmentDecision` ist in v3 nicht mehr enthalten und wird nicht mehr angezeigt.
-
-## Aktuelle UI-Entscheidungen und offene Punkte
-
-Aktuell umgesetzt:
-
-- "Netzauswahl" wurde zu "Netzansicht".
-- "Netzausbauvorschlag + Startnetz" wurde nach fachlicher Prüfung zu "Startnetz und Netzausbauvorschlag".
-- "Szenario 1/2/3 (2037) + Startnetz" wurde nach fachlicher Prüfung zu "Startnetz und Szenario 1/2/3 (2037)".
-- "Alle Leitungsmaßnahmen" wurde zu "Alle Maßnahmen im Datensatz", weil die Option keine eigene NEP-Kategorie ist, sondern die vollständige geladene GeoJSON einschließlich reiner Modellierungsergebnisse zeigt.
-- Die eigene Netzansicht "Startnetzmaßnahmen" wurde nach fachlicher Prüfung entfernt; dieselbe fachliche Menge ist über "Einordnung im NEP" > "Startnetz" erreichbar.
-- "NEP-Einordnung" wurde zu "Einordnung im NEP".
-- "Startnetz" bleibt als kurze Kategorienoption erhalten; der Tooltip erklärt die Modellierungsbasis.
-- "Netzausbauvorschlag" bleibt als kurze Kategorienoption erhalten; der Tooltip erklärt die Abgrenzung zum Startnetz.
-- "Nur Szenarioergebnis" wurde zu "Nur Modellierung 2037".
-- Der Filter "Teil des Kernnetzes" wurde als eigene Achse direkt nach "Einordnung im NEP" vorgesehen. Er filtert datenpräzise nach vorhandener oder fehlender `kernnetzAntragsId` mit den Optionen "Alle", "Mit Kernnetz-ID" und "Ohne Kernnetz-ID".
-- Wichtig: "Teil des Kernnetzes" ist als nutzerverständliches Gruppenlabel gemeint; die Optionen und der Tooltip stellen klar, dass die App nach Kernnetz-ID filtert und daraus kein Nachweis für Baurecht, Bauentscheidung, Umsetzungsstand oder die aktuelle NEP-Einordnung folgt.
-- "Neue Maßnahmen NEP 2025" wurde nicht als globale Option gewählt, weil Maßnahmen ohne Kernnetz-ID in der Ansicht "Alle Maßnahmen im Datensatz" auch reine Modellierungsergebnisse enthalten können.
-- Die Filter-Leiste folgt fachlich der Reihenfolge: Netzansicht als Grundmenge, Einordnung im NEP als Rollenfilter, Teil des Kernnetzes als Kernnetz-ID-Achse, optionaler Szenariofilter als Schnittmenge, danach "Umstellung oder Neubau", Inbetriebnahmejahr und Betreiber-/OGE-Filter.
-- Die Tooltips erklären ausdrücklich den Unterschied zwischen Szenario-Netzansichten und dem separaten Szenariofilter: Szenario-Netzansichten enthalten Startnetzmaßnahmen zusätzlich, der separate Szenariofilter fügt keine Startnetzmaßnahmen hinzu.
-- Der Tooltip zu "Umstellung oder Neubau" erklärt bei Umstellungen, dass die Leitung aus dem Methansystem freigemacht werden kann.
-- Der Tooltip zum Inbetriebnahmejahr erklärt, dass das Jahr ein planerischer Wert aus den Maßnahmendaten ist.
-- "OGE-Bezug" bleibt unverändert.
-- Die Hervorhebung "OGE durchführender FNB" ist bewusst als Darstellung und nicht als Filter erklärt; "Nur OGE-Bezug" bleibt dagegen der breitere Filter über Ansprechpartner oder durchführende Netzbetreiber.
-- Die Hervorhebung wirkt auf alles, was auf der Karte liegt: Leitungen und Verdichterstandorte. Ob sie bei Verdichterstandorten sichtbar wird, hängt allein vom Datenstand ab, nicht von der Logik; GDRM-Anlagen haben keine Geometrie und erscheinen gar nicht auf der Karte.
-- Orte-Punkte ohne sichtbares Label sind nur für den Hover-Tooltip interaktiv; sie zeigen den Karten-Cursor statt eines Zeigers, und die Marker werden bei Wechsel des Tooltip-Zustands neu aufgebaut, weil Leaflet sonst verwaiste Tooltip-Fokus-Listener zurücklässt (TypeError bei Klick; Fix 2026-07-05).
-- Der Filter "Maßnahmenart" nutzt die Reihenfolge Alle, Leitungen, Verdichter, GDRM, Sonstige mit den bewusst kurzen Chip-Labels "GDRM" und "Sonstige"; der Tooltip erklärt die Langform "GDRM-Anlagen (Gasdruckregel- und Messanlagen)" (Entscheidung 2026-07-05).
-- Der Button "Filter und Karte zurücksetzen" sitzt als Primary-Icon-Button mit Tooltip rechts neben der Kennzahlen-Card — außerhalb der Card, weil er auf Filter und Karte wirkt und nicht Teil der Kennzahlen ist (Entscheidung 2026-07-05).
-- Das Detailpanel zeigt keine Attributzeile "Kartengeometrie" mehr. Stattdessen erscheint nur bei Features ohne Geometrie eine Hinweisbox unter der Kopfzeile: bei `geometrieStatus: "fehlt"` "aktuell nicht auf der Karte verortet", bei `"aggregiert"` "keinem einzelnen Standort zugeordnet" (Entscheidung 2026-07-05).
-- Nutzersichtbare Texte vermeiden das Entwicklerwort "Feature"; Tooltips sprechen von Maßnahmen bzw. Einträgen im Datensatz (Entscheidung 2026-07-05).
-- Die Detailansicht eines Verdichterstandorts zeigt eine Summen-Kachelzeile (Maßnahmen, IBN-Jahre, Leistung gesamt, Kosten gesamt) plus echte Standortfelder; die Einzelmaßnahmen sind aufklappbare Karten, ab 2 Maßnahmen standardmäßig eingeklappt, bei genau 1 Maßnahme aufgeklappt. Aggregat-Booleans und gespiegelte ID-Listen des Parents erscheinen dort nicht mehr als Detailzeilen (Entscheidung 2026-07-05).
-- Der Karteninhalt-Umschalter unten links heißt "Maßnahmen" statt "Leitungen", weil die Ebene seit v3 auch Verdichterpunkte enthält; App-Titel und Karten-Export verwenden durchgängig "H₂-Maßnahmen".
-- Suche und Filter gelten für dieselbe Einzelmaßnahme (Entscheidung 2026-07-05): Eine Maßnahme matcht die Suche über ihre eigenen Felder oder die standortweiten Felder ihres Features (Name, Standort, Beschreibung, Bundesländer). Aggregatfelder der Verdichterstandort-Parents (officialIds, ids, Betreiberlisten, Booleans, Jahres- und Szenariomengen) zählen bewusst nicht standortweit, damit eine ausgeblendete Maßnahme den Standort nicht in die Ansicht hebt. Kennzahlen zählen nur Maßnahmen, die Suche und Filter gleichzeitig erfüllen.
-- Ist die Trefferliste bei aktiver Suche leer, prüft die App denselben Suchbegriff gegen die Netzansicht "Alle Maßnahmen im Datensatz" (ohne Szenariofilter) und zeigt bei Treffern unter "Keine Treffer" die Schaltfläche "Treffer in der vollständigen Netzansicht anzeigen" (Primärfarbe, medium). Ein Klick wechselt die Netzansicht auf "Alle Maßnahmen im Datensatz" und setzt den Szenariofilter zurück; Suchbegriff und übrige Filter bleiben erhalten. Der Hinweis erscheint auch, wenn die Netzansicht bereits "Alle Maßnahmen im Datensatz" ist und allein der Szenariofilter die Treffer blockiert (Fix 2026-07-05); er entfällt nur, wenn Netzansicht und Szenariofilter bereits dem Fallback-Ziel entsprechen. Bewusst kein automatisches Umschalten beim Tippen: Das würde den fachlichen Kontext (Kennzahlen, Karte) als Nebenwirkung einer Texteingabe unsichtbar ändern und könnte während der Eingabe hin- und herspringen (Entscheidung 2026-07-05).
-- Treffer-Meta-Zeilen zeigen offizielle Maßnahmen-IDs (`getOfficialIds`) statt der technischen Feature-ID; bei Verdichterstandorten mit genau einer Maßnahme erschien sonst die synthetische ID (Fix 2026-07-05).
-- Punktgeometrien sind laut v3-Vertrag Verdichterstandorten vorbehalten: Die Validierung lehnt Points für andere Featuretypen ab, und die Karte rendert nur `verdichterstandort`-Features als Verdichterpunkte (Fix 2026-07-05).
-
-Offene Diskussionspunkte:
-
-- Sollten die Szenariofilter-Optionen selbst "Szenario 1 (2037)" usw. heißen, obwohl die Gruppe bereits "In Szenario 2037 enthalten" heißt? Aktuelle Tendenz: Optionen kurz lassen, weil der Gruppenname das Jahr bereits trägt.
+- Suche und Filter gelten für dieselbe Einzelmaßnahme. Eine Maßnahme matcht die Suche über ihre eigenen Felder oder über standortweite Felder ihres Features (Name, Standort, Beschreibung, Bundesländer). Aggregatfelder der Verdichterstandort-Parents zählen nicht standortweit, damit eine ausgeblendete Maßnahme den Standort nicht in die Ansicht hebt.
+- Punktgeometrien sind Verdichterstandorten vorbehalten; andere Featuretypen mit Geometrie werden als Leitungen erwartet oder bleiben ohne Kartengeometrie.
 
 ## Primärquellen
 
