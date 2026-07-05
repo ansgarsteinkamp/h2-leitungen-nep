@@ -94,7 +94,7 @@ describe("MapCameraEffects", () => {
       expect(mockMap.fitBounds).toHaveBeenCalledWith(INITIAL_BOUNDS, { padding: [48, 48] });
    });
 
-   it("resumes active search bounds when a selection is closed without an explicit reset", () => {
+   it("resumes active search bounds when a selection is closed explicitly", () => {
       const searchBounds = [
          [51, 7],
          [52, 8]
@@ -113,12 +113,26 @@ describe("MapCameraEffects", () => {
          }
       };
       const { rerender } = render(
-         <MapCameraEffects resetViewKey={0} searchActive searchBounds={searchBounds} selection={selection} />
+         <MapCameraEffects
+            resetViewKey={0}
+            searchActive
+            searchBounds={searchBounds}
+            selection={selection}
+            selectionCloseKey={0}
+         />
       );
 
       mockMap.fitBounds.mockClear();
 
-      rerender(<MapCameraEffects resetViewKey={0} searchActive searchBounds={searchBounds} selection={null} />);
+      rerender(
+         <MapCameraEffects
+            resetViewKey={0}
+            searchActive
+            searchBounds={searchBounds}
+            selection={null}
+            selectionCloseKey={1}
+         />
+      );
 
       expect(mockMap.fitBounds).toHaveBeenCalledTimes(1);
       expect(mockMap.fitBounds).toHaveBeenCalledWith(searchBounds, {
@@ -128,7 +142,7 @@ describe("MapCameraEffects", () => {
       });
    });
 
-   it("returns to the initial view when an indirect selection clear has no search bounds", () => {
+   it("returns to the initial view when a selection is closed explicitly without search bounds", () => {
       const selection = {
          item: {
             type: "Feature",
@@ -143,15 +157,93 @@ describe("MapCameraEffects", () => {
          }
       };
       const { rerender } = render(
-         <MapCameraEffects resetViewKey={0} searchActive={false} searchBounds={[]} selection={selection} />
+         <MapCameraEffects
+            resetViewKey={0}
+            searchActive={false}
+            searchBounds={[]}
+            selection={selection}
+            selectionCloseKey={0}
+         />
       );
 
       mockMap.fitBounds.mockClear();
 
-      rerender(<MapCameraEffects resetViewKey={0} searchActive={false} searchBounds={[]} selection={null} />);
+      rerender(
+         <MapCameraEffects
+            resetViewKey={0}
+            searchActive={false}
+            searchBounds={[]}
+            selection={null}
+            selectionCloseKey={1}
+         />
+      );
 
       expect(mockMap.fitBounds).toHaveBeenCalledTimes(1);
       expect(mockMap.fitBounds).toHaveBeenCalledWith(INITIAL_BOUNDS, { animate: true, padding: [48, 48] });
+   });
+
+   it("keeps the viewport when a filter change clears the selection implicitly", () => {
+      const selection = {
+         item: {
+            type: "Feature",
+            geometry: {
+               type: "LineString",
+               coordinates: [
+                  [7.1, 51.1],
+                  [7.2, 51.2]
+               ]
+            },
+            properties: { id: "H2-001-01" }
+         }
+      };
+      const { rerender } = render(
+         <MapCameraEffects
+            resetViewKey={0}
+            searchActive={false}
+            searchBounds={[]}
+            selection={selection}
+            selectionCloseKey={0}
+         />
+      );
+
+      mockMap.fitBounds.mockClear();
+      mockMap.panTo.mockClear();
+
+      // Gleicher selectionCloseKey: Die Auswahl verschwindet als Nebenwirkung eines
+      // Filterwechsels — der Kartenausschnitt des Nutzers bleibt unangetastet.
+      rerender(
+         <MapCameraEffects
+            resetViewKey={0}
+            searchActive={false}
+            searchBounds={[]}
+            selection={null}
+            selectionCloseKey={0}
+         />
+      );
+
+      expect(mockMap.fitBounds).not.toHaveBeenCalled();
+      expect(mockMap.panTo).not.toHaveBeenCalled();
+   });
+
+   it("keeps the viewport when a search that never moved the camera is cleared", () => {
+      // Suche aktiv, aber ohne Auto-Fit (z. B. mehr als 30 Treffer): searchBounds bleiben leer.
+      const { rerender } = render(
+         <MapCameraEffects resetViewKey={0} searchActive searchBounds={[]} selection={null} selectionCloseKey={0} />
+      );
+
+      mockMap.fitBounds.mockClear();
+
+      rerender(
+         <MapCameraEffects
+            resetViewKey={0}
+            searchActive={false}
+            searchBounds={[]}
+            selection={null}
+            selectionCloseKey={0}
+         />
+      );
+
+      expect(mockMap.fitBounds).not.toHaveBeenCalled();
    });
 
    it("returns to the initial view when active search bounds become empty", () => {

@@ -31,7 +31,8 @@ export default function NetworkMap({
    resetViewKey,
    searchActive,
    searchBounds,
-   selection
+   selection,
+   selectionCloseKey
 }) {
    const [hiddenLegendResetKey, setHiddenLegendResetKey] = useState(null);
    const isLegendVisible = hiddenLegendResetKey !== resetViewKey;
@@ -55,6 +56,7 @@ export default function NetworkMap({
             searchActive={searchActive}
             searchBounds={searchBounds}
             selection={selection}
+            selectionCloseKey={selectionCloseKey}
          />
          <MapZoomControls />
          <MapContentSwitch

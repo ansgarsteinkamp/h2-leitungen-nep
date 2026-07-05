@@ -42,6 +42,9 @@ export default function PipelineWorkspace({ countries, pipelineCollection }) {
    const [placesError, setPlacesError] = useState(null);
    const [placesLoaded, setPlacesLoaded] = useState(false);
    const [resetViewKey, setResetViewKey] = useState(0);
+   // Zählt explizite Auswahl-Schließungen (X-Button, neue Sucheingabe): Nur die stellen den
+   // Kartenkontext wieder her; blendet ein Filterwechsel die Auswahl aus, bleibt der Ausschnitt.
+   const [selectionCloseKey, setSelectionCloseKey] = useState(0);
    const lastSelectionResultIdRef = useRef(null);
    const lastSelectionTriggerRef = useRef(null);
    const { europeContext, germany } = useMemo(() => buildCountryCollections(countries), [countries]);
@@ -86,11 +89,16 @@ export default function PipelineWorkspace({ countries, pipelineCollection }) {
       setResetViewKey(value => value + 1);
    };
 
+   const dismissSelection = () => {
+      selection.clearSelection();
+      setSelectionCloseKey(value => value + 1);
+   };
+
    const closeSelection = () => {
       const previousResultId = lastSelectionResultIdRef.current;
       const previousTrigger = lastSelectionTriggerRef.current;
 
-      selection.clearSelection();
+      dismissSelection();
       restoreSelectionFocus(previousResultId, previousTrigger);
    };
 
@@ -99,7 +107,7 @@ export default function PipelineWorkspace({ countries, pipelineCollection }) {
    };
 
    const searchPipelines = value => {
-      if (selection.selection) selection.clearSelection();
+      if (selection.selection) dismissSelection();
       filters.setFilter("searchTerm", value);
    };
 
@@ -158,6 +166,7 @@ export default function PipelineWorkspace({ countries, pipelineCollection }) {
                      searchActive={filters.hasActiveSearch}
                      searchBounds={filters.searchBounds}
                      selection={selection.selection}
+                     selectionCloseKey={selectionCloseKey}
                   />
                </div>
             </div>

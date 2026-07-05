@@ -30,23 +30,37 @@ function focusSelectionBounds(map, selectionBounds) {
    });
 }
 
-export default function MapCameraEffects({ resetViewKey, searchActive, searchBounds, selection }) {
+export default function MapCameraEffects({
+   resetViewKey,
+   searchActive,
+   searchBounds,
+   selection,
+   selectionCloseKey = 0
+}) {
    const map = useMap();
+   // Merkt sich, ob Auswahl oder Suche die Kamera tatsächlich bewegt haben: Nur dann darf ein
+   // Suchende oder Auswahl-Schließen zur Übersicht zurückkehren; ein manuell gesetzter
+   // Ausschnitt bleibt sonst unangetastet.
+   const cameraOwnedRef = useRef(false);
    const previousMapRef = useRef(null);
    const previousResetViewKeyRef = useRef(resetViewKey);
    const previousSearchActiveRef = useRef(searchActive);
    const previousSearchBoundsRef = useRef(null);
    const previousSelectionRef = useRef(null);
+   const previousSelectionCloseKeyRef = useRef(selectionCloseKey);
 
    useEffect(() => {
       map.fitBounds(INITIAL_BOUNDS, { padding: INITIAL_CAMERA_PADDING });
+      cameraOwnedRef.current = false;
    }, [map, resetViewKey]);
 
    useEffect(() => {
       const mapChanged = map !== previousMapRef.current;
       const resetViewChanged = resetViewKey !== previousResetViewKeyRef.current;
       const selectionChanged = selection !== previousSelectionRef.current;
-      const selectionCleared = Boolean(previousSelectionRef.current && !selection);
+      // Nur explizites Schließen (X-Button, neue Sucheingabe) stellt den Kontext wieder her;
+      // blendet ein Filterwechsel die Auswahl aus, bleibt der Kartenausschnitt des Nutzers stehen.
+      const selectionCloseRequested = selectionCloseKey !== previousSelectionCloseKeyRef.current;
       const searchCleared = previousSearchActiveRef.current && !searchActive;
       const searchBoundsChanged = searchBounds !== previousSearchBoundsRef.current;
 
@@ -55,6 +69,7 @@ export default function MapCameraEffects({ resetViewKey, searchActive, searchBou
       previousSearchActiveRef.current = searchActive;
       previousSelectionRef.current = selection;
       previousSearchBoundsRef.current = searchBounds;
+      previousSelectionCloseKeyRef.current = selectionCloseKey;
 
       if (resetViewChanged) return;
 
@@ -65,21 +80,25 @@ export default function MapCameraEffects({ resetViewKey, searchActive, searchBou
          const selectionBounds = featureToLatLngs(selection.item);
          if (selectionBounds.length) {
             focusSelectionBounds(map, selectionBounds);
+            cameraOwnedRef.current = true;
          }
 
          return;
       }
 
       if (!searchBounds.length) {
-         if (searchCleared || selectionCleared || (searchActive && searchBoundsChanged)) {
+         if (!cameraOwnedRef.current) return;
+         if (searchCleared || selectionCloseRequested || (searchActive && searchBoundsChanged)) {
             map.fitBounds(INITIAL_BOUNDS, { animate: true, padding: INITIAL_CAMERA_PADDING });
+            cameraOwnedRef.current = false;
          }
          return;
       }
 
-      if (!searchBoundsChanged && !selectionCleared && !mapChanged) return;
+      if (!searchBoundsChanged && !selectionCloseRequested && !mapChanged) return;
       map.fitBounds(searchBounds, { animate: true, maxZoom: SEARCH_MAX_FIT_ZOOM, padding: SEARCH_CAMERA_PADDING });
-   }, [map, resetViewKey, searchActive, searchBounds, selection]);
+      cameraOwnedRef.current = true;
+   }, [map, resetViewKey, searchActive, searchBounds, selection, selectionCloseKey]);
 
    return null;
 }
