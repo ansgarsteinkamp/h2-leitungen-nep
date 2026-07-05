@@ -23,14 +23,14 @@ const entries = participationEntries.flatMap(participation =>
 
 function LegendSymbol({ color, lineType }) {
    return (
-      <PipelineLineSymbol className="h-0.75 w-5" color={color} lineType={lineType} opacity={LEGEND_SYMBOL_OPACITY} />
+      <PipelineLineSymbol className="h-0.5 w-4" color={color} lineType={lineType} opacity={LEGEND_SYMBOL_OPACITY} />
    );
 }
 
 function HighlightLegendSymbol() {
    return (
       <PipelineLineSymbol
-         className="h-1.5 w-5 rounded-full"
+         className="h-1.25 w-4 rounded-full"
          color={OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR}
          opacity={1}
       />
@@ -39,10 +39,10 @@ function HighlightLegendSymbol() {
 
 function SiteLegendSymbol({ color }) {
    return (
-      <span className="inline-flex w-5 justify-center">
+      <span className="inline-flex w-4 justify-center">
          <span
             aria-hidden="true"
-            className="size-3 rounded-full border border-[var(--map-place-marker-stroke)]"
+            className="size-2.5 rounded-full border border-[var(--map-place-marker-stroke)]"
             style={{ backgroundColor: color, opacity: LEGEND_SYMBOL_OPACITY }}
          />
       </span>
@@ -53,7 +53,7 @@ export default function MapLegend({ showCompressorSites = false, showOgeExecutin
    return (
       <aside
          aria-label="Kartenlegende"
-         className="absolute right-3.5 bottom-3.5 z-500 w-fit max-w-[min(18rem,calc(100%-1.75rem))] rounded-md border border-border bg-[var(--map-legend-background)] px-3 py-2.5 text-[0.6rem] text-muted-foreground backdrop-blur-md max-sm:hidden"
+         className="absolute right-3.5 bottom-3.5 z-500 w-fit max-w-[min(18rem,calc(100%-1.75rem))] rounded-md border border-border bg-[var(--map-legend-background)] px-2.5 py-2 text-[0.55rem] text-muted-foreground backdrop-blur-md max-sm:hidden"
       >
          {onHide ? (
             <Tooltip>
@@ -73,7 +73,7 @@ export default function MapLegend({ showCompressorSites = false, showOgeExecutin
                </TooltipContent>
             </Tooltip>
          ) : null}
-         <ul className="grid gap-1.5">
+         <ul className="grid gap-1.25">
             {entries.map(entry => (
                <li key={entry.label} className="inline-flex items-center gap-2">
                   <LegendSymbol color={entry.color} lineType={entry.lineType} />
