@@ -126,6 +126,12 @@ const rectsOverlap = (left, right) =>
 const textWidthCache = new Map();
 let textMeasureCanvas = null;
 
+// Vor dem Laden des Webfonts misst der Canvas mit der Fallback-Schrift; solche Breiten dürfen
+// nicht dauerhaft im Cache bleiben, sonst kollidieren später in Montserrat gerenderte Labels.
+if (typeof document !== "undefined" && document.fonts?.addEventListener) {
+   document.fonts.addEventListener("loadingdone", () => textWidthCache.clear());
+}
+
 const measureTextWidth = (text, fontSize, fontWeight) => {
    const fallbackWidth = [...text].length * fontSize * 0.54;
 

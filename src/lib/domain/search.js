@@ -1,4 +1,3 @@
-import { getFeatureOperators } from "@/lib/domain/facets";
 import { getOperatorSearchTerms } from "@/lib/domain/operators";
 import {
    getActiveScenarioLabels,
@@ -29,7 +28,7 @@ export const isSearchActive = query => query.length >= 2;
 const normalizedIncludes = (value, query) => normalize(value).includes(query);
 const normalizedStartsWith = (value, query) => normalize(value).startsWith(query);
 
-const getFeatureOperatorSearchTerms = feature => getFeatureOperators(feature).flatMap(getOperatorSearchTerms);
+const getFeatureOperatorSearchTerms = feature => getPipelineParticipants(feature).flatMap(getOperatorSearchTerms);
 
 // Offizielle Maßnahmen-IDs stehen nicht immer in `id`: bei Verdichterstandorten liegen sie in
 // officialIds, ids und massnahmen[].id, Kernnetz-IDs zusätzlich in kernnetzAntragsIds.

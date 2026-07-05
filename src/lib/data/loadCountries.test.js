@@ -127,6 +127,17 @@ describe("loadCountries", () => {
       expect(fetchMock).toHaveBeenCalledWith("/base/data/countries_v2.geojson");
    });
 
+   it("normalizes a base URL without a trailing slash", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+         ok: true,
+         text: () => Promise.resolve(JSON.stringify(collection()))
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(loadCountries("/base")).resolves.toEqual(collection());
+      expect(fetchMock).toHaveBeenCalledWith("/base/data/countries_v2.geojson");
+   });
+
    it("uses a clear error when the countries file cannot be fetched", async () => {
       vi.stubGlobal(
          "fetch",

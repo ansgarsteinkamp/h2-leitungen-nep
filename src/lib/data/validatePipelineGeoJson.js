@@ -282,6 +282,25 @@ function normalizeMeasureProperties(properties, label) {
    }
    DATE_PROPERTIES.forEach(key => getIsoDateYear(normalized[key], label, key));
 
+   ID_LIST_PROPERTIES.forEach(key => {
+      if (key in normalized) normalized[key] = toIdArray(normalized[key]);
+   });
+   DATE_LIST_PROPERTIES.forEach(key => {
+      if (key in normalized) {
+         normalized[key] = toIdArray(normalized[key]);
+         normalized[key].forEach(value => getIsoDateYear(value, label, key));
+      }
+   });
+   if ("ibnJahre" in normalized) {
+      normalized.ibnJahre = toIdArray(normalized.ibnJahre).map(value => {
+         const year = toNumber(value);
+         if (year === null || !Number.isInteger(year)) {
+            throw new Error(`${label}: ibnJahre darf nur ganzzahlige Jahre enthalten.`);
+         }
+         return year;
+      });
+   }
+
    normalized.standardAnzeige = isStandardFeature(normalized);
    normalized.ogeBeteiligung = hasOgeParticipation(normalized);
    normalized.ogeIstDurchfuehrenderNetzbetreiber = hasOgeExecutingOperator(normalized);
@@ -330,27 +349,13 @@ function normalizeProperties(properties, geometry, featureIndex) {
       throw new Error(`${label}: Leitungen benötigen das Feld leitungstyp.`);
    }
 
-   ID_LIST_PROPERTIES.forEach(key => {
-      if (key in normalized) normalized[key] = toIdArray(normalized[key]);
-   });
-   DATE_LIST_PROPERTIES.forEach(key => {
-      if (key in normalized) {
-         normalized[key] = toIdArray(normalized[key]);
-         normalized[key].forEach(value => getIsoDateYear(value, label, key));
-      }
-   });
-   if ("ibnJahre" in normalized) {
-      normalized.ibnJahre = toIdArray(normalized.ibnJahre).map(value => {
-         const year = toNumber(value);
-         if (year === null || !Number.isInteger(year)) {
-            throw new Error(`${label}: ibnJahre darf nur ganzzahlige Jahre enthalten.`);
-         }
-         return year;
-      });
-   }
-
    if (featureTyp === FEATURE_TYPE_VERDICHTERSTANDORT) {
       normalized.massnahmen = normalizeNestedMeasures(normalized.massnahmen, label);
+      // Ohne Einzelmaßnahmen würden die Parent-Aggregate des Standorts wie eine Maßnahme
+      // ausgewertet — genau die Fehlklassifikation, die die strikte Semantik ausschließt.
+      if (normalized.massnahmen.length === 0) {
+         throw new Error(`${label}: Verdichterstandorte benötigen mindestens eine Einzelmaßnahme in massnahmen.`);
+      }
    }
 
    normalized.geometrieStatus = normalizeGeometrieStatus(normalized, geometry, label);
@@ -391,10 +396,15 @@ export function parsePipelineGeoJson(text) {
          const featureTyp = normalizeFeatureTyp(feature.properties, label);
          const geometry = normalizeGeometry(feature.geometry, featureTyp, label);
          const properties = normalizeProperties(feature.properties, geometry, index);
-         if (ids.has(properties.id)) {
-            throw new Error(`${label}: Die ID "${properties.id}" ist doppelt vergeben.`);
-         }
-         ids.add(properties.id);
+         // Einzelmaßnahmen von Verdichterstandorten teilen den ID-Namensraum der Features:
+         // Duplikate würden in Metriken doppelt zählen.
+         const measureIds = [properties.id, ...(properties.massnahmen ?? []).map(measure => measure.id)];
+         measureIds.forEach(id => {
+            if (ids.has(id)) {
+               throw new Error(`${label}: Die ID "${id}" ist doppelt vergeben.`);
+            }
+            ids.add(id);
+         });
 
          return {
             ...feature,

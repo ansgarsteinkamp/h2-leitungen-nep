@@ -88,7 +88,7 @@ export function validateCountriesGeoJson(collection) {
 export async function loadCountries(baseUrl) {
    let response;
    try {
-      response = await fetch(`${baseUrl}data/countries_v2.geojson`);
+      response = await fetch(`${baseUrl.replace(/\/?$/, "/")}data/countries_v2.geojson`);
    } catch (error) {
       throw new Error("Die Kartenbasis konnte nicht geladen werden.", { cause: error });
    }

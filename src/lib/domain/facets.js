@@ -20,10 +20,6 @@ const sortedYears = values =>
       .filter(Number.isFinite)
       .sort((a, b) => a - b);
 
-export function getFeatureOperators(feature) {
-   return getPipelineParticipants(feature);
-}
-
 // Filterwert des Maßnahmenart-Filters: Standorte und Aggregatmaßnahmen teilen sich den Wert "verdichter".
 export function getFeatureTypeFilterValue(input) {
    const featureTyp = getFeatureTyp(input);

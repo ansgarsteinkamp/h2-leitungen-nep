@@ -43,6 +43,12 @@ const bringToFront = layer => {
    }
 };
 
+const bringToBack = layer => {
+   if (typeof layer.bringToBack === "function") {
+      layer.bringToBack();
+   }
+};
+
 const createPipelineSubset = (pipelines, predicate) => ({
    ...pipelines,
    features: pipelines.features.filter(predicate)
@@ -86,6 +92,7 @@ export default function PipelineLayer({
    const hitboxGeoJsonRef = useRef(null);
    const [hoveredPipelineId, setHoveredPipelineId] = useState(null);
    const hoveredPipelineIdRef = useRef(null);
+   const hoveredHitboxLayerRef = useRef(null);
    const openTooltipLayerRef = useRef(null);
    const pipelineStyleOptionsRef = useRef({ highlightOgeExecutingOperator });
    const previousPipelinesRef = useRef(pipelines);
@@ -203,9 +210,20 @@ export default function PipelineLayer({
 
          if (selectedLayer) bringToFront(selectedLayer);
          if (hoveredLayer) bringToFront(hoveredLayer);
+         // Die nach vorn geholte Hitbox nach dem Hover wieder zurückstellen, sonst überdeckt
+         // eine einmal gehoverte Nicht-OGE-Hitbox dauerhaft die absichtlich oben einsortierten
+         // OGE-Hitboxen an Kreuzungspunkten.
+         const previousHoveredHitbox = hoveredHitboxLayerRef.current;
+         if (previousHoveredHitbox && previousHoveredHitbox.feature?.properties.id !== activeHoveredPipelineId) {
+            hoveredHitboxLayerRef.current = null;
+            if (!isOgePipeline(previousHoveredHitbox.feature)) bringToBack(previousHoveredHitbox);
+         }
          eachHitboxLayer(layer => {
             const featureId = layer.feature?.properties.id;
-            if (featureId === activeHoveredPipelineId) bringToFront(layer);
+            if (featureId === activeHoveredPipelineId) {
+               hoveredHitboxLayerRef.current = layer;
+               bringToFront(layer);
+            }
          });
       },
       [eachHitboxLayer, eachPipelineLayer, getCurrentPipelineStyle, isContextPresentation]
@@ -247,6 +265,7 @@ export default function PipelineLayer({
       if (previousPipelinesRef.current !== pipelines) {
          closeAllTooltips();
          hoveredPipelineIdRef.current = null;
+         hoveredHitboxLayerRef.current = null;
          setHoveredPipelineId(null);
          previousPipelinesRef.current = pipelines;
       }

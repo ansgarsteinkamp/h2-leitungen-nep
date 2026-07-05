@@ -296,10 +296,12 @@ export function usePipelineFilters(collection) {
    );
 
    // Für den Hinweis im leeren Suchergebnis: Gäbe es in der Netzansicht "Alle Maßnahmen im
-   // Datensatz" (ohne Szenariofilter) Treffer für denselben Suchbegriff?
+   // Datensatz" (ohne Szenariofilter) Treffer für denselben Suchbegriff? Auch in der Netzansicht
+   // "all" kann der Szenariofilter allein die Treffer blockieren, daher zählt der Fallback nur
+   // dann nicht, wenn beide Dimensionen bereits dem Fallback-Ziel entsprechen.
    const searchFallbackCount = useMemo(() => {
       if (!hasActiveSearch || filteredCollection.features.length > 0) return 0;
-      if (filters.networkView === "all") return 0;
+      if (filters.networkView === "all" && filters.scenario === ALL_VALUE) return 0;
 
       return filterPipelines(collection.features, { ...filters, networkView: "all", scenario: ALL_VALUE }, query)
          .length;

@@ -5,7 +5,7 @@ import ThemeToggleCorner from "@/components/theme/ThemeToggleCorner";
 import FileDropzone from "@/components/upload/FileDropzone";
 import { cn } from "@/lib/utils";
 
-function formatRejection(rejections, { maxFiles, multiple }) {
+function formatRejection(rejections, { maxFiles, maxSize, multiple }) {
    const code = rejections?.[0]?.errors?.[0]?.code;
 
    if (code === "too-many-files") {
@@ -14,6 +14,10 @@ function formatRejection(rejections, { maxFiles, multiple }) {
       }
 
       return "Es darf nur eine Datei ausgewählt werden.";
+   }
+
+   if (code === "file-too-large" && maxSize) {
+      return `Die Datei ist zu groß. Maximal zulässig sind ${Math.round(maxSize / (1024 * 1024))} MB.`;
    }
 
    return (
@@ -53,7 +57,7 @@ export default function UploadStart({
 
    const handleFilesRejected = rejections => {
       setFiles([]);
-      setError(formatRejection(rejections, { maxFiles, multiple }));
+      setError(formatRejection(rejections, { maxFiles, maxSize, multiple }));
       onFilesRejected?.(rejections);
    };
 

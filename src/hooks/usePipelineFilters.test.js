@@ -758,6 +758,29 @@ describe("filterPipelines", () => {
       expect(result.current.searchFallbackCount).toBe(0);
    });
 
+   it("offers the search fallback in the full network view when only the scenario filter blocks", () => {
+      const site = compressorSite("standort-suche", [
+         compressorMeasure("H2-2003-01", { netzausbauvorschlag: true, ibnJahr: 2032 }),
+         compressorMeasure("H2-2103-01", { szenario1: true, ibnJahr: 2034 })
+      ]);
+      const { result } = renderHook(() => usePipelineFilters(collection([site])));
+
+      setFilter(result, "networkView", "all");
+      setFilter(result, "scenario", "szenario2");
+      setFilter(result, "searchTerm", "H2-2103-01");
+
+      // Auch in der Netzansicht "Alle" kann der Szenariofilter allein die Treffer blockieren;
+      // der Fallback (Netzansicht "Alle" ohne Szenariofilter) muss dann angeboten werden.
+      expect(idsOf(result.current.filteredCollection.features)).toEqual([]);
+      expect(result.current.searchFallbackCount).toBe(1);
+
+      act(() => result.current.showSearchFallback());
+
+      expect(result.current.filters.scenario).toBe(ALL_VALUE);
+      expect(idsOf(result.current.filteredCollection.features)).toEqual(["standort-suche"]);
+      expect(result.current.searchFallbackCount).toBe(0);
+   });
+
    it("matches compressor sites when at least one nested measure satisfies the network view", () => {
       const site = compressorSite("standort-b", [
          compressorMeasure("H2-2003-01", { szenario2: true, ibnJahr: 2034 }),

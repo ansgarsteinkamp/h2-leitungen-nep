@@ -1,4 +1,7 @@
+import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
+
+import { DomEvent } from "leaflet";
 
 import { MAP_EXPORT_EXCLUDE_PROPS } from "@/components/map/mapExport";
 import { PipelineLineSymbol } from "@/components/ui/pipeline-line-symbol";
@@ -50,8 +53,18 @@ function SiteLegendSymbol({ color }) {
 }
 
 export default function MapLegend({ showCompressorSites = false, showOgeExecutingOperatorHighlight = false, onHide }) {
+   const legendRef = useRef(null);
+
+   useEffect(() => {
+      if (!legendRef.current) return;
+
+      DomEvent.disableClickPropagation(legendRef.current);
+      DomEvent.disableScrollPropagation(legendRef.current);
+   }, []);
+
    return (
       <aside
+         ref={legendRef}
          aria-label="Kartenlegende"
          className="absolute right-3.5 bottom-3.5 z-500 w-fit max-w-[min(18rem,calc(100%-1.75rem))] rounded-md border border-border bg-[var(--map-legend-background)] px-2.5 py-2 text-[0.55rem] text-muted-foreground backdrop-blur-md max-sm:hidden"
       >

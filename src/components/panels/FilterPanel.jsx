@@ -313,7 +313,17 @@ function YearRangeFilter({ filters, options, setYearRange }) {
    const selectedFrom = Math.min(yearFrom, yearTo);
    const selectedTo = Math.max(yearFrom, yearTo);
    const selectedLabel = selectedFrom === selectedTo ? String(selectedFrom) : `${selectedFrom} bis ${selectedTo}`;
-   const disabled = minYear === maxYear;
+
+   // Bei nur einem Jahr im Datensatz gibt es nichts auszuwählen; ein Slider mit min === max
+   // würde zudem ungültige Thumb-Positionen (NaN-Prozentwerte) rendern.
+   if (minYear === maxYear) {
+      return (
+         <div className="grid gap-2">
+            <FilterLabel description={COMMISSIONING_YEAR_DESCRIPTION} id={labelId} label="Inbetriebnahmejahr" />
+            <p className="text-xs text-muted-foreground">{`Alle Maßnahmen: Inbetriebnahme ${minYear}`}</p>
+         </div>
+      );
+   }
 
    return (
       <div className="grid gap-3">
@@ -330,7 +340,6 @@ function YearRangeFilter({ filters, options, setYearRange }) {
          <Slider
             aria-labelledby={labelId}
             className="py-1"
-            disabled={disabled}
             max={maxYear}
             min={minYear}
             minStepsBetweenThumbs={0}

@@ -40,11 +40,6 @@ export default function App() {
       const [file] = files;
       if (!file) return;
 
-      if (file.size > MAX_UPLOAD_SIZE) {
-         setUploadError(new Error("Die Datei ist zu groß. Bitte eine GeoJSON-Datei bis maximal 10 MB auswählen."));
-         return;
-      }
-
       setIsProcessing(true);
       setUploadError(null);
 

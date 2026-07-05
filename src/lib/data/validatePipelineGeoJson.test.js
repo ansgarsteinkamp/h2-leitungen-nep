@@ -410,6 +410,61 @@ describe("parsePipelineGeoJson", () => {
       expect(site.properties.standardAnzeige).toBe(true);
    });
 
+   it("rejects compressor sites without nested measures", () => {
+      const site = massnahmen => ({
+         type: "Feature",
+         geometry: null,
+         properties: {
+            id: "verdichterstandort:leer",
+            name: "Verdichterstation Leer",
+            featureTyp: "verdichterstandort",
+            startnetz: false,
+            netzausbauvorschlag: true,
+            ...(massnahmen === undefined ? {} : { massnahmen })
+         }
+      });
+
+      // Ohne Einzelmaßnahmen würden Parent-Aggregate wie eine Maßnahme ausgewertet.
+      expect(() => parsePipelineGeoJson(collection([site([])]))).toThrow(/mindestens eine Einzelmaßnahme/);
+      expect(() => parsePipelineGeoJson(collection([site(undefined)]))).toThrow(/mindestens eine Einzelmaßnahme/);
+   });
+
+   it("normalizes nested measure list fields and rejects duplicate measure ids", () => {
+      const site = measures => ({
+         type: "Feature",
+         geometry: null,
+         properties: {
+            id: "verdichterstandort:listen",
+            name: "Verdichterstation Listen",
+            featureTyp: "verdichterstandort",
+            startnetz: false,
+            netzausbauvorschlag: true,
+            massnahmen: measures
+         }
+      });
+      const measure = overrides => ({
+         id: "H2-2003-01",
+         name: "Verdichterstation Listen",
+         startnetz: false,
+         netzausbauvorschlag: true,
+         ...overrides
+      });
+
+      const parsed = parsePipelineGeoJson(
+         collection([site([measure({ officialIds: "H2-2003-01", kernnetzAntragsIds: "KLU001-01" })])])
+      );
+      expect(parsed.features[0].properties.massnahmen[0].officialIds).toEqual(["H2-2003-01"]);
+      expect(parsed.features[0].properties.massnahmen[0].kernnetzAntragsIds).toEqual(["KLU001-01"]);
+
+      // Einzelmaßnahmen teilen den ID-Namensraum: Duplikate zählen in Metriken doppelt.
+      expect(() => parsePipelineGeoJson(collection([site([measure(), measure()])]))).toThrow(/doppelt vergeben/);
+      expect(() =>
+         parsePipelineGeoJson(
+            collection([feature({ properties: { ...baseProperties, id: "H2-2003-01" } }), site([measure()])])
+         )
+      ).toThrow(/doppelt vergeben/);
+   });
+
    it("defaults missing featureTyp to leitung and rejects unknown feature types", () => {
       const parsed = parsePipelineGeoJson(collection([feature()]));
 
