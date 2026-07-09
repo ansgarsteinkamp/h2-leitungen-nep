@@ -5,7 +5,7 @@ import DetailPanel from "@/components/panels/DetailPanel";
 import { pipelineMeta } from "@/lib/domain/formatters";
 import { cn } from "@/lib/utils";
 
-function ResultItem({ result, onSelect }) {
+function ResultItem({ getResultMeta, result, onSelect }) {
    const props = result.item.properties;
    const label = props.name || props.id;
 
@@ -19,7 +19,7 @@ function ResultItem({ result, onSelect }) {
          >
             <strong className="min-w-0 text-xs font-medium wrap-break-word text-card-foreground">{label}</strong>
             <small className="min-w-0 text-[0.68rem] wrap-break-word text-muted-foreground">
-               {pipelineMeta(result.item)}
+               {getResultMeta(result.item)}
             </small>
          </button>
       </li>
@@ -28,13 +28,17 @@ function ResultItem({ result, onSelect }) {
 
 export default function InspectorPanel({
    className,
+   detailFocusRef,
+   getResultMeta = pipelineMeta,
    onClearSearch,
    onCloseSelection,
    onSearchTermChange,
    onSelectResult,
    onShowSearchFallback,
+   renderDetail,
    results,
    searchFallbackCount = 0,
+   searchInputLabel = "Suche nach ID, Maßnahme, Betreiber oder Status",
    searchTerm,
    selection
 }) {
@@ -61,7 +65,7 @@ export default function InspectorPanel({
             <div className="grid min-h-10 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-md border border-primary/45 bg-field/75 px-3 text-muted-foreground shadow-none transition-colors hover:border-primary/65 focus-within:border-ring focus-within:bg-popover focus-within:ring-2 focus-within:ring-ring/65 dark:shadow-[0_0_0_1px_rgba(217,119,87,0.05)] dark:focus-within:border-primary/90 dark:focus-within:ring-primary/20">
                <Search aria-hidden="true" className="size-3.5" />
                <input
-                  aria-label="Suche nach ID, Maßnahme, Betreiber oder Status"
+                  aria-label={searchInputLabel}
                   className="min-w-0 border-0 bg-transparent text-[0.8rem] leading-5 text-popover-foreground outline-none placeholder:text-muted-foreground/55"
                   onChange={event => onSearchTermChange(event.target.value)}
                   placeholder="Suche"
@@ -84,7 +88,11 @@ export default function InspectorPanel({
 
          {selection ? (
             <div className="min-h-0 flex-1 overflow-hidden">
-               <DetailPanel onClose={onCloseSelection} selection={selection} />
+               {renderDetail ? (
+                  renderDetail(selection, onCloseSelection)
+               ) : (
+                  <DetailPanel focusedSelectionRef={detailFocusRef} onClose={onCloseSelection} selection={selection} />
+               )}
             </div>
          ) : (
             <section className="min-h-0 flex-1 overflow-auto pt-1" aria-label="Treffer">
@@ -94,7 +102,12 @@ export default function InspectorPanel({
                {resultCount > 0 ? (
                   <ul className="grid p-0">
                      {results.items.map(result => (
-                        <ResultItem key={result.item.properties.id} onSelect={onSelectResult} result={result} />
+                        <ResultItem
+                           getResultMeta={getResultMeta}
+                           key={result.item.properties.id}
+                           onSelect={onSelectResult}
+                           result={result}
+                        />
                      ))}
                   </ul>
                ) : (

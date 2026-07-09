@@ -22,21 +22,21 @@ const cancelFrame = frameId => {
    clearTimeout(frameId);
 };
 
-const MAP_LABEL = "Interaktive Karte der H₂-Maßnahmen aus dem NEP 2025";
+const DEFAULT_MAP_LABEL = "Interaktive Karte der H₂-Maßnahmen aus dem NEP 2025";
 
 const MAP_MAX_BOUNDS = [
    [45.5, 2.5],
    [56.7, 18.5]
 ];
 
-function MapContainerA11yAttributes() {
+function MapContainerA11yAttributes({ label }) {
    const map = useMap();
 
    useEffect(() => {
       const container = map.getContainer();
-      container.setAttribute("aria-label", MAP_LABEL);
+      container.setAttribute("aria-label", label);
       container.removeAttribute("role");
-   }, [map]);
+   }, [label, map]);
 
    return null;
 }
@@ -82,17 +82,17 @@ function MapResizeInvalidator() {
    return null;
 }
 
-export default function MapViewport({ children }) {
+export default function MapViewport({ children, exportFilenameTitle, label = DEFAULT_MAP_LABEL }) {
    const exportTargetRef = useRef(null);
 
    return (
       <section
-         aria-label={MAP_LABEL}
+         aria-label={label}
          className="relative h-full min-h-110 overflow-hidden border border-border bg-muted/75 min-[1360px]:min-h-155 max-lg:h-auto max-lg:min-h-[58vh] max-sm:min-h-[54vh]"
          ref={exportTargetRef}
          role="region"
       >
-         <MapDownloadButton targetRef={exportTargetRef} />
+         <MapDownloadButton filenameTitle={exportFilenameTitle} targetRef={exportTargetRef} />
          <MapContainer
             attributionControl={false}
             center={[51.1, 10.3]}
@@ -108,7 +108,7 @@ export default function MapViewport({ children }) {
             zoomDelta={0.5}
             zoomSnap={0.25}
          >
-            <MapContainerA11yAttributes />
+            <MapContainerA11yAttributes label={label} />
             <MapResizeInvalidator />
             {children}
          </MapContainer>

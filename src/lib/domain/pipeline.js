@@ -45,6 +45,11 @@ export function isLeitungFeature(input) {
    return getFeatureTyp(input) === FEATURE_TYPE_LEITUNG;
 }
 
+export function hasLineGeometry(feature) {
+   const type = feature?.geometry?.type;
+   return type === "LineString" || type === "MultiLineString";
+}
+
 export function isVerdichterstandortFeature(input) {
    return getFeatureTyp(input) === FEATURE_TYPE_VERDICHTERSTANDORT;
 }

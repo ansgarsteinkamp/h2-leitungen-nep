@@ -200,6 +200,11 @@
    --map-place-storage-label: #963862;
    --map-place-label-halo: #ffffff;
    --map-place-leader: #3f5f72;
+   --map-projekt-ausspeisung: #0397ab;
+   --map-projekt-einspeisung: #b94874;
+   --map-projekt-speicher: #ffffff;
+   --map-projekt-speicher-stroke: #20201d;
+   --map-projekt-speicher-akzent: #20201d;
    --radius: 0.5rem;
    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
@@ -263,6 +268,11 @@
    --map-place-storage-label: #f0b9ab;
    --map-place-label-halo: #20201d;
    --map-place-leader: #b7b5a9;
+   --map-projekt-ausspeisung: #cf6a48;
+   --map-projekt-einspeisung: #b2891c;
+   --map-projekt-speicher: #3f9d7d;
+   --map-projekt-speicher-stroke: #20201d;
+   --map-projekt-speicher-akzent: #3f9d7d;
 }
 
 @theme inline {
@@ -420,10 +430,52 @@
    }
 }
 
+/* Pendant zum Leitungs-Halo für Punkt-Auswahlen (Verdichter, Marktabfrage-Projekte):
+   Der Halo-Kreis pulsiert über Elementdeckkraft und Ringbreite; Füll- und Konturdeckkraft
+   des Kreises selbst kommen als SVG-Attribute aus den Leaflet-pathOptions. */
+.point-selection-halo {
+   animation: selected-point-halo 1.8s ease-in-out infinite;
+   pointer-events: none;
+}
+
+.light .point-selection-halo {
+   animation-name: selected-point-halo-light;
+}
+
+@keyframes selected-point-halo {
+   0%,
+   100% {
+      opacity: 0.55;
+      stroke-width: 2px;
+   }
+
+   50% {
+      opacity: 1;
+      stroke-width: 7px;
+   }
+}
+
+@keyframes selected-point-halo-light {
+   0%,
+   100% {
+      opacity: 0.5;
+      stroke-width: 2px;
+   }
+
+   50% {
+      opacity: 0.9;
+      stroke-width: 5px;
+   }
+}
+
 @media (prefers-reduced-motion: reduce) {
    .pipeline-selection-halo {
       animation: none;
       opacity: 0.5;
+   }
+
+   .point-selection-halo {
+      animation: none;
    }
 }
 
@@ -565,6 +617,87 @@
    left: 50%;
    width: 1px;
    height: 3px;
+}
+
+/* Cluster-Badges der Marktabfrage-Projekte: farbiger Ring in der Kategoriefarbe, wenn alle
+   enthaltenen Projekte dieselbe Kategorie haben, sonst neutral. Die Zahl steht auf einer nur
+   leicht getönten Fläche, damit der Kontrast in beiden Themes >= 4,5:1 bleibt; hohl vs. gefüllt
+   unterscheidet Cluster zugleich von Einzelpunkten. Die Größenstufen (--sm bis --xl, gesetzt in
+   marktabfrageCluster.js) kodieren die Anzahl zusätzlich über Tönung, Halo und Schriftgröße. */
+.projekt-cluster-icon {
+   border: 0;
+   background: transparent;
+}
+
+/* Marktabfrage-Projektmarker: DivIcons mit Kategorie-Form (Kreis/Dreieck/Quadrat, siehe
+   marktabfrageShapes.js). Der Hover-Effekt ersetzt das frühere Radius-Vergrößern der
+   CircleMarker per CSS-Skalierung. */
+.projekt-marker {
+   display: grid;
+   place-items: center;
+   border: 0;
+   background: transparent;
+}
+
+.projekt-marker svg {
+   overflow: visible;
+   transition: transform 120ms ease-out;
+}
+
+.projekt-marker:hover svg {
+   transform: scale(1.35);
+}
+
+.projekt-cluster {
+   display: grid;
+   place-items: center;
+   width: 100%;
+   height: 100%;
+   border: 2px solid var(--projekt-cluster-color, var(--muted-foreground));
+   border-radius: 9999px;
+   background: color-mix(
+      in srgb,
+      var(--projekt-cluster-color, var(--muted-foreground)) var(--projekt-cluster-tint, 12%),
+      var(--map-background)
+   );
+   box-shadow: 0 0 0 var(--projekt-cluster-halo, 2px)
+      color-mix(in srgb, var(--projekt-cluster-color, var(--muted-foreground)) 30%, transparent);
+   color: var(--card-foreground);
+   font-family: var(--font-ui);
+   font-size: var(--projekt-cluster-font, 0.6rem);
+   font-weight: 600;
+   line-height: 1;
+   transition: transform 120ms ease-out;
+}
+
+/* Hover-Feedback analog zu den Einzelmarkern; skaliert wird der innere Badge-Span, weil
+   Leaflet das Icon-Element selbst per transform positioniert. */
+.projekt-cluster-icon:hover .projekt-cluster {
+   transform: scale(1.15);
+}
+
+.projekt-cluster--sm {
+   --projekt-cluster-tint: 12%;
+   --projekt-cluster-halo: 2px;
+   --projekt-cluster-font: 0.6rem;
+}
+
+.projekt-cluster--md {
+   --projekt-cluster-tint: 22%;
+   --projekt-cluster-halo: 4px;
+   --projekt-cluster-font: 0.66rem;
+}
+
+.projekt-cluster--lg {
+   --projekt-cluster-tint: 32%;
+   --projekt-cluster-halo: 6px;
+   --projekt-cluster-font: 0.72rem;
+}
+
+.projekt-cluster--xl {
+   --projekt-cluster-tint: 44%;
+   --projekt-cluster-halo: 8px;
+   --projekt-cluster-font: 0.8rem;
 }
 
 .place-storage-marker-icon {

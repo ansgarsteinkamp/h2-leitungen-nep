@@ -1,3 +1,5 @@
+import { getMarktabfrageLabels, normalizeMarktabfrageFeature } from "@/lib/data/marktabfrageGeoJson";
+import { isMarktabfrageProjektFeature } from "@/lib/domain/marktabfrage";
 import { normalizeOperatorName } from "@/lib/domain/operators";
 import {
    FEATURE_TYPES,
@@ -363,7 +365,9 @@ function normalizeProperties(properties, geometry, featureIndex) {
    return normalized;
 }
 
-export function parsePipelineGeoJson(text) {
+// Quelldaten ab v4 mischen NEP-Maßnahmen und Marktabfrage-Projekte in einer Datei; die Anwendung
+// verarbeitet beide Datensätze getrennt. IDs teilen sich dateiweit einen Namensraum.
+export function parseQuelldatenGeoJson(text) {
    let collection;
 
    try {
@@ -381,36 +385,49 @@ export function parsePipelineGeoJson(text) {
    }
 
    const ids = new Set();
+   const pipelineFeatures = [];
+   const marktabfrageFeatures = [];
+
+   const registerIds = (measureIds, label) => {
+      measureIds.forEach(id => {
+         if (ids.has(id)) {
+            throw new Error(`${label}: Die ID "${id}" ist doppelt vergeben.`);
+         }
+         ids.add(id);
+      });
+   };
+
+   collection.features.forEach((feature, index) => {
+      const label = `Feature ${index + 1}`;
+      if (feature?.type !== "Feature") {
+         throw new Error(`Eintrag ${index + 1} muss ein GeoJSON Feature sein.`);
+      }
+      if (!feature.properties || typeof feature.properties !== "object") {
+         throw new Error(`${label} enthält keine Eigenschaften.`);
+      }
+
+      if (isMarktabfrageProjektFeature(feature)) {
+         const normalized = normalizeMarktabfrageFeature(feature, label);
+         registerIds([normalized.properties.id], label);
+         marktabfrageFeatures.push(normalized);
+         return;
+      }
+
+      const featureTyp = normalizeFeatureTyp(feature.properties, label);
+      const geometry = normalizeGeometry(feature.geometry, featureTyp, label);
+      const properties = normalizeProperties(feature.properties, geometry, index);
+      // Einzelmaßnahmen von Verdichterstandorten teilen den ID-Namensraum der Features:
+      // Duplikate würden in Metriken doppelt zählen.
+      registerIds([properties.id, ...(properties.massnahmen ?? []).map(measure => measure.id)], label);
+      pipelineFeatures.push({ ...feature, geometry, properties });
+   });
 
    return {
-      ...collection,
-      features: collection.features.map((feature, index) => {
-         const label = `Feature ${index + 1}`;
-         if (feature?.type !== "Feature") {
-            throw new Error(`Eintrag ${index + 1} muss ein GeoJSON Feature sein.`);
-         }
-         if (!feature.properties || typeof feature.properties !== "object") {
-            throw new Error(`${label} enthält keine Eigenschaften.`);
-         }
-
-         const featureTyp = normalizeFeatureTyp(feature.properties, label);
-         const geometry = normalizeGeometry(feature.geometry, featureTyp, label);
-         const properties = normalizeProperties(feature.properties, geometry, index);
-         // Einzelmaßnahmen von Verdichterstandorten teilen den ID-Namensraum der Features:
-         // Duplikate würden in Metriken doppelt zählen.
-         const measureIds = [properties.id, ...(properties.massnahmen ?? []).map(measure => measure.id)];
-         measureIds.forEach(id => {
-            if (ids.has(id)) {
-               throw new Error(`${label}: Die ID "${id}" ist doppelt vergeben.`);
-            }
-            ids.add(id);
-         });
-
-         return {
-            ...feature,
-            geometry,
-            properties
-         };
-      })
+      marktabfrageCollection: {
+         type: "FeatureCollection",
+         features: marktabfrageFeatures,
+         labels: getMarktabfrageLabels(collection)
+      },
+      pipelineCollection: { ...collection, features: pipelineFeatures }
    };
 }

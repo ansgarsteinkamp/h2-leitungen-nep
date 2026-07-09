@@ -12,7 +12,7 @@ import {
 
 const idCollator = new Intl.Collator("de-DE", { numeric: true, sensitivity: "base" });
 
-const normalize = value =>
+export const normalizeSearchText = value =>
    String(value ?? "")
       .toLocaleLowerCase("de-DE")
       .normalize("NFD")
@@ -20,6 +20,8 @@ const normalize = value =>
       .replace(/ß/g, "ss")
       .replace(/[^\p{Letter}\p{Number}]+/gu, " ")
       .replace(/\s+/g, " ");
+
+const normalize = normalizeSearchText;
 
 export const getSearchQuery = value => normalize(value).trim();
 

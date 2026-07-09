@@ -1,5 +1,9 @@
 export const ALL_VALUE = "__all__";
 
+// Datensatz-Modi der Anwendung: NEP-Maßnahmen oder Projekte der Marktabfrage.
+export const DATENSATZ_NEP = "nep";
+export const DATENSATZ_MARKTABFRAGE = "marktabfrage";
+
 export const NETWORK_VIEW_OPTIONS = [
    {
       value: "standard",

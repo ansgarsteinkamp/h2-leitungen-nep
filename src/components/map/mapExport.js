@@ -24,8 +24,8 @@ function formatLocalDate(date) {
    return `${year}_${month}_${day}`;
 }
 
-export function createMapExportFilename(date = new Date()) {
-   return `${formatLocalDate(date)} ${EXPORT_FILENAME_TITLE}.png`;
+export function createMapExportFilename(date = new Date(), title = EXPORT_FILENAME_TITLE) {
+   return `${formatLocalDate(date)} ${title}.png`;
 }
 
 function copyRootCustomProperties(target) {

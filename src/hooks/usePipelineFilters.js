@@ -321,6 +321,9 @@ export function usePipelineFilters(collection) {
       };
    }, [collection.features]);
 
+   // Die Setter lesen `filters` aus der Render-Closure: Zwei Setter-Aufrufe im selben Batch
+   // würden einander überschreiben. Mehr-Key-Änderungen daher als ein commitFilters-Aufruf
+   // ausdrücken (siehe showSearchFallback).
    const commitFilters = nextFilters => {
       setFilterState(normalizeFilterCombination(nextFilters, collection.features));
    };

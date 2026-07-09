@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { parsePipelineGeoJson } from "./validatePipelineGeoJson";
+import { parseQuelldatenGeoJson } from "./quelldatenGeoJson";
+
+// Die Tests prüfen den NEP-Teil der Quelldaten; die App nutzt parseQuelldatenGeoJson direkt.
+const parsePipeline = text => parseQuelldatenGeoJson(text).pipelineCollection;
 
 const baseProperties = {
    id: "H2-001-01",
@@ -35,9 +38,9 @@ function collection(features) {
    return JSON.stringify({ type: "FeatureCollection", features });
 }
 
-describe("parsePipelineGeoJson", () => {
+describe("parseQuelldatenGeoJson pipeline collection", () => {
    it("normalizes properties and derives standard and OGE flags", () => {
-      const parsed = parsePipelineGeoJson(collection([feature()]));
+      const parsed = parsePipeline(collection([feature()]));
       const props = parsed.features[0].properties;
 
       expect(props.startnetz).toBe(true);
@@ -50,7 +53,7 @@ describe("parsePipelineGeoJson", () => {
    });
 
    it("keeps OGE contact participation separate from OGE executing operator", () => {
-      const parsed = parsePipelineGeoJson(
+      const parsed = parsePipeline(
          collection([
             feature({
                properties: {
@@ -68,7 +71,7 @@ describe("parsePipelineGeoJson", () => {
    });
 
    it("parses German-formatted numbers with thousands separators and decimal commas", () => {
-      const parsed = parsePipelineGeoJson(
+      const parsed = parsePipeline(
          collection([
             feature({
                properties: {
@@ -86,7 +89,7 @@ describe("parsePipelineGeoJson", () => {
    });
 
    it("keeps dot decimals as decimal numbers", () => {
-      const parsed = parsePipelineGeoJson(
+      const parsed = parsePipeline(
          collection([
             feature({
                properties: {
@@ -104,7 +107,7 @@ describe("parsePipelineGeoJson", () => {
    });
 
    it("ignores malformed German-formatted numbers instead of guessing", () => {
-      const parsed = parsePipelineGeoJson(
+      const parsed = parsePipeline(
          collection([
             feature({
                properties: {
@@ -119,7 +122,7 @@ describe("parsePipelineGeoJson", () => {
    });
 
    it("splits and cleans array-valued list properties consistently", () => {
-      const parsed = parsePipelineGeoJson(
+      const parsed = parsePipeline(
          collection([
             feature({
                properties: {
@@ -138,7 +141,7 @@ describe("parsePipelineGeoJson", () => {
 
    it("rejects invalid required boolean fields", () => {
       expect(() =>
-         parsePipelineGeoJson(
+         parsePipeline(
             collection([
                feature({
                   properties: {
@@ -152,7 +155,7 @@ describe("parsePipelineGeoJson", () => {
    });
 
    it("treats blank required booleans as false", () => {
-      const parsed = parsePipelineGeoJson(
+      const parsed = parsePipeline(
          collection([
             feature({
                properties: {
@@ -169,7 +172,7 @@ describe("parsePipelineGeoJson", () => {
    });
 
    it("keeps optional invalid boolean fields as null", () => {
-      const parsed = parsePipelineGeoJson(
+      const parsed = parsePipeline(
          collection([
             feature({
                properties: {
@@ -187,7 +190,7 @@ describe("parsePipelineGeoJson", () => {
    });
 
    it("accepts x and dash markers only for scenario-style boolean fields", () => {
-      const parsed = parsePipelineGeoJson(
+      const parsed = parsePipeline(
          collection([
             feature({
                properties: {
@@ -209,7 +212,7 @@ describe("parsePipelineGeoJson", () => {
    });
 
    it("keeps source-provided commissioning year even when it differs from the commissioning date", () => {
-      const parsed = parsePipelineGeoJson(
+      const parsed = parsePipeline(
          collection([
             feature({
                properties: {
@@ -227,7 +230,7 @@ describe("parsePipelineGeoJson", () => {
 
    it("rejects invalid commissioning years and dates", () => {
       expect(() =>
-         parsePipelineGeoJson(
+         parsePipeline(
             collection([
                feature({
                   properties: {
@@ -240,7 +243,7 @@ describe("parsePipelineGeoJson", () => {
       ).toThrow(/ibnJahr/);
 
       expect(() =>
-         parsePipelineGeoJson(
+         parsePipeline(
             collection([
                feature({
                   properties: {
@@ -254,13 +257,13 @@ describe("parsePipelineGeoJson", () => {
    });
 
    it("requires every entry to be a GeoJSON Feature", () => {
-      expect(() => parsePipelineGeoJson(collection([{ type: "LineString", properties: baseProperties }]))).toThrow(
+      expect(() => parsePipeline(collection([{ type: "LineString", properties: baseProperties }]))).toThrow(
          /GeoJSON Feature/
       );
    });
 
    it("rejects duplicate feature IDs", () => {
-      expect(() => parsePipelineGeoJson(collection([feature(), feature()]))).toThrow(/doppelt vergeben/);
+      expect(() => parsePipeline(collection([feature(), feature()]))).toThrow(/doppelt vergeben/);
    });
 
    it("allows missing optional list fields", () => {
@@ -268,7 +271,7 @@ describe("parsePipelineGeoJson", () => {
       delete properties.bundeslaender;
       delete properties.durchfuehrendeNetzbetreiber;
       delete properties.ansprechpartner;
-      const parsed = parsePipelineGeoJson(collection([feature({ properties })]));
+      const parsed = parsePipeline(collection([feature({ properties })]));
 
       expect(parsed.features[0].properties.bundeslaender).toEqual([]);
       expect(parsed.features[0].properties.durchfuehrendeNetzbetreiber).toEqual([]);
@@ -277,7 +280,7 @@ describe("parsePipelineGeoJson", () => {
 
    it("rejects coordinates outside valid longitude and latitude ranges", () => {
       expect(() =>
-         parsePipelineGeoJson(
+         parsePipeline(
             collection([
                feature({
                   geometry: {
@@ -295,7 +298,7 @@ describe("parsePipelineGeoJson", () => {
 
    it("rejects blank or boolean coordinates instead of coercing them to numbers", () => {
       expect(() =>
-         parsePipelineGeoJson(
+         parsePipeline(
             collection([
                feature({
                   geometry: {
@@ -311,7 +314,7 @@ describe("parsePipelineGeoJson", () => {
       ).toThrow(/Koordinate/);
 
       expect(() =>
-         parsePipelineGeoJson(
+         parsePipeline(
             collection([
                feature({
                   geometry: {
@@ -329,7 +332,7 @@ describe("parsePipelineGeoJson", () => {
 
    it("rejects line strings with fewer than two coordinates", () => {
       expect(() =>
-         parsePipelineGeoJson(
+         parsePipeline(
             collection([
                feature({
                   geometry: {
@@ -343,7 +346,7 @@ describe("parsePipelineGeoJson", () => {
    });
 
    it("accepts v3 features with point geometry, null geometry and nested measures", () => {
-      const parsed = parsePipelineGeoJson(
+      const parsed = parsePipeline(
          collection([
             feature(),
             {
@@ -425,8 +428,8 @@ describe("parsePipelineGeoJson", () => {
       });
 
       // Ohne Einzelmaßnahmen würden Parent-Aggregate wie eine Maßnahme ausgewertet.
-      expect(() => parsePipelineGeoJson(collection([site([])]))).toThrow(/mindestens eine Einzelmaßnahme/);
-      expect(() => parsePipelineGeoJson(collection([site(undefined)]))).toThrow(/mindestens eine Einzelmaßnahme/);
+      expect(() => parsePipeline(collection([site([])]))).toThrow(/mindestens eine Einzelmaßnahme/);
+      expect(() => parsePipeline(collection([site(undefined)]))).toThrow(/mindestens eine Einzelmaßnahme/);
    });
 
    it("normalizes nested measure list fields and rejects duplicate measure ids", () => {
@@ -450,44 +453,44 @@ describe("parsePipelineGeoJson", () => {
          ...overrides
       });
 
-      const parsed = parsePipelineGeoJson(
+      const parsed = parsePipeline(
          collection([site([measure({ officialIds: "H2-2003-01", kernnetzAntragsIds: "KLU001-01" })])])
       );
       expect(parsed.features[0].properties.massnahmen[0].officialIds).toEqual(["H2-2003-01"]);
       expect(parsed.features[0].properties.massnahmen[0].kernnetzAntragsIds).toEqual(["KLU001-01"]);
 
       // Einzelmaßnahmen teilen den ID-Namensraum: Duplikate zählen in Metriken doppelt.
-      expect(() => parsePipelineGeoJson(collection([site([measure(), measure()])]))).toThrow(/doppelt vergeben/);
+      expect(() => parsePipeline(collection([site([measure(), measure()])]))).toThrow(/doppelt vergeben/);
       expect(() =>
-         parsePipelineGeoJson(
+         parsePipeline(
             collection([feature({ properties: { ...baseProperties, id: "H2-2003-01" } }), site([measure()])])
          )
       ).toThrow(/doppelt vergeben/);
    });
 
    it("defaults missing featureTyp to leitung and rejects unknown feature types", () => {
-      const parsed = parsePipelineGeoJson(collection([feature()]));
+      const parsed = parsePipeline(collection([feature()]));
 
       expect(parsed.features[0].properties.featureTyp).toBe("leitung");
 
       expect(() =>
-         parsePipelineGeoJson(collection([feature({ properties: { ...baseProperties, featureTyp: "raffinerie" } })]))
+         parsePipeline(collection([feature({ properties: { ...baseProperties, featureTyp: "raffinerie" } })]))
       ).toThrow(/featureTyp/);
    });
 
    it("rejects point geometries on pipelines and line geometries on other feature types", () => {
       expect(() =>
-         parsePipelineGeoJson(collection([feature({ geometry: { type: "Point", coordinates: [7.1, 51.2] } })]))
+         parsePipeline(collection([feature({ geometry: { type: "Point", coordinates: [7.1, 51.2] } })]))
       ).toThrow(/Punktgeometrie/);
 
       expect(() =>
-         parsePipelineGeoJson(collection([feature({ properties: { ...baseProperties, featureTyp: "gdrm_anlage" } })]))
+         parsePipeline(collection([feature({ properties: { ...baseProperties, featureTyp: "gdrm_anlage" } })]))
       ).toThrow(/Liniengeometrie/);
    });
 
    it("rejects point geometries on feature types other than compressor sites", () => {
       expect(() =>
-         parsePipelineGeoJson(
+         parsePipeline(
             collection([
                feature({
                   geometry: { type: "Point", coordinates: [7.1, 51.2] },
@@ -500,11 +503,11 @@ describe("parsePipelineGeoJson", () => {
 
    it("rejects a geometrieStatus that contradicts the actual geometry", () => {
       expect(() =>
-         parsePipelineGeoJson(collection([feature({ properties: { ...baseProperties, geometrieStatus: "fehlt" } })]))
+         parsePipeline(collection([feature({ properties: { ...baseProperties, geometrieStatus: "fehlt" } })]))
       ).toThrow(/geometrieStatus/);
 
       expect(() =>
-         parsePipelineGeoJson(
+         parsePipeline(
             collection([
                {
                   type: "Feature",
@@ -524,9 +527,9 @@ describe("parsePipelineGeoJson", () => {
       const properties = { ...baseProperties };
       delete properties.leitungstyp;
 
-      expect(() => parsePipelineGeoJson(collection([feature({ properties })]))).toThrow(/leitungstyp/);
+      expect(() => parsePipeline(collection([feature({ properties })]))).toThrow(/leitungstyp/);
 
-      const parsed = parsePipelineGeoJson(
+      const parsed = parsePipeline(
          collection([
             {
                type: "Feature",
@@ -541,7 +544,7 @@ describe("parsePipelineGeoJson", () => {
 
    it("rejects blank names and non-integer commissioning years", () => {
       expect(() =>
-         parsePipelineGeoJson(
+         parsePipeline(
             collection([
                feature({
                   properties: {
@@ -554,7 +557,7 @@ describe("parsePipelineGeoJson", () => {
       ).toThrow(/Name/);
 
       expect(() =>
-         parsePipelineGeoJson(
+         parsePipeline(
             collection([
                feature({
                   properties: {

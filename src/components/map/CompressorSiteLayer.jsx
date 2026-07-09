@@ -36,6 +36,7 @@ const getSiteStyle = (feature, { highlighted, selected }) => ({
 });
 
 const getSiteHaloStyle = feature => ({
+   className: "point-selection-halo",
    color: getSelectionHaloColor(feature),
    fillColor: getSelectionHaloColor(feature),
    fillOpacity: 0.28,

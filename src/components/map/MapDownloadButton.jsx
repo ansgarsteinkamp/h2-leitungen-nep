@@ -10,7 +10,7 @@ import {
    triggerBlobDownload
 } from "@/components/map/mapExport";
 
-export default function MapDownloadButton({ targetRef }) {
+export default function MapDownloadButton({ filenameTitle, targetRef }) {
    const [isExporting, setIsExporting] = useState(false);
 
    const downloadMap = async () => {
@@ -22,7 +22,7 @@ export default function MapDownloadButton({ targetRef }) {
       try {
          const blob = await createMapSnapshot(target);
          if (!blob) throw new Error("Der Kartenexport konnte nicht erstellt werden.");
-         triggerBlobDownload(blob, createMapExportFilename());
+         triggerBlobDownload(blob, createMapExportFilename(new Date(), filenameTitle));
       } catch (error) {
          console.error("Kartenexport fehlgeschlagen:", error);
       } finally {

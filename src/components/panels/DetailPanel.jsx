@@ -224,13 +224,19 @@ function DetailRow({ field, value }) {
    );
 }
 
-export default function DetailPanel({ selection, onClose }) {
+export default function DetailPanel({ focusedSelectionRef, selection, onClose }) {
    const panelRef = useRef(null);
 
+   // Fokussiert das Panel nur bei einer neuen Auswahl. Ohne den (über Moduswechsel hinweg
+   // stabilen) Merker würde ein bloßer Datensatz-Wechsel mit erhaltener Auswahl den Fokus vom
+   // Umschalter in das neu gemountete Panel reißen.
    useEffect(() => {
       if (!selection) return;
+      const selectionId = selection.item.properties.id;
+      if (focusedSelectionRef?.current === selectionId) return;
+      if (focusedSelectionRef) focusedSelectionRef.current = selectionId;
       panelRef.current?.focus();
-   }, [selection]);
+   }, [focusedSelectionRef, selection]);
 
    if (!selection) return null;
 

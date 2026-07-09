@@ -263,6 +263,223 @@ describe("MapCameraEffects", () => {
       expect(mockMap.fitBounds).toHaveBeenCalledWith(INITIAL_BOUNDS, { animate: true, padding: [48, 48] });
    });
 
+   it("keeps the viewport when a dataset switch swaps in another selection", () => {
+      const nepSelection = {
+         item: {
+            type: "Feature",
+            geometry: {
+               type: "LineString",
+               coordinates: [
+                  [7.1, 51.1],
+                  [7.2, 51.2]
+               ]
+            },
+            properties: { id: "H2-001-01" }
+         }
+      };
+      const marktabfrageSelection = {
+         item: {
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [9.5, 52.5] },
+            properties: { id: "MA-1" }
+         }
+      };
+      const { rerender } = render(
+         <MapCameraEffects
+            datensatzKey="nep"
+            resetViewKey={0}
+            searchActive={false}
+            searchBounds={[]}
+            selection={nepSelection}
+            selectionCloseKey={0}
+         />
+      );
+
+      mockMap.fitBounds.mockClear();
+      mockMap.panTo.mockClear();
+
+      // Der Datensatz-Wechsel tauscht die Auswahl des anderen Modus ein — keine neue
+      // Nutzer-Auswahl, der Kartenausschnitt bleibt stehen.
+      rerender(
+         <MapCameraEffects
+            datensatzKey="marktabfrage"
+            resetViewKey={0}
+            searchActive={false}
+            searchBounds={[]}
+            selection={marktabfrageSelection}
+            selectionCloseKey={0}
+         />
+      );
+
+      expect(mockMap.fitBounds).not.toHaveBeenCalled();
+      expect(mockMap.panTo).not.toHaveBeenCalled();
+   });
+
+   it("keeps the viewport when a dataset switch swaps in other search bounds", () => {
+      const nepSearchBounds = [
+         [51, 7],
+         [52, 8]
+      ];
+      const marktabfrageSearchBounds = [
+         [50, 6],
+         [53, 9]
+      ];
+      const { rerender } = render(
+         <MapCameraEffects
+            datensatzKey="nep"
+            resetViewKey={0}
+            searchActive
+            searchBounds={nepSearchBounds}
+            selection={null}
+            selectionCloseKey={0}
+         />
+      );
+
+      mockMap.fitBounds.mockClear();
+
+      rerender(
+         <MapCameraEffects
+            datensatzKey="marktabfrage"
+            resetViewKey={0}
+            searchActive
+            searchBounds={marktabfrageSearchBounds}
+            selection={null}
+            selectionCloseKey={0}
+         />
+      );
+
+      expect(mockMap.fitBounds).not.toHaveBeenCalled();
+   });
+
+   it("keeps the viewport when a dataset switch ends the previous search", () => {
+      const searchBounds = [
+         [51, 7],
+         [52, 8]
+      ];
+      const { rerender } = render(
+         <MapCameraEffects
+            datensatzKey="nep"
+            resetViewKey={0}
+            searchActive
+            searchBounds={searchBounds}
+            selection={null}
+            selectionCloseKey={0}
+         />
+      );
+
+      mockMap.fitBounds.mockClear();
+
+      // Ohne den Guard würde das Suchende beim Wechsel zur Übersicht zurückspringen.
+      rerender(
+         <MapCameraEffects
+            datensatzKey="marktabfrage"
+            resetViewKey={0}
+            searchActive={false}
+            searchBounds={[]}
+            selection={null}
+            selectionCloseKey={0}
+         />
+      );
+
+      expect(mockMap.fitBounds).not.toHaveBeenCalled();
+   });
+
+   it("does not return to the overview when a bounds-less search starts after a dataset switch", () => {
+      const nepSearchBounds = [
+         [51, 7],
+         [52, 8]
+      ];
+      // NEP-Suche bewegt die Kamera: Ownership entsteht.
+      const { rerender } = render(
+         <MapCameraEffects
+            datensatzKey="nep"
+            resetViewKey={0}
+            searchActive
+            searchBounds={nepSearchBounds}
+            selection={null}
+            selectionCloseKey={0}
+         />
+      );
+
+      rerender(
+         <MapCameraEffects
+            datensatzKey="marktabfrage"
+            resetViewKey={0}
+            searchActive={false}
+            searchBounds={[]}
+            selection={null}
+            selectionCloseKey={0}
+         />
+      );
+
+      mockMap.fitBounds.mockClear();
+
+      // Suche im neuen Modus mit zu vielen Treffern für Auto-Fit: neue, aber leere Bounds-Referenz.
+      // Die Ownership des alten Modus ist mit dem Wechsel verfallen — kein Rücksprung zur Übersicht.
+      rerender(
+         <MapCameraEffects
+            datensatzKey="marktabfrage"
+            resetViewKey={0}
+            searchActive
+            searchBounds={[]}
+            selection={null}
+            selectionCloseKey={0}
+         />
+      );
+
+      expect(mockMap.fitBounds).not.toHaveBeenCalled();
+   });
+
+   it("focuses a new selection made after a dataset switch", () => {
+      const { rerender } = render(
+         <MapCameraEffects
+            datensatzKey="nep"
+            resetViewKey={0}
+            searchActive={false}
+            searchBounds={[]}
+            selection={null}
+            selectionCloseKey={0}
+         />
+      );
+
+      rerender(
+         <MapCameraEffects
+            datensatzKey="marktabfrage"
+            resetViewKey={0}
+            searchActive={false}
+            searchBounds={[]}
+            selection={null}
+            selectionCloseKey={0}
+         />
+      );
+
+      mockMap.fitBounds.mockClear();
+
+      const selection = {
+         item: {
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [9.5, 52.5] },
+            properties: { id: "MA-1" }
+         }
+      };
+      rerender(
+         <MapCameraEffects
+            datensatzKey="marktabfrage"
+            resetViewKey={0}
+            searchActive={false}
+            searchBounds={[]}
+            selection={selection}
+            selectionCloseKey={0}
+         />
+      );
+
+      expect(mockMap.fitBounds).toHaveBeenCalledWith([[52.5, 9.5]], {
+         animate: true,
+         maxZoom: 7,
+         padding: [80, 80]
+      });
+   });
+
    it("lets an explicit reset take precedence over active search bounds", () => {
       const searchBounds = [
          [51, 7],

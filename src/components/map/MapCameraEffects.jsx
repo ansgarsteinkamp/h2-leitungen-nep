@@ -31,6 +31,7 @@ function focusSelectionBounds(map, selectionBounds) {
 }
 
 export default function MapCameraEffects({
+   datensatzKey = "nep",
    resetViewKey,
    searchActive,
    searchBounds,
@@ -42,6 +43,7 @@ export default function MapCameraEffects({
    // Suchende oder Auswahl-Schließen zur Übersicht zurückkehren; ein manuell gesetzter
    // Ausschnitt bleibt sonst unangetastet.
    const cameraOwnedRef = useRef(false);
+   const previousDatensatzKeyRef = useRef(datensatzKey);
    const previousMapRef = useRef(null);
    const previousResetViewKeyRef = useRef(resetViewKey);
    const previousSearchActiveRef = useRef(searchActive);
@@ -56,6 +58,7 @@ export default function MapCameraEffects({
 
    useEffect(() => {
       const mapChanged = map !== previousMapRef.current;
+      const datensatzChanged = datensatzKey !== previousDatensatzKeyRef.current;
       const resetViewChanged = resetViewKey !== previousResetViewKeyRef.current;
       const selectionChanged = selection !== previousSelectionRef.current;
       // Nur explizites Schließen (X-Button, neue Sucheingabe) stellt den Kontext wieder her;
@@ -64,6 +67,7 @@ export default function MapCameraEffects({
       const searchCleared = previousSearchActiveRef.current && !searchActive;
       const searchBoundsChanged = searchBounds !== previousSearchBoundsRef.current;
 
+      previousDatensatzKeyRef.current = datensatzKey;
       previousMapRef.current = map;
       previousResetViewKeyRef.current = resetViewKey;
       previousSearchActiveRef.current = searchActive;
@@ -72,6 +76,16 @@ export default function MapCameraEffects({
       previousSelectionCloseKeyRef.current = selectionCloseKey;
 
       if (resetViewChanged) return;
+
+      // Ein Datensatz-Wechsel tauscht Auswahl-, Such- und Bounds-Props des jeweils anderen Modus
+      // ein, ist aber weder ein Suchende noch eine neue Auswahl: Der Kartenausschnitt bleibt stehen.
+      // Der stehengebliebene Ausschnitt gilt danach als Nutzerkontext — die Kamera-Ownership des
+      // alten Modus verfällt, sonst würde z. B. eine treffermengenbedingt bounds-lose Suche im
+      // neuen Modus zur Übersicht zurückspringen.
+      if (datensatzChanged) {
+         cameraOwnedRef.current = false;
+         return;
+      }
 
       // Selection owns contextual camera movement while active; search resumes only after it clears.
       if (selection) {
@@ -98,7 +112,7 @@ export default function MapCameraEffects({
       if (!searchBoundsChanged && !selectionCloseRequested && !mapChanged) return;
       map.fitBounds(searchBounds, { animate: true, maxZoom: SEARCH_MAX_FIT_ZOOM, padding: SEARCH_CAMERA_PADDING });
       cameraOwnedRef.current = true;
-   }, [map, resetViewKey, searchActive, searchBounds, selection, selectionCloseKey]);
+   }, [datensatzKey, map, resetViewKey, searchActive, searchBounds, selection, selectionCloseKey]);
 
    return null;
 }

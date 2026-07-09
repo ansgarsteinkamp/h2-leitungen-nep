@@ -4,7 +4,7 @@ import { ErrorState, LoadingState } from "@/components/layout/AppStates";
 import PipelineWorkspace from "@/components/layout/PipelineWorkspace";
 import UploadStart from "@/presets/upload/UploadStart";
 import { loadCountries } from "@/lib/data/loadCountries";
-import { parsePipelineGeoJson } from "@/lib/data/validatePipelineGeoJson";
+import { parseQuelldatenGeoJson } from "@/lib/data/quelldatenGeoJson";
 
 const MAX_UPLOAD_SIZE = 10 * 1024 * 1024;
 
@@ -16,7 +16,7 @@ const PIPELINE_FILE_ACCEPT = {
 export default function App() {
    const [countries, setCountries] = useState(null);
    const [countriesError, setCountriesError] = useState(null);
-   const [pipelineCollection, setPipelineCollection] = useState(null);
+   const [quelldaten, setQuelldaten] = useState(null);
    const [uploadError, setUploadError] = useState(null);
    const [isProcessing, setIsProcessing] = useState(false);
 
@@ -45,8 +45,8 @@ export default function App() {
 
       try {
          const text = await file.text();
-         const nextCollection = parsePipelineGeoJson(text);
-         setPipelineCollection(nextCollection);
+         const nextQuelldaten = parseQuelldatenGeoJson(text);
+         setQuelldaten(nextQuelldaten);
       } catch (error) {
          setUploadError(error);
       } finally {
@@ -55,20 +55,20 @@ export default function App() {
    };
 
    const resetUpload = () => {
-      setPipelineCollection(null);
+      setQuelldaten(null);
       setUploadError(null);
       setIsProcessing(false);
    };
 
    if (uploadError) return <ErrorState error={uploadError} onReset={resetUpload} />;
 
-   if (!pipelineCollection) {
+   if (!quelldaten) {
       return (
          <UploadStart
             accept={PIPELINE_FILE_ACCEPT}
-            heading="Interaktive Karte der H₂-Maßnahmen aus dem NEP 2025"
+            heading="Interaktive Karte zu NEP 2025 und Marktabfrage 2026"
             isProcessing={isProcessing}
-            label="quelldaten_v3.geojson hier ablegen oder auswählen"
+            label="quelldaten_v4.geojson hier ablegen oder auswählen"
             maxFiles={1}
             maxSize={MAX_UPLOAD_SIZE}
             onFilesAccepted={handleFilesAccepted}
@@ -81,5 +81,11 @@ export default function App() {
    }
    if (!countries) return <LoadingState />;
 
-   return <PipelineWorkspace countries={countries} pipelineCollection={pipelineCollection} />;
+   return (
+      <PipelineWorkspace
+         countries={countries}
+         marktabfrageCollection={quelldaten.marktabfrageCollection}
+         pipelineCollection={quelldaten.pipelineCollection}
+      />
+   );
 }

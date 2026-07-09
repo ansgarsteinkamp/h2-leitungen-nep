@@ -153,6 +153,29 @@ describe("MapDownloadButton", () => {
       expect(createMapExportFilename(new Date(2026, 4, 27, 23, 30))).toBe("2026_05_27 Karte der H₂-Maßnahmen.png");
    });
 
+   it("uses the mode-specific title for the PNG filename when provided", () => {
+      expect(createMapExportFilename(new Date(2026, 4, 27), "Karte der H₂-Projekte und PtG-Anlagen")).toBe(
+         "2026_05_27 Karte der H₂-Projekte und PtG-Anlagen.png"
+      );
+   });
+
+   it("downloads with the filenameTitle prop instead of the default title", async () => {
+      render(
+         <TooltipProvider>
+            <MapDownloadButton
+               filenameTitle="Karte der H₂-Projekte und PtG-Anlagen"
+               targetRef={{ current: document.createElement("section") }}
+            />
+         </TooltipProvider>
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "Karte als PNG herunterladen" }));
+
+      await waitFor(() =>
+         expect(clickedDownloadFilename).toMatch(/^\d{4}_\d{2}_\d{2} Karte der H₂-Projekte und PtG-Anlagen\.png$/)
+      );
+   });
+
    it("restores temporary export styles when snapshot creation fails", async () => {
       const target = document.createElement("section");
       target.innerHTML = '<svg><path class="export-path" d="M0 0L1 1" style="stroke: red"></path></svg>';
