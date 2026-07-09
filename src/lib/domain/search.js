@@ -133,12 +133,6 @@ export function unitMatchesSearch(feature, unit, query, active = isSearchActive(
    return haystack.includes(query);
 }
 
-export function featureMatchesSearch(feature, query, active = isSearchActive(query)) {
-   if (!active) return true;
-
-   return getMeasureUnits(feature).some(unit => unitMatchesSearch(feature, unit, query, active));
-}
-
 export function toResultItems(collection, active, query = "") {
    return collection.features
       .map(feature => ({ feature, rank: getSearchRank(feature, query, active) }))

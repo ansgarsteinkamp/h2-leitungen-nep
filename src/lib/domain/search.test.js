@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { featureMatchesSearch, getSearchQuery, toResultItems, unitMatchesSearch } from "./search";
+import { getMeasureUnits } from "@/lib/domain/pipeline";
+
+import { getSearchQuery, toResultItems, unitMatchesSearch } from "./search";
 
 function pipeline(id, properties = {}) {
    return {
@@ -14,6 +16,10 @@ function pipeline(id, properties = {}) {
          ...properties
       }
    };
+}
+
+function featureMatchesSearch(feature, query) {
+   return getMeasureUnits(feature).some(unit => unitMatchesSearch(feature, unit, query, true));
 }
 
 function resultIds(features, active = false, query = "") {
@@ -48,7 +54,7 @@ describe("toResultItems", () => {
       const feature = pipeline("H2-024-01");
       const query = getSearchQuery("H2 024");
 
-      expect(featureMatchesSearch(feature, query, true)).toBe(true);
+      expect(featureMatchesSearch(feature, query)).toBe(true);
       expect(resultIds([pipeline("H2-100-01"), feature], true, query)).toEqual(["H2-024-01", "H2-100-01"]);
    });
 
@@ -62,15 +68,15 @@ describe("toResultItems", () => {
       const feature = pipeline("H2-050-01", { durchfuehrendeNetzbetreiber: ["Gastransport Nord GmbH"] });
       const query = getSearchQuery("GTG");
 
-      expect(featureMatchesSearch(feature, query, true)).toBe(true);
+      expect(featureMatchesSearch(feature, query)).toBe(true);
       expect(resultIds([pipeline("H2-100-01"), feature], true, query)).toEqual(["H2-050-01", "H2-100-01"]);
    });
 
    it("matches ß and ss spellings equivalently", () => {
       const feature = pipeline("H2-060-01", { beschreibung: "Maßnahme zur Netzverstärkung" });
 
-      expect(featureMatchesSearch(feature, getSearchQuery("Massnahme"), true)).toBe(true);
-      expect(featureMatchesSearch(feature, getSearchQuery("Netzverstarkung"), true)).toBe(true);
+      expect(featureMatchesSearch(feature, getSearchQuery("Massnahme"))).toBe(true);
+      expect(featureMatchesSearch(feature, getSearchQuery("Netzverstarkung"))).toBe(true);
    });
 
    it("finds compressor sites by official measure IDs and nested measure fields", () => {
@@ -101,7 +107,7 @@ describe("toResultItems", () => {
       };
 
       ["H2-2103", "KVS003", "2034", "Szenario 1"].forEach(term => {
-         expect(featureMatchesSearch(site, getSearchQuery(term), true)).toBe(true);
+         expect(featureMatchesSearch(site, getSearchQuery(term))).toBe(true);
       });
 
       // Offizielle IDs zählen als Identifier-Treffer und ranken vor Namens-Treffern.
