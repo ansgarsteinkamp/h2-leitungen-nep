@@ -9,11 +9,11 @@ import { createClusterIcon } from "./marktabfrageCluster";
 import { createProjektIcon, getProjektCenter } from "./marktabfrageMarkers";
 
 vi.mock("react-leaflet", () => ({
-   CircleMarker({ center, children, eventHandlers, interactive, pathOptions, radius }) {
+   CircleMarker({ center, children, className, eventHandlers, interactive, pathOptions, radius }) {
       return (
          <div
             data-center={center.join(",")}
-            data-class={pathOptions.className}
+            data-class={className}
             data-fill={pathOptions.fillColor}
             data-interactive={String(interactive)}
             data-radius={radius}

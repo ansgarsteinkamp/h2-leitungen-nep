@@ -131,11 +131,11 @@ describe("filterProjekte", () => {
    });
 
    it("finds projects via operator, ID, and project number", () => {
-      const features = [projekt("abc123", { betreiber: "Hüttenwerke Krupp" })];
+      const features = [projekt("abc123", { betreiber: "Hüttenwerke Krupp", projektnummer: "#7" })];
 
       expect(filterProjekte(features, { ...filters, searchTerm: "krupp" })).toHaveLength(1);
       expect(filterProjekte(features, { ...filters, searchTerm: "abc123" })).toHaveLength(1);
-      expect(filterProjekte(features, { ...filters, searchTerm: "#abc123" })).toHaveLength(1);
+      expect(filterProjekte(features, { ...filters, searchTerm: "#7" })).toHaveLength(1);
       expect(filterProjekte(features, { ...filters, searchTerm: "gibtsnicht" })).toHaveLength(0);
    });
 });

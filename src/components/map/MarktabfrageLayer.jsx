@@ -25,7 +25,6 @@ const CONTEXT_RADIUS = 2;
 const MAX_CLUSTER_RADIUS = 30;
 
 const getProjektHaloStyle = feature => ({
-   className: "point-selection-halo",
    color: getProjektAkzentColor(feature),
    fillColor: getProjektAkzentColor(feature),
    fillOpacity: 0.28,
@@ -106,6 +105,9 @@ export default function MarktabfrageLayer({
             <Pane name="marktabfrage-projekt-halo" style={{ zIndex: 413 }}>
                <CircleMarker
                   center={getProjektCenter(selectedFeature)}
+                  // className muss als direkte Prop in den Leaflet-Konstruktor: über pathOptions
+                  // liefe sie durch setStyle, das Klassen nie ans SVG-Element schreibt.
+                  className="point-selection-halo"
                   interactive={false}
                   pathOptions={getProjektHaloStyle(selectedFeature)}
                   radius={HALO_RADIUS}

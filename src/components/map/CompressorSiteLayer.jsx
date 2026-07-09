@@ -36,7 +36,6 @@ const getSiteStyle = (feature, { highlighted, selected }) => ({
 });
 
 const getSiteHaloStyle = feature => ({
-   className: "point-selection-halo",
    color: getSelectionHaloColor(feature),
    fillColor: getSelectionHaloColor(feature),
    fillOpacity: 0.28,
@@ -97,6 +96,9 @@ export default function CompressorSiteLayer({
             <Pane name="compressor-site-halo" style={{ zIndex: 412 }}>
                <CircleMarker
                   center={getSiteCenter(selectedFeature)}
+                  // className muss als direkte Prop in den Leaflet-Konstruktor: über pathOptions
+                  // liefe sie durch setStyle, das Klassen nie ans SVG-Element schreibt.
+                  className="point-selection-halo"
                   interactive={false}
                   pathOptions={getSiteHaloStyle(selectedFeature)}
                   radius={HALO_RADIUS}

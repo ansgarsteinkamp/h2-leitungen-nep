@@ -29,7 +29,7 @@ describe("projektMatchesSearch", () => {
          id: "H2-42",
          name: "Wasserstoffpark Nord",
          betreiber: "Muster Energie AG",
-         projektnummer: "PN-1001",
+         projektnummer: "#1001",
          datenbankId: "DB-7788"
       });
 
@@ -37,7 +37,7 @@ describe("projektMatchesSearch", () => {
       expect(projektMatchesSearch(projekt, getSearchQuery("Muster Energie"))).toBe(true);
       expect(projektMatchesSearch(projekt, getSearchQuery("H2-42"))).toBe(true);
       expect(projektMatchesSearch(projekt, getSearchQuery("DB-7788"))).toBe(true);
-      expect(projektMatchesSearch(projekt, getSearchQuery("PN-1001"))).toBe(true);
+      expect(projektMatchesSearch(projekt, getSearchQuery("#1001"))).toBe(true);
       expect(projektMatchesSearch(projekt, getSearchQuery("völlig anderes"))).toBe(false);
    });
 
@@ -45,24 +45,36 @@ describe("projektMatchesSearch", () => {
       const projekt = makeProjekt({ id: "H2-1", name: "Weißenfels Süd", betreiber: "Müller & Bär GmbH" });
 
       expect(projektMatchesSearch(projekt, getSearchQuery("weissenfels sud"))).toBe(true);
-      expect(projektMatchesSearch(projekt, getSearchQuery("MÜLLER BÄR"))).toBe(true);
+      expect(projektMatchesSearch(projekt, getSearchQuery("MÜLLER & BÄR"))).toBe(true);
    });
 
-   it("matches numeric queries only exactly against identifiers, not as substrings", () => {
+   it("keeps all other characters literal instead of stripping them", () => {
+      const projekt = makeProjekt({ id: "H2-1", name: "Gaskraftwerk Bexbach #766" });
+
+      expect(projektMatchesSearch(projekt, getSearchQuery("#766"))).toBe(true);
+      expect(projektMatchesSearch(projekt, getSearchQuery("#76"))).toBe(true);
+      expect(projektMatchesSearch(projekt, getSearchQuery("#6"))).toBe(false);
+   });
+
+   it("matches number queries only exactly against the project number", () => {
       const treffer = makeProjekt({ id: "a1b2c3d4-guid", name: "Alpha", projektnummer: "#123" });
       const nummerObermenge = makeProjekt({ id: "e5f6-guid", name: "Beta", projektnummer: "#2123" });
-      const idMitZiffern = makeProjekt({ id: "12340c45-guid", name: "Gamma", datenbankId: "9912399" });
 
       expect(projektMatchesSearch(treffer, getSearchQuery("#123"))).toBe(true);
       expect(projektMatchesSearch(treffer, getSearchQuery("123"))).toBe(true);
+      expect(projektMatchesSearch(treffer, getSearchQuery(" # 123 "))).toBe(true);
+      expect(projektMatchesSearch(treffer, getSearchQuery("#0123"))).toBe(true);
       expect(projektMatchesSearch(nummerObermenge, getSearchQuery("#123"))).toBe(false);
-      expect(projektMatchesSearch(idMitZiffern, getSearchQuery("#123"))).toBe(false);
+      expect(projektMatchesSearch(nummerObermenge, getSearchQuery("123"))).toBe(false);
    });
 
-   it("keeps substring matching on names and operators for numeric queries", () => {
-      const projekt = makeProjekt({ id: "H2-1", name: "Anlage 123 Nord" });
+   it("keeps substring matching on names and IDs for digit-only queries", () => {
+      const nameMitZiffern = makeProjekt({ id: "H2-1", name: "Anlage 123 Nord" });
+      const idMitZiffern = makeProjekt({ id: "12340c45-guid", name: "Gamma", datenbankId: "9912399" });
 
-      expect(projektMatchesSearch(projekt, getSearchQuery("123"))).toBe(true);
+      expect(projektMatchesSearch(nameMitZiffern, getSearchQuery("123"))).toBe(true);
+      expect(projektMatchesSearch(idMitZiffern, getSearchQuery("123"))).toBe(true);
+      expect(projektMatchesSearch(idMitZiffern, getSearchQuery("#123"))).toBe(false);
    });
 
    it("matches every project when the search is inactive", () => {
@@ -80,7 +92,7 @@ describe("projektMatchesSearch", () => {
       expect(projektMatchesSearch(projekt, getSearchQuery("Essen"))).toBe(false);
    });
 
-   it("matches the postal code only exactly, like other numeric identifiers", () => {
+   it("matches the postal code only exactly", () => {
       const projekt = makeProjekt({ id: "H2-1", name: "Alpha", plz: "47259" });
 
       expect(projektMatchesSearch(projekt, getSearchQuery("47259"))).toBe(true);
@@ -88,16 +100,21 @@ describe("projektMatchesSearch", () => {
       expect(projektMatchesSearch(projekt, getSearchQuery("4725a"))).toBe(false);
    });
 
-   it("activates single-digit numeric queries so one-digit project numbers stay findable", () => {
+   it("trims field values so untrimmed source data stays findable", () => {
+      const projekt = makeProjekt({ id: "H2-1", name: "Alpha", plz: " 47259 ", ort: " Duisburg " });
+
+      expect(projektMatchesSearch(projekt, getSearchQuery("47259"))).toBe(true);
+      expect(projektMatchesSearch(projekt, getSearchQuery("Duisburg"))).toBe(true);
+   });
+
+   it("keeps one-digit project numbers findable via the # form", () => {
       const projekt = makeProjekt({ id: "H2-1", name: "Alpha", projektnummer: "#5" });
       const anderes = makeProjekt({ id: "H2-2", name: "Beta", projektnummer: "#55" });
-      // Teilstring-Suche auf Namen gilt wie bei mehrstelligen Ziffern-Anfragen auch einstellig.
-      const nameMitZiffer = makeProjekt({ id: "H2-3", name: "Anlage 5 Nord" });
 
       expect(isSearchActive(getSearchQuery("#5"))).toBe(true);
+      expect(isSearchActive(getSearchQuery("5"))).toBe(false);
       expect(projektMatchesSearch(projekt, getSearchQuery("#5"))).toBe(true);
       expect(projektMatchesSearch(anderes, getSearchQuery("#5"))).toBe(false);
-      expect(projektMatchesSearch(nameMitZiffer, getSearchQuery("5"))).toBe(true);
    });
 });
 
@@ -143,15 +160,32 @@ describe("toProjektResultItems", () => {
       expect(items.map(entry => entry.item.properties.id)).toEqual(["X1", "X2", "X3"]);
    });
 
-   it("ranks the exact project number first for numeric queries without substring identifier hits", () => {
+   it("ranks the exact project number before name matches for digit-only queries", () => {
       const exakteNummer = makeProjekt({ id: "Z9", name: "Zeta", projektnummer: "#123" });
       const nameMitZiffern = makeProjekt({ id: "A1", name: "123 Anlage" });
-      const nummerObermenge = makeProjekt({ id: "B2", name: "Beta", projektnummer: "#2123" });
+      const nameEnthaeltZiffern = makeProjekt({ id: "B2", name: "Beta 123" });
 
-      const query = getSearchQuery("#123");
-      const items = toProjektResultItems(collectionOf([nummerObermenge, nameMitZiffern, exakteNummer]), true, query);
+      const query = getSearchQuery("123");
+      const items = toProjektResultItems(
+         collectionOf([nameEnthaeltZiffern, nameMitZiffern, exakteNummer]),
+         true,
+         query
+      );
 
       expect(items.map(entry => entry.item.properties.id)).toEqual(["Z9", "A1", "B2"]);
+   });
+
+   it("does not boost the rank via postal code substrings that are no match reason", () => {
+      const nameEnthaeltZiffern = makeProjekt({ id: "A1", name: "Anlage 4725 Nord", plz: "47259" });
+      const nameBeginntMitZiffern = makeProjekt({ id: "B2", name: "4725 Süd" });
+
+      const items = toProjektResultItems(
+         collectionOf([nameEnthaeltZiffern, nameBeginntMitZiffern]),
+         true,
+         getSearchQuery("4725")
+      );
+
+      expect(items.map(entry => entry.item.properties.id)).toEqual(["B2", "A1"]);
    });
 
    it("marks matches as search and sets title and kind", () => {

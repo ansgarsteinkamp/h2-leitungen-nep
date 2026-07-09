@@ -1,67 +1,80 @@
 import { getMarktabfrageAttribute } from "@/lib/domain/marktabfrage";
 import { projektTitle } from "@/lib/domain/marktabfrageFormatters";
-import { getSearchQuery, isSearchActive as isTextSearchActive, normalizeSearchText } from "@/lib/domain/search";
 
 const idCollator = new Intl.Collator("de-DE", { numeric: true, sensitivity: "base" });
 
-// Getrimmt, damit führende Trennzeichen (z. B. das "#" der Projektnummer) den Vergleich mit der
-// ebenfalls getrimmten Suchanfrage nicht verfälschen.
-const normalize = value => normalizeSearchText(value).trim();
+// Nur Großschreibung, Akzente, ß und umgebender Whitespace sind für die Suche unerheblich.
+// Alle anderen Zeichen (#, Bindestriche …) zählen wörtlich — das hält die Suche vorhersehbar.
+// Getrimmt werden Suchanfrage UND Feldwerte: Die Attribute der Quelldaten (PLZ, Ort,
+// Datenbank-ID) laufen ungetrimmt durch den Import, und die PLZ vergleicht exakt.
+const normalize = value =>
+   String(value ?? "")
+      .toLocaleLowerCase("de-DE")
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .replace(/ß/g, "ss")
+      .replace(/\s+/g, " ")
+      .trim();
 
-const normalizedIncludes = (value, query) => normalize(value).includes(query);
-const normalizedStartsWith = (value, query) => normalize(value).startsWith(query);
+export const getSearchQuery = normalize;
 
-// Reine Ziffern-Anfragen sind Projektnummern- oder PLZ-Suchen ("#123" normalisiert zu "123"):
-// Die Identifikatoren matchen dann nur exakt — per Teilstring fände "123" sonst auch die
-// Projektnummer 2123 und jede Datenbank-ID, die zufällig "123" enthält. Namen, Betreiber und
-// Orte bleiben Teilstring-Suche.
-const isNumericQuery = query => /^\d+$/.test(query);
+export const isSearchActive = query => query.length >= 2;
 
-// Ziffern-Anfragen sind schon ab einem Zeichen aktiv: Sie matchen Identifikatoren nur exakt,
-// eine einstellige Projektnummer ("#5") bliebe mit der 2-Zeichen-Schwelle sonst unauffindbar.
-export const isSearchActive = query => isNumericQuery(query) || isTextSearchActive(query);
+// Suchbegriff gegen die Projektnummer prüfen (exakter Treffer, keine Teilstring-Suche)
+//
+// "#1", "1"     => findet genau Projektnummer #1 (nicht #10, #11, ...)
+// "# 1", " #1 " => Leerzeichen unschädlich
+// "#01"         => findet Projektnummer #1
+// "#1a", "a1"   => kein Treffer
+//
+const NUMMERN_ANFRAGE = /^#?\s*(\d+)$/;
 
-const identifierMatches = (value, query) =>
-   isNumericQuery(query) ? normalize(value) === query : normalizedIncludes(value, query);
+const matchesProjektnummer = (query, projektnummer) => {
+   const anfrage = query.match(NUMMERN_ANFRAGE);
+   if (anfrage === null) return false;
+
+   const nummer = String(projektnummer ?? "").match(NUMMERN_ANFRAGE);
+   return nummer !== null && Number(anfrage[1]) === Number(nummer[1]);
+};
+
+const includesQuery = (value, query) => normalize(value).includes(query);
 
 // Suchfelder laut Abfrage-Design: Projektname, Betreiber (Großkunde bzw. Anlagenbetreiber),
-// Ort und PLZ des Projektstandorts, Datenbank-ID und Projektnummer (#…). Kategoriale Facetten
-// (Status, Härtegrad, Netz, Bundesland) bleiben bewusst außen vor — sie erzeugten als
-// Suchfelder nur unbrauchbar große Treffermengen.
-function getIdentifierValues(feature) {
-   const props = feature.properties;
-   const attribute = getMarktabfrageAttribute(props);
-   return [props.id, attribute.datenbankId, props.projektnummer, attribute.plz];
-}
-
-function getNameSearchValues(feature) {
-   const props = feature.properties;
-   // Ort matcht per Teilstring wie Name und Betreiber; PtG-Anlagen haben keinen Ort in den
-   // Quelldaten, aber meist eine PLZ (Identifikator, exakt).
-   return [props.name, props.betreiber, getMarktabfrageAttribute(props).ort];
-}
-
+// Ort, Datenbank-ID — alle per Teilstring. Projektnummer ("#…") und PLZ treffen nur exakt:
+// per Teilstring fände "#123" sonst auch "#2123", und kurze Ziffernfolgen stecken in fast
+// jeder PLZ. Kategoriale Facetten (Status, Härtegrad, Netz, Bundesland) bleiben bewusst
+// außen vor — sie erzeugten als Suchfelder nur unbrauchbar große Treffermengen.
 export function projektMatchesSearch(feature, query, active = isSearchActive(query)) {
    if (!active) return true;
 
-   return (
-      getIdentifierValues(feature).some(value => identifierMatches(value, query)) ||
-      getNameSearchValues(feature).some(value => normalizedIncludes(value, query))
+   const props = feature.properties;
+   const attribute = getMarktabfrageAttribute(props);
+
+   if (matchesProjektnummer(query, props.projektnummer)) return true;
+   if (normalize(attribute.plz) === query) return true;
+
+   return [props.id, attribute.datenbankId, props.name, props.betreiber, attribute.ort].some(value =>
+      includesQuery(value, query)
    );
 }
 
 function getSearchRank(feature, query, active) {
    if (!active) return 0;
 
-   const identifiers = getIdentifierValues(feature);
+   const props = feature.properties;
+   const attribute = getMarktabfrageAttribute(props);
+   // PLZ nur im Exakt-Rang: In den Teilstring-Rängen zählte eine PLZ als Treffergrund,
+   // den projektMatchesSearch gar nicht kennt — das verzerrte die Sortierung.
+   const identifiers = [props.id, attribute.datenbankId];
+
+   if (matchesProjektnummer(query, props.projektnummer)) return 0;
+   if (normalize(attribute.plz) === query) return 0;
    if (identifiers.some(value => normalize(value) === query)) return 0;
-   if (!isNumericQuery(query)) {
-      if (identifiers.some(value => normalizedStartsWith(value, query))) return 1;
-      if (identifiers.some(value => normalizedIncludes(value, query))) return 2;
-   }
-   if (normalizedStartsWith(feature.properties.name, query)) return 3;
-   if (normalizedIncludes(feature.properties.name, query)) return 4;
-   if (normalizedIncludes(feature.properties.betreiber, query)) return 5;
+   if (identifiers.some(value => normalize(value).startsWith(query))) return 1;
+   if (identifiers.some(value => includesQuery(value, query))) return 2;
+   if (normalize(props.name).startsWith(query)) return 3;
+   if (includesQuery(props.name, query)) return 4;
+   if (includesQuery(props.betreiber, query)) return 5;
 
    // Rang 6: Treffer nur über den Ort — die Ergebnisliste enthält ausschließlich gefilterte
    // Treffer, daher braucht der Ort keinen eigenen Prüfschritt und sortiert als letzte Stufe.
@@ -99,5 +112,3 @@ export function toProjektResultItems(collection, active, query = "") {
          source: active ? "search" : "filtered"
       }));
 }
-
-export { getSearchQuery };
