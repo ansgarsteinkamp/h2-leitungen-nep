@@ -193,7 +193,7 @@ Der Begriff "durchführender Netzbetreiber" sollte nicht überdehnt werden. Die 
 
 Ab `quelldaten_v5.geojson` tragen einzelne Maßnahmen `ogeDurchfuehrendAbNep`: den NEP-Zyklus als Jahr (z. B. 2029), ab dem OGE laut interner OGE-Planung durchführender FNB wird. Die Angabe ist nicht Bestandteil des NEP; `durchfuehrendeNetzbetreiber`, `ogeIstDurchfuehrenderNetzbetreiber`, der Filter "Nur OGE-Bezug" und die Kennzahlen bleiben unberührt. Bei Verdichtern steht der Wert an der Einzelmaßnahme in `massnahmen[]`.
 
-In der App erweitern die Chips unter "Ab welchem NEP wird OGE durchführender FNB?" die bestehende Hervorhebung; sie erscheinen nur, wenn diese aktiv ist und die Datei das Feld enthält. Jeder Zyklus wirkt einzeln: NEP 29 hebt zusätzlich nur die Maßnahmen mit Wert 2029 hervor. Ein Verdichterstandort leuchtet, sobald eine seiner Einzelmaßnahmen passt. Die Legende nennt die gewählten Zyklen als interne Planung.
+In der App erweitern die Chips unter "Ab welchem NEP wird OGE durchführender FNB?" die bestehende Hervorhebung; sie erscheinen nur, wenn diese aktiv ist und die Datei das Feld enthält. Jeder Zyklus wirkt einzeln: NEP 29 hebt zusätzlich nur die Maßnahmen mit Wert 2029 hervor. Ein Verdichterstandort leuchtet, sobald eine seiner Einzelmaßnahmen passt.
 
 ## Datenmarker in diesem Projekt
 

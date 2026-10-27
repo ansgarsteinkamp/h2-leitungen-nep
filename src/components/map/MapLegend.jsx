@@ -7,7 +7,6 @@ import { MAP_EXPORT_EXCLUDE_PROPS } from "@/components/map/mapExport";
 import { PipelineLineSymbol } from "@/components/ui/pipeline-line-symbol";
 import { OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR, PIPELINE_SYMBOL_COLORS } from "@/components/theme/pipelineTheme";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { nepCycleLabel } from "@/lib/domain/formatters";
 
 const participationEntries = [
    { key: "oge", label: "OGE-Bezug" },
@@ -16,6 +15,7 @@ const participationEntries = [
 
 const lineTypeEntries = ["Umstellung", "Neubau"];
 const LEGEND_SYMBOL_OPACITY = 0.95;
+
 const entries = participationEntries.flatMap(participation =>
    lineTypeEntries.map(lineType => ({
       color: PIPELINE_SYMBOL_COLORS[participation.key],
@@ -52,30 +52,7 @@ function SiteLegendSymbol({ color }) {
    );
 }
 
-// Die NEP-Erweiterung ist interne OGE-Planung und wird deshalb in der Legende genannt. Der Eintrag
-// trägt nicht zur Legendenbreite bei (w-0 min-w-full) und bricht in der Breite der übrigen um.
-function OgeExecutingHighlightLegendEntry({ ogeExecutingNeps }) {
-   return (
-      <li className="mt-1 flex w-0 min-w-full items-start gap-2 border-t border-border/60 pt-1.5">
-         <span className="inline-flex h-[1.5em] shrink-0 items-center">
-            <HighlightLegendSymbol />
-         </span>
-         <span className="grid min-w-0 gap-0.5 leading-[1.5]">
-            <span>OGE als durchführender FNB</span>
-            {ogeExecutingNeps.length > 0 ? (
-               <span>{`inkl. interner Planung ${ogeExecutingNeps.map(nepCycleLabel).join(", ")}`}</span>
-            ) : null}
-         </span>
-      </li>
-   );
-}
-
-export default function MapLegend({
-   ogeExecutingNeps = [],
-   showCompressorSites = false,
-   showOgeExecutingOperatorHighlight = false,
-   onHide
-}) {
+export default function MapLegend({ showCompressorSites = false, showOgeExecutingOperatorHighlight = false, onHide }) {
    const legendRef = useRef(null);
 
    useEffect(() => {
@@ -125,7 +102,10 @@ export default function MapLegend({
                  ))
                : null}
             {showOgeExecutingOperatorHighlight ? (
-               <OgeExecutingHighlightLegendEntry ogeExecutingNeps={ogeExecutingNeps} />
+               <li className="mt-1 inline-flex items-center gap-2 border-t border-border/60 pt-1.5">
+                  <HighlightLegendSymbol />
+                  OGE als durchführender FNB
+               </li>
             ) : null}
          </ul>
       </aside>

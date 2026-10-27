@@ -76,14 +76,4 @@ describe("MapLegend", () => {
          screen.getByRole("button", { name: "Legende ausblenden" }).getAttribute(MAP_EXPORT_EXCLUDE_ATTRIBUTE)
       ).toBe("");
    });
-
-   it("names the selected internal OGE planning cycles below the highlight entry", () => {
-      renderLegend({ ogeExecutingNeps: [2027, 2031], showOgeExecutingOperatorHighlight: true });
-
-      const legend = screen.getByRole("complementary", { name: "Kartenlegende" });
-      const highlightEntry = within(legend).getAllByRole("listitem").at(-1);
-
-      expect(within(highlightEntry).getByText("OGE als durchführender FNB")).toBeTruthy();
-      expect(within(highlightEntry).getByText("inkl. interner Planung NEP 27, NEP 31")).toBeTruthy();
-   });
 });

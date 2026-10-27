@@ -205,11 +205,10 @@ describe("NetworkMap", () => {
       expect(onMapContentChange).not.toHaveBeenCalled();
    });
 
-   it("passes selected internal OGE planning cycles to the layers and names them in the legend", () => {
+   it("passes selected internal OGE planning cycles to the map layers", () => {
       renderNetworkMap({ highlightOgeExecutingOperator: true, ogeExecutingNeps: [2027, 2031] });
 
       expect(screen.getByTestId("pipeline-layer").getAttribute("data-oge-executing-neps")).toBe("2027,2031");
       expect(screen.getByTestId("compressor-site-layer").getAttribute("data-oge-executing-neps")).toBe("2027,2031");
-      expect(screen.getByText("inkl. interner Planung NEP 27, NEP 31")).toBeTruthy();
    });
 });

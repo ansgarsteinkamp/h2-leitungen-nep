@@ -150,7 +150,6 @@ export default function NetworkMap({
                )}
                {!showPlaces && isLegendVisible ? (
                   <MapLegend
-                     ogeExecutingNeps={ogeExecutingNeps}
                      showCompressorSites={hasCompressorSites}
                      showOgeExecutingOperatorHighlight={highlightOgeExecutingOperator}
                      onHide={() => setHiddenLegendKey(legendKey)}
