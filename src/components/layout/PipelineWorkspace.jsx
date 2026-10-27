@@ -11,7 +11,7 @@ import { EMPTY_MARKTABFRAGE_COLLECTION } from "@/lib/data/marktabfrageGeoJson";
 import { DATENSATZ_MARKTABFRAGE, DATENSATZ_NEP } from "@/lib/domain/constants";
 import { loadPlaces } from "@/lib/data/loadPlaces";
 import { projektMeta } from "@/lib/domain/marktabfrageFormatters";
-import { hasLineGeometry } from "@/lib/domain/pipeline";
+import { EMPTY_OGE_EXECUTING_NEPS, hasLineGeometry } from "@/lib/domain/pipeline";
 import { useMarktabfrageFilters } from "@/hooks/useMarktabfrageFilters";
 import { usePipelineFilters } from "@/hooks/usePipelineFilters";
 import { usePipelineSelection } from "@/hooks/usePipelineSelection";
@@ -51,8 +51,8 @@ export default function PipelineWorkspace({
 }) {
    const [datensatz, setDatensatz] = useState(DATENSATZ_NEP);
    const [highlightOgeExecutingOperator, setHighlightOgeExecutingOperator] = useState(false);
-   // Kumulativer NEP-Horizont (z. B. 2029) der internen OGE-Planung; null = nur heutiger Stand.
-   const [ogeExecutingNepHorizon, setOgeExecutingNepHorizon] = useState(null);
+   // Gewählte NEP-Zyklen der internen OGE-Planung (aufsteigend, z. B. [2027, 2031]); leer = nur heutiger Stand.
+   const [ogeExecutingNeps, setOgeExecutingNeps] = useState(EMPTY_OGE_EXECUTING_NEPS);
    const [mapContent, setMapContent] = useState("pipelines");
    const [places, setPlaces] = useState([]);
    const [placesError, setPlacesError] = useState(null);
@@ -139,7 +139,7 @@ export default function PipelineWorkspace({
       // lässt den Zustand des NEP-Modus unangetastet.
       if (!isMarktabfrage) {
          setHighlightOgeExecutingOperator(false);
-         setOgeExecutingNepHorizon(null);
+         setOgeExecutingNeps(EMPTY_OGE_EXECUTING_NEPS);
       }
       setResetViewKey(value => value + 1);
    };
@@ -215,8 +215,8 @@ export default function PipelineWorkspace({
                   kernnetzIdOptions={pipelineFilters.kernnetzIdOptions}
                   metrics={pipelineFilters.metrics}
                   onHighlightOgeExecutingOperatorChange={setHighlightOgeExecutingOperator}
-                  ogeExecutingNepHorizon={ogeExecutingNepHorizon}
-                  onOgeExecutingNepHorizonChange={setOgeExecutingNepHorizon}
+                  ogeExecutingNeps={ogeExecutingNeps}
+                  onOgeExecutingNepsChange={setOgeExecutingNeps}
                   onResetFilters={resetFilters}
                   measureTypeOptions={pipelineFilters.measureTypeOptions}
                   networkViewOptions={pipelineFilters.networkViewOptions}
@@ -235,7 +235,8 @@ export default function PipelineWorkspace({
                      germany={germany}
                      highlightOgeExecutingOperator={highlightOgeExecutingOperator}
                      isVisibleMeasure={pipelineFilters.isVisibleMeasure}
-                     ogeExecutingNepHorizon={ogeExecutingNepHorizon}
+                     ogeExecutingNepYears={pipelineFilters.options.ogeExecutingNepYears}
+                     ogeExecutingNeps={ogeExecutingNeps}
                      mapContent={mapContent}
                      marktabfrageMode={isMarktabfrage}
                      marktabfrageProjekte={marktabfrageFilters.filteredCollection}

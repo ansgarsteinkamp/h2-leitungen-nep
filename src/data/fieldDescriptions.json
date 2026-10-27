@@ -226,7 +226,7 @@
    },
    "ogeDurchfuehrendAbNep": {
       "label": "OGE durchführend ab (interne Planung)",
-      "description": "Interne OGE-Planung, ab welchem NEP-Zyklus OGE durchführender Netzbetreiber dieser Maßnahme wird (z. B. NEP 29 = NEP-Zyklus 2029). Nicht Bestandteil des NEP Gas/Wasserstoff 2025; dort ist derzeit ein anderer oder kein durchführender Netzbetreiber eingetragen.",
+      "description": "Interne OGE-Planung, ab welchem NEP-Zyklus OGE durchführender Netzbetreiber dieser Maßnahme wird (z. B. NEP 29 = NEP-Zyklus 2029). Nicht Bestandteil des NEP Gas/Wasserstoff 2025; dort ist derzeit ein anderer oder kein durchführender Netzbetreiber eingetragen. In der Karte wird die Maßnahme nur hervorgehoben, wenn genau dieser Zyklus ausgewählt ist.",
       "type": "number",
       "sourceFields": ["Interne Liste: Ab welchem NEP wird OGE durchführender FNB?"]
    },

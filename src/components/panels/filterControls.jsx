@@ -139,7 +139,15 @@ export function SegmentGroup({
    );
 }
 
-function SegmentButton({ active, groupLabel, option, onChange, optionButtonClassName, optionTextClassName, symbol }) {
+export function SegmentButton({
+   active,
+   groupLabel,
+   option,
+   onChange,
+   optionButtonClassName,
+   optionTextClassName,
+   symbol
+}) {
    return (
       <button
          aria-label={`${groupLabel}: ${option.label}`}

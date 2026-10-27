@@ -212,7 +212,7 @@ describe("PipelineLayer", () => {
       expect(getOgeButton("oge-executing").getAttribute("data-weight")).toBe("5.25");
    });
 
-   it("restyles planned OGE executing operators when only the NEP horizon changes", () => {
+   it("restyles planned OGE executing operators when only the selected NEP cycles change", () => {
       const pipelines = collection([
          {
             ...pipeline("oge-planned", true),
@@ -238,7 +238,7 @@ describe("PipelineLayer", () => {
       rerender(
          <PipelineLayer
             highlightOgeExecutingOperator
-            ogeExecutingNepHorizon={2029}
+            ogeExecutingNeps={[2029]}
             onSelectPipeline={vi.fn()}
             pipelines={pipelines}
             selectedPipelineId={null}
@@ -247,6 +247,18 @@ describe("PipelineLayer", () => {
 
       expect(getOgeButton("oge-planned").getAttribute("data-color")).toBe(OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR);
       expect(getOgeButton("oge-planned").getAttribute("data-weight")).toBe("5.25");
+
+      rerender(
+         <PipelineLayer
+            highlightOgeExecutingOperator
+            ogeExecutingNeps={[2027]}
+            onSelectPipeline={vi.fn()}
+            pipelines={pipelines}
+            selectedPipelineId={null}
+         />
+      );
+
+      expect(getOgeButton("oge-planned").getAttribute("data-weight")).toBe("3");
    });
 
    it("uses the latest OGE executing operator highlight mode in existing Leaflet event handlers", () => {

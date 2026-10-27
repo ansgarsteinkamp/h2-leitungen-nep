@@ -5,6 +5,7 @@ import { pipelineMeta, pipelineTitle } from "@/lib/domain/formatters";
 import { createPipelineDataKey } from "@/components/map/mapDataKey";
 import { getPipelineContextStyle, getPipelineStyle, getSelectionHaloStyle } from "@/components/map/pipelineStyle";
 import { getPipelineParticipationKey } from "@/components/theme/pipelineTheme";
+import { EMPTY_OGE_EXECUTING_NEPS } from "@/lib/domain/pipeline";
 
 const MAP_TOOLTIP_OPTIONS = {
    className: "map-tooltip",
@@ -80,7 +81,7 @@ const bindInertLayer = (_feature, layer) => {
 
 export default function PipelineLayer({
    highlightOgeExecutingOperator = false,
-   ogeExecutingNepHorizon = null,
+   ogeExecutingNeps = EMPTY_OGE_EXECUTING_NEPS,
    onSelectPipeline,
    pipelines,
    presentation = "interactive",
@@ -95,7 +96,7 @@ export default function PipelineLayer({
    const hoveredPipelineIdRef = useRef(null);
    const hoveredHitboxLayerRef = useRef(null);
    const openTooltipLayerRef = useRef(null);
-   const pipelineStyleOptionsRef = useRef({ highlightOgeExecutingOperator, ogeExecutingNepHorizon });
+   const pipelineStyleOptionsRef = useRef({ highlightOgeExecutingOperator, ogeExecutingNeps });
    const previousPipelinesRef = useRef(pipelines);
    const selectedPipelineIdRef = useRef(selectedPipelineId);
    const pipelineDataKey = useMemo(() => createPipelineDataKey(pipelines), [pipelines]);
@@ -105,8 +106,8 @@ export default function PipelineLayer({
       [pipelines]
    );
    const pipelineStyleOptions = useMemo(
-      () => ({ highlightOgeExecutingOperator, ogeExecutingNepHorizon }),
-      [highlightOgeExecutingOperator, ogeExecutingNepHorizon]
+      () => ({ highlightOgeExecutingOperator, ogeExecutingNeps }),
+      [highlightOgeExecutingOperator, ogeExecutingNeps]
    );
    const hitboxPipelineData = useMemo(
       () => createPipelineFeatureCollection(pipelines, sortPipelinesByDisplayPriority(pipelines.features)),

@@ -1,7 +1,7 @@
 import { CircleMarker, Pane, Tooltip } from "react-leaflet";
 
 import { pipelineMeta, pipelineTitle } from "@/lib/domain/formatters";
-import { isOgeExecutingOperatorHighlighted } from "@/lib/domain/pipeline";
+import { EMPTY_OGE_EXECUTING_NEPS, isOgeExecutingOperatorHighlighted } from "@/lib/domain/pipeline";
 import {
    getOgeExecutingOperatorHighlightColor,
    getPipelineColor,
@@ -65,7 +65,7 @@ function SiteTooltip({ feature }) {
 export default function CompressorSiteLayer({
    highlightOgeExecutingOperator = false,
    isVisibleMeasure,
-   ogeExecutingNepHorizon = null,
+   ogeExecutingNeps = EMPTY_OGE_EXECUTING_NEPS,
    onSelectSite,
    presentation = "interactive",
    selectedSiteId,
@@ -114,7 +114,7 @@ export default function CompressorSiteLayer({
                const highlighted = isOgeExecutingOperatorHighlighted(feature, {
                   highlightOgeExecutingOperator,
                   isVisibleMeasure,
-                  ogeExecutingNepHorizon
+                  ogeExecutingNeps
                });
 
                const restingRadius = selected ? SELECTED_RADIUS : BASE_RADIUS;

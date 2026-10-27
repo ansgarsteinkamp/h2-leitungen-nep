@@ -32,20 +32,20 @@ vi.mock("@/lib/data/geoCollections", () => ({
 vi.mock("@/components/panels/FilterPanel", () => ({
    default({
       highlightOgeExecutingOperator,
-      ogeExecutingNepHorizon,
+      ogeExecutingNeps,
       onHighlightOgeExecutingOperatorChange,
-      onOgeExecutingNepHorizonChange,
+      onOgeExecutingNepsChange,
       onResetFilters,
       setFilter
    }) {
       return (
          <aside
             data-highlight={String(highlightOgeExecutingOperator)}
-            data-oge-executing-nep-horizon={String(ogeExecutingNepHorizon)}
+            data-oge-executing-neps={ogeExecutingNeps.join(",")}
             data-testid="filter-panel"
          >
-            <button onClick={() => onOgeExecutingNepHorizonChange(2029)} type="button">
-               NEP 29 wählen
+            <button onClick={() => onOgeExecutingNepsChange([2027, 2031])} type="button">
+               NEP 27 und 31 wählen
             </button>
             <button onClick={onResetFilters} type="button">
                NEP-Filter zurücksetzen
@@ -93,11 +93,12 @@ vi.mock("@/components/panels/InspectorPanel", () => ({
 }));
 
 vi.mock("@/components/map/NetworkMap", () => ({
-   default({ marktabfrageMode, marktabfrageProjekte, pipelineContext }) {
+   default({ marktabfrageMode, marktabfrageProjekte, ogeExecutingNeps, pipelineContext }) {
       return (
          <section
             data-context-count={pipelineContext.features.length}
             data-marktabfrage-mode={String(marktabfrageMode)}
+            data-oge-executing-neps={ogeExecutingNeps.join(",")}
             data-projekt-count={marktabfrageProjekte.features.length}
             data-testid="network-map"
          />
@@ -251,19 +252,21 @@ describe("PipelineWorkspace dataset switching", () => {
       expect(screen.getByTestId("inspector-panel").getAttribute("data-selection-id")).toBe("WP1");
    });
 
-   it("clears OGE highlight and NEP horizon when resetting in NEP mode", () => {
+   it("clears OGE highlight and selected NEP cycles when resetting in NEP mode", () => {
       renderWorkspace({ countries, pipelineCollection });
 
       fireEvent.click(screen.getByRole("button", { name: "OGE-Hervorhebung aktivieren" }));
-      fireEvent.click(screen.getByRole("button", { name: "NEP 29 wählen" }));
+      fireEvent.click(screen.getByRole("button", { name: "NEP 27 und 31 wählen" }));
 
       const panel = screen.getByTestId("filter-panel");
       expect(panel.getAttribute("data-highlight")).toBe("true");
-      expect(panel.getAttribute("data-oge-executing-nep-horizon")).toBe("2029");
+      expect(panel.getAttribute("data-oge-executing-neps")).toBe("2027,2031");
+      expect(screen.getByTestId("network-map").getAttribute("data-oge-executing-neps")).toBe("2027,2031");
 
       fireEvent.click(screen.getByRole("button", { name: "NEP-Filter zurücksetzen" }));
 
       expect(panel.getAttribute("data-highlight")).toBe("false");
-      expect(panel.getAttribute("data-oge-executing-nep-horizon")).toBe("null");
+      expect(panel.getAttribute("data-oge-executing-neps")).toBe("");
+      expect(screen.getByTestId("network-map").getAttribute("data-oge-executing-neps")).toBe("");
    });
 });

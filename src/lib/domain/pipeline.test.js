@@ -95,33 +95,35 @@ describe("pipeline domain helpers", () => {
    describe("isOgeExecutingOperatorHighlighted", () => {
       const current = { properties: { ogeIstDurchfuehrenderNetzbetreiber: true } };
       const fromNep27 = { properties: { ogeIstDurchfuehrenderNetzbetreiber: false, ogeDurchfuehrendAbNep: 2027 } };
+      const fromNep29 = { properties: { ogeIstDurchfuehrenderNetzbetreiber: false, ogeDurchfuehrendAbNep: 2029 } };
       const fromNep31 = { properties: { ogeIstDurchfuehrenderNetzbetreiber: false, ogeDurchfuehrendAbNep: 2031 } };
       const other = { properties: { ogeIstDurchfuehrenderNetzbetreiber: false } };
 
-      it("highlights nothing while the OGE highlight is off, even with a NEP horizon", () => {
-         const options = { highlightOgeExecutingOperator: false, ogeExecutingNepHorizon: 2031 };
+      it("highlights nothing while the OGE highlight is off, even with selected NEP cycles", () => {
+         const options = { highlightOgeExecutingOperator: false, ogeExecutingNeps: [2027, 2031] };
 
          expect(isOgeExecutingOperatorHighlighted(current, options)).toBe(false);
          expect(isOgeExecutingOperatorHighlighted(fromNep27, options)).toBe(false);
       });
 
-      it("highlights only today's OGE executing measures without a NEP horizon", () => {
-         const options = { highlightOgeExecutingOperator: true, ogeExecutingNepHorizon: null };
+      it("highlights only today's OGE executing measures without selected NEP cycles", () => {
+         const options = { highlightOgeExecutingOperator: true, ogeExecutingNeps: [] };
 
          expect(isOgeExecutingOperatorHighlighted(current, options)).toBe(true);
          expect(isOgeExecutingOperatorHighlighted(fromNep27, options)).toBe(false);
          expect(isOgeExecutingOperatorHighlighted(other, options)).toBe(false);
       });
 
-      it("applies the NEP horizon cumulatively", () => {
-         const nep29 = { highlightOgeExecutingOperator: true, ogeExecutingNepHorizon: 2029 };
-         const nep31 = { highlightOgeExecutingOperator: true, ogeExecutingNepHorizon: 2031 };
+      it("applies each selected NEP cycle on its own, not cumulatively", () => {
+         const nep31 = { highlightOgeExecutingOperator: true, ogeExecutingNeps: [2031] };
+         const nep27And31 = { highlightOgeExecutingOperator: true, ogeExecutingNeps: [2027, 2031] };
 
-         expect(isOgeExecutingOperatorHighlighted(current, nep29)).toBe(true);
-         expect(isOgeExecutingOperatorHighlighted(fromNep27, nep29)).toBe(true);
-         expect(isOgeExecutingOperatorHighlighted(fromNep31, nep29)).toBe(false);
+         expect(isOgeExecutingOperatorHighlighted(current, nep31)).toBe(true);
+         expect(isOgeExecutingOperatorHighlighted(fromNep27, nep31)).toBe(false);
          expect(isOgeExecutingOperatorHighlighted(fromNep31, nep31)).toBe(true);
-         expect(isOgeExecutingOperatorHighlighted(other, nep31)).toBe(false);
+         expect(isOgeExecutingOperatorHighlighted(fromNep27, nep27And31)).toBe(true);
+         expect(isOgeExecutingOperatorHighlighted(fromNep29, nep27And31)).toBe(false);
+         expect(isOgeExecutingOperatorHighlighted(other, nep27And31)).toBe(false);
       });
 
       it("ignores compressor measures hidden by the active filters", () => {
@@ -135,7 +137,7 @@ describe("pipeline domain helpers", () => {
                ]
             }
          };
-         const options = { highlightOgeExecutingOperator: true, ogeExecutingNepHorizon: 2031 };
+         const options = { highlightOgeExecutingOperator: true, ogeExecutingNeps: [2027] };
 
          expect(
             isOgeExecutingOperatorHighlighted(site, { ...options, isVisibleMeasure: unit => unit.id === "V1" })
@@ -148,7 +150,25 @@ describe("pipeline domain helpers", () => {
          ).toBe(true);
       });
 
-      it("highlights a compressor site when any of its measures is planned within the horizon", () => {
+      it("highlights a compressor site with measures from several cycles for each of these cycles", () => {
+         const site = {
+            properties: {
+               featureTyp: "verdichterstandort",
+               massnahmen: [
+                  { id: "V1", ogeDurchfuehrendAbNep: 2027 },
+                  { id: "V2", ogeDurchfuehrendAbNep: 2031 }
+               ]
+            }
+         };
+         const highlighted = ogeExecutingNeps =>
+            isOgeExecutingOperatorHighlighted(site, { highlightOgeExecutingOperator: true, ogeExecutingNeps });
+
+         expect(highlighted([2031])).toBe(true);
+         expect(highlighted([2027])).toBe(true);
+         expect(highlighted([2029])).toBe(false);
+      });
+
+      it("highlights a compressor site when any of its measures is planned for a selected NEP cycle", () => {
          const site = {
             properties: {
                featureTyp: "verdichterstandort",
@@ -160,7 +180,7 @@ describe("pipeline domain helpers", () => {
          expect(
             isOgeExecutingOperatorHighlighted(site, {
                highlightOgeExecutingOperator: true,
-               ogeExecutingNepHorizon: 2027
+               ogeExecutingNeps: [2027]
             })
          ).toBe(true);
          expect(isOgeExecutingOperatorHighlighted(site, { highlightOgeExecutingOperator: true })).toBe(false);

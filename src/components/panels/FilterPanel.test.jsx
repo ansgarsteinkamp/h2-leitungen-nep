@@ -39,9 +39,9 @@ function renderFilterPanel({
    kernnetzIdOptions = KERNNETZ_ID_OPTIONS,
    measureTypeOptions = MEASURE_TYPE_OPTIONS,
    networkViewOptions = NETWORK_VIEW_OPTIONS,
-   ogeExecutingNepHorizon = null,
+   ogeExecutingNeps = [],
    onHighlightOgeExecutingOperatorChange = vi.fn(),
-   onOgeExecutingNepHorizonChange = vi.fn(),
+   onOgeExecutingNepsChange = vi.fn(),
    onResetFilters = vi.fn(),
    options: filterOptions = options,
    scenarioOptions = SCENARIO_OPTIONS,
@@ -56,9 +56,9 @@ function renderFilterPanel({
             kernnetzIdOptions={kernnetzIdOptions}
             measureTypeOptions={measureTypeOptions}
             metrics={metrics}
-            ogeExecutingNepHorizon={ogeExecutingNepHorizon}
+            ogeExecutingNeps={ogeExecutingNeps}
             onHighlightOgeExecutingOperatorChange={onHighlightOgeExecutingOperatorChange}
-            onOgeExecutingNepHorizonChange={onOgeExecutingNepHorizonChange}
+            onOgeExecutingNepsChange={onOgeExecutingNepsChange}
             onResetFilters={onResetFilters}
             networkViewOptions={networkViewOptions}
             options={filterOptions}
@@ -71,7 +71,7 @@ function renderFilterPanel({
 
    return {
       onHighlightOgeExecutingOperatorChange,
-      onOgeExecutingNepHorizonChange,
+      onOgeExecutingNepsChange,
       onResetFilters,
       setFilter,
       setYearRange
@@ -173,7 +173,7 @@ describe("FilterPanel", () => {
 
    describe("planned OGE executing NEP selector", () => {
       const nepOptions = { ...options, ogeExecutingNepYears: [2027, 2029, 2031] };
-      const nepButton = label => screen.getByRole("button", { name: new RegExp(`^Interne OGE-Planung bis ${label}`) });
+      const nepButton = label => screen.getByRole("button", { name: `Interne OGE-Planung: ${label}` });
 
       it("stays hidden while the OGE highlight is off or the data has no planning values", () => {
          renderFilterPanel({ options: nepOptions });
@@ -184,28 +184,43 @@ describe("FilterPanel", () => {
          expect(screen.queryByText("Ab welchem NEP wird OGE durchführender FNB?")).toBeNull();
       });
 
-      it("marks the horizon as pressed and earlier cycles as included", () => {
-         renderFilterPanel({ highlightOgeExecutingOperator: true, ogeExecutingNepHorizon: 2029, options: nepOptions });
-
-         expect(screen.getByRole("group", { name: "Ab welchem NEP wird OGE durchführender FNB?" })).toBeTruthy();
-         expect(nepButton("NEP 27").getAttribute("aria-label")).toBe("Interne OGE-Planung bis NEP 27 (enthalten)");
-         expect(nepButton("NEP 27").getAttribute("aria-pressed")).toBe("false");
-         expect(nepButton("NEP 29").getAttribute("aria-pressed")).toBe("true");
-         expect(nepButton("NEP 31").getAttribute("aria-pressed")).toBe("false");
-      });
-
-      it("sets a new horizon and clears it when the current horizon is clicked again", () => {
-         const { onOgeExecutingNepHorizonChange } = renderFilterPanel({
+      it("marks exactly the selected cycles as pressed", () => {
+         renderFilterPanel({
             highlightOgeExecutingOperator: true,
-            ogeExecutingNepHorizon: 2029,
+            ogeExecutingNeps: [2027, 2031],
             options: nepOptions
          });
 
+         expect(screen.getByRole("group", { name: "Ab welchem NEP wird OGE durchführender FNB?" })).toBeTruthy();
+         expect(nepButton("NEP 27").getAttribute("aria-pressed")).toBe("true");
+         expect(nepButton("NEP 29").getAttribute("aria-pressed")).toBe("false");
+         expect(nepButton("NEP 31").getAttribute("aria-pressed")).toBe("true");
+      });
+
+      it("toggles each cycle independently and keeps the selection sorted", () => {
+         const { onOgeExecutingNepsChange } = renderFilterPanel({
+            highlightOgeExecutingOperator: true,
+            ogeExecutingNeps: [2031],
+            options: nepOptions
+         });
+
+         fireEvent.click(nepButton("NEP 27"));
          fireEvent.click(nepButton("NEP 31"));
+
+         expect(onOgeExecutingNepsChange.mock.calls).toEqual([[[2027, 2031]], [[]]]);
+      });
+
+      it("removes only the clicked cycle and inserts new cycles in order", () => {
+         const { onOgeExecutingNepsChange } = renderFilterPanel({
+            highlightOgeExecutingOperator: true,
+            ogeExecutingNeps: [2027, 2031],
+            options: nepOptions
+         });
+
          fireEvent.click(nepButton("NEP 27"));
          fireEvent.click(nepButton("NEP 29"));
 
-         expect(onOgeExecutingNepHorizonChange.mock.calls).toEqual([[2031], [2027], [null]]);
+         expect(onOgeExecutingNepsChange.mock.calls).toEqual([[[2031]], [[2027, 2029, 2031]]]);
       });
    });
 

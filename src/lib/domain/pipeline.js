@@ -116,11 +116,18 @@ export function getOgeExecutingFromNep(input) {
    return Number.isInteger(props.ogeDurchfuehrendAbNep) ? props.ogeDurchfuehrendAbNep : null;
 }
 
-// Der NEP-Horizont wirkt kumulativ und erweitert nur die bestehende Hervorhebung. Wie die Filter
-// zählt jede Einzelmaßnahme für sich: Ein Standort leuchtet nur über sichtbare Maßnahmen.
+// Leere Auswahl als stabile Referenz, damit Layer-Styles nicht bei jedem Render neu berechnet werden.
+export const EMPTY_OGE_EXECUTING_NEPS = Object.freeze([]);
+
+// Jeder gewählte NEP-Zyklus wirkt einzeln und erweitert nur die bestehende Hervorhebung. Wie die
+// Filter zählt jede Einzelmaßnahme für sich: Ein Standort leuchtet nur über sichtbare Maßnahmen.
 export function isOgeExecutingOperatorHighlighted(
    input,
-   { highlightOgeExecutingOperator = false, isVisibleMeasure = () => true, ogeExecutingNepHorizon = null } = {}
+   {
+      highlightOgeExecutingOperator = false,
+      isVisibleMeasure = () => true,
+      ogeExecutingNeps = EMPTY_OGE_EXECUTING_NEPS
+   } = {}
 ) {
    if (!highlightOgeExecutingOperator) return false;
 
@@ -129,7 +136,7 @@ export function isOgeExecutingOperatorHighlighted(
       if (unit.ogeIstDurchfuehrenderNetzbetreiber === true) return true;
 
       const fromNep = getOgeExecutingFromNep(unit);
-      return Number.isInteger(ogeExecutingNepHorizon) && fromNep !== null && fromNep <= ogeExecutingNepHorizon;
+      return fromNep !== null && ogeExecutingNeps.includes(fromNep);
    });
 }
 

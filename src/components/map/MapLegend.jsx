@@ -7,7 +7,8 @@ import { MAP_EXPORT_EXCLUDE_PROPS } from "@/components/map/mapExport";
 import { PipelineLineSymbol } from "@/components/ui/pipeline-line-symbol";
 import { OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR, PIPELINE_SYMBOL_COLORS } from "@/components/theme/pipelineTheme";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { nepCycleLabel } from "@/lib/domain/formatters";
+import { ogeExecutingPlanningScopeLabel } from "@/lib/domain/formatters";
+import { EMPTY_OGE_EXECUTING_NEPS } from "@/lib/domain/pipeline";
 import { cn } from "@/lib/utils";
 
 const participationEntries = [
@@ -17,7 +18,6 @@ const participationEntries = [
 
 const lineTypeEntries = ["Umstellung", "Neubau"];
 const LEGEND_SYMBOL_OPACITY = 0.95;
-
 const entries = participationEntries.flatMap(participation =>
    lineTypeEntries.map(lineType => ({
       color: PIPELINE_SYMBOL_COLORS[participation.key],
@@ -56,13 +56,14 @@ function SiteLegendSymbol({ color }) {
 
 // Die NEP-Erweiterung ist interne OGE-Planung; die Legende muss das nennen, weil sie in
 // Screenshots und Kartenexporten der einzige Hinweis auf den Hervorhebungsumfang ist.
-function getOgeExecutingHighlightLegendLabel(ogeExecutingNepHorizon) {
-   if (ogeExecutingNepHorizon === null) return "OGE als durchführender FNB";
-   return `OGE als durchführender FNB: NEP 2025 und interne OGE-Planung bis ${nepCycleLabel(ogeExecutingNepHorizon)}`;
+function getOgeExecutingHighlightLegendLabel(ogeExecutingNeps, ogeExecutingNepYears) {
+   if (ogeExecutingNeps.length === 0) return "OGE als durchführender FNB";
+   return `OGE als durchführender FNB: NEP 2025 und interne OGE-Planung ${ogeExecutingPlanningScopeLabel(ogeExecutingNeps, ogeExecutingNepYears)}`;
 }
 
 export default function MapLegend({
-   ogeExecutingNepHorizon = null,
+   ogeExecutingNepYears = EMPTY_OGE_EXECUTING_NEPS,
+   ogeExecutingNeps = EMPTY_OGE_EXECUTING_NEPS,
    showCompressorSites = false,
    showOgeExecutingOperatorHighlight = false,
    onHide
@@ -70,7 +71,7 @@ export default function MapLegend({
    const legendRef = useRef(null);
    // Auf schmalen Bildschirmen ist die Legende sonst ausgeblendet; bei interner Planung bleibt
    // dort kompakt nur der Hervorhebungseintrag stehen.
-   const showsInternalPlanning = showOgeExecutingOperatorHighlight && ogeExecutingNepHorizon !== null;
+   const showsInternalPlanning = showOgeExecutingOperatorHighlight && ogeExecutingNeps.length > 0;
 
    useEffect(() => {
       if (!legendRef.current) return;
@@ -124,7 +125,7 @@ export default function MapLegend({
             {showOgeExecutingOperatorHighlight ? (
                <li className="mt-1 inline-flex items-center gap-2 border-t border-border/60 pt-1.5 max-sm:mt-0 max-sm:border-t-0 max-sm:pt-0">
                   <HighlightLegendSymbol />
-                  {getOgeExecutingHighlightLegendLabel(ogeExecutingNepHorizon)}
+                  {getOgeExecutingHighlightLegendLabel(ogeExecutingNeps, ogeExecutingNepYears)}
                </li>
             ) : null}
          </ul>

@@ -36,13 +36,25 @@ vi.mock("@/components/map/CountryLayers", () => ({
 }));
 
 vi.mock("@/components/map/PipelineLayer", () => ({
-   default({ highlightOgeExecutingOperator, ogeExecutingNepHorizon = null, presentation = "interactive" }) {
+   default({ highlightOgeExecutingOperator, ogeExecutingNeps = [], presentation = "interactive" }) {
       return (
          <div
             data-highlight-oge-executing-operator={String(highlightOgeExecutingOperator)}
-            data-oge-executing-nep-horizon={String(ogeExecutingNepHorizon)}
+            data-oge-executing-neps={ogeExecutingNeps.join(",")}
             data-presentation={presentation}
             data-testid="pipeline-layer"
+         />
+      );
+   }
+}));
+
+vi.mock("@/components/map/CompressorSiteLayer", () => ({
+   default({ ogeExecutingNeps = [], presentation = "interactive" }) {
+      return (
+         <div
+            data-oge-executing-neps={ogeExecutingNeps.join(",")}
+            data-presentation={presentation}
+            data-testid="compressor-site-layer"
          />
       );
    }
@@ -197,10 +209,10 @@ describe("NetworkMap", () => {
       expect(onMapContentChange).not.toHaveBeenCalled();
    });
 
-   it("applies the internal OGE planning horizon only together with the OGE highlight", () => {
-      renderNetworkMap({ ogeExecutingNepHorizon: 2029 });
+   it("applies selected internal OGE planning cycles only together with the OGE highlight", () => {
+      renderNetworkMap({ ogeExecutingNeps: [2029] });
 
-      expect(screen.getByTestId("pipeline-layer").getAttribute("data-oge-executing-nep-horizon")).toBe("null");
+      expect(screen.getByTestId("pipeline-layer").getAttribute("data-oge-executing-neps")).toBe("");
       expect(screen.getByLabelText("map").getAttribute("data-export-title")).toBe("");
       expect(screen.queryByText(/interne OGE-Planung/)).toBeNull();
    });
@@ -218,7 +230,8 @@ describe("NetworkMap", () => {
                filteredPipelines={collection}
                germany={collection}
                highlightOgeExecutingOperator
-               ogeExecutingNepHorizon={2029}
+               ogeExecutingNepYears={[2027, 2029, 2031]}
+               ogeExecutingNeps={[2027, 2031]}
                onSelectPipeline={vi.fn()}
                resetViewKey={0}
                searchActive={false}
@@ -228,11 +241,16 @@ describe("NetworkMap", () => {
          </TooltipProvider>
       );
 
-      expect(screen.getByTestId("pipeline-layer").getAttribute("data-oge-executing-nep-horizon")).toBe("2029");
-      expect(screen.getByText("OGE als durchführender FNB: NEP 2025 und interne OGE-Planung bis NEP 29")).toBeTruthy();
+      expect(screen.getByTestId("pipeline-layer").getAttribute("data-oge-executing-neps")).toBe("2027,2031");
+      expect(screen.getByTestId("compressor-site-layer").getAttribute("data-oge-executing-neps")).toBe("2027,2031");
+      expect(
+         screen.getByText(
+            "OGE als durchführender FNB: NEP 2025 und interne OGE-Planung nur für NEP 27 und NEP 31 (ohne NEP 29)"
+         )
+      ).toBeTruthy();
       expect(screen.queryByRole("button", { name: "Legende ausblenden" })).toBeNull();
       expect(screen.getByLabelText("map").getAttribute("data-export-title")).toBe(
-         "Karte der H₂-Maßnahmen inkl. interner OGE-Planung bis NEP 29"
+         "Karte der H₂-Maßnahmen inkl. interner OGE-Planung nur für NEP 27 und NEP 31 (ohne NEP 29)"
       );
    });
 });

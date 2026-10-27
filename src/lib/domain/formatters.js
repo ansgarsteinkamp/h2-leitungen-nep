@@ -33,6 +33,22 @@ export const metricCostLabel = value => {
 // NEP-Zyklen werden fachlich zweistellig benannt: 2029 -> "NEP 29".
 export const nepCycleLabel = year => `NEP ${String(year % 100).padStart(2, "0")}`;
 
+const NEP_CYCLE_LIST_FORMAT = new Intl.ListFormat("de", { type: "conjunction" });
+
+const nepCycleListLabel = years => NEP_CYCLE_LIST_FORMAT.format(years.map(nepCycleLabel));
+
+// Umfang der hervorgehobenen internen OGE-Planung für Legende und Exporttitel. Eine lückenlose
+// Auswahl ab dem ersten Zyklus ist ein echter Planungsstand ("bis NEP 29"); jede andere Auswahl
+// zeigt nur einzelne Wechsel und nennt deshalb auch die fehlenden Zyklen.
+export const ogeExecutingPlanningScopeLabel = (selectedYears, availableYears) => {
+   const isLeadingRange = selectedYears.every((year, index) => year === availableYears[index]);
+   if (isLeadingRange) return `bis ${nepCycleLabel(selectedYears.at(-1))}`;
+
+   const missingYears = availableYears.filter(year => !selectedYears.includes(year));
+   const selectedLabel = `nur für ${nepCycleListLabel(selectedYears)}`;
+   return missingYears.length > 0 ? `${selectedLabel} (ohne ${nepCycleListLabel(missingYears)})` : selectedLabel;
+};
+
 export const cleanText = value => {
    if (value === null || value === undefined || value === "") return "unbekannt";
    return String(value);

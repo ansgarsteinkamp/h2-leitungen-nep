@@ -77,13 +77,29 @@ describe("MapLegend", () => {
       ).toBe("");
    });
 
-   it("names the internal OGE planning horizon in the highlight entry", () => {
-      renderLegend({ ogeExecutingNepHorizon: 2029, showOgeExecutingOperatorHighlight: true });
+   it("names the scope of the selected internal OGE planning cycles in the highlight entry", () => {
+      const { rerender } = renderLegend({
+         ogeExecutingNepYears: [2027, 2029, 2031],
+         ogeExecutingNeps: [2027, 2031],
+         showOgeExecutingOperatorHighlight: true
+      });
 
       const legend = screen.getByRole("complementary", { name: "Kartenlegende" });
 
       expect(within(legend).getAllByRole("listitem").at(-1).textContent).toBe(
-         "OGE als durchführender FNB: NEP 2025 und interne OGE-Planung bis NEP 29"
+         "OGE als durchführender FNB: NEP 2025 und interne OGE-Planung nur für NEP 27 und NEP 31 (ohne NEP 29)"
       );
+
+      rerender(
+         <TooltipProvider>
+            <MapLegend
+               ogeExecutingNepYears={[2027, 2029, 2031]}
+               ogeExecutingNeps={[2027, 2029]}
+               showOgeExecutingOperatorHighlight
+            />
+         </TooltipProvider>
+      );
+
+      expect(screen.getByText("OGE als durchführender FNB: NEP 2025 und interne OGE-Planung bis NEP 29")).toBeTruthy();
    });
 });
