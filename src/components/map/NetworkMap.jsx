@@ -13,6 +13,7 @@ import MapZoomControls from "@/components/map/MapZoomControls";
 import PlaceLayer from "@/components/map/PlaceLayer";
 import PipelineLayer from "@/components/map/PipelineLayer";
 import { DATENSATZ_MARKTABFRAGE, DATENSATZ_NEP } from "@/lib/domain/constants";
+import { nepCycleLabel } from "@/lib/domain/formatters";
 import { hasLineGeometry, isVerdichterstandortFeature } from "@/lib/domain/pipeline";
 
 // Nur echte Verdichterstandorte werden als Punkte gerendert; ein off-contract Point-Feature
@@ -27,6 +28,8 @@ export default function NetworkMap({
    filteredPipelines,
    germany,
    highlightOgeExecutingOperator = false,
+   isVisibleMeasure,
+   ogeExecutingNepHorizon = null,
    mapContent = "pipelines",
    marktabfrageMode = false,
    marktabfrageProjekte = null,
@@ -48,7 +51,13 @@ export default function NetworkMap({
    // andere nicht mit verstecken.
    const [hiddenLegendKey, setHiddenLegendKey] = useState(null);
    const legendKey = `${datensatzKey}:${resetViewKey}`;
-   const isLegendVisible = hiddenLegendKey !== legendKey;
+   // Wirksam ist der NEP-Horizont nur zusammen mit der OGE-Hervorhebung.
+   const activeOgeExecutingNepHorizon =
+      highlightOgeExecutingOperator && Number.isInteger(ogeExecutingNepHorizon) ? ogeExecutingNepHorizon : null;
+   // Solange interne OGE-Planung hervorgehoben ist, bleibt die NEP-Legende sichtbar: Sie ist in
+   // Screenshots und Exporten der einzige Hinweis darauf.
+   const showsInternalPlanning = !marktabfrageMode && activeOgeExecutingNepHorizon !== null;
+   const isLegendVisible = showsInternalPlanning || hiddenLegendKey !== legendKey;
    const showPlaces = mapContent === "places";
    const projekte = marktabfrageProjekte ?? EMPTY_PROJEKTE;
    // Punkt- und Linien-Features werden getrennt gerendert; Features ohne Geometrie erscheinen
@@ -66,7 +75,13 @@ export default function NetworkMap({
 
    return (
       <MapViewport
-         exportFilenameTitle={marktabfrageMode ? "Karte der H₂-Projekte und PtG-Anlagen" : undefined}
+         exportFilenameTitle={
+            marktabfrageMode
+               ? "Karte der H₂-Projekte und PtG-Anlagen"
+               : showsInternalPlanning
+                 ? `Karte der H₂-Maßnahmen inkl. interner OGE-Planung bis ${nepCycleLabel(activeOgeExecutingNepHorizon)}`
+                 : undefined
+         }
          label={
             marktabfrageMode ? "Interaktive Karte der H₂-Projekte und PtG-Anlagen aus der Marktabfrage 2026" : undefined
          }
@@ -133,12 +148,15 @@ export default function NetworkMap({
                   <>
                      <PipelineLayer
                         highlightOgeExecutingOperator={highlightOgeExecutingOperator}
+                        ogeExecutingNepHorizon={activeOgeExecutingNepHorizon}
                         onSelectPipeline={onSelectPipeline}
                         pipelines={linePipelines}
                         selectedPipelineId={selection?.item?.properties?.id}
                      />
                      <CompressorSiteLayer
                         highlightOgeExecutingOperator={highlightOgeExecutingOperator}
+                        isVisibleMeasure={isVisibleMeasure}
+                        ogeExecutingNepHorizon={activeOgeExecutingNepHorizon}
                         onSelectSite={onSelectPipeline}
                         selectedSiteId={selection?.item?.properties?.id}
                         sites={compressorSites}
@@ -147,9 +165,10 @@ export default function NetworkMap({
                )}
                {!showPlaces && isLegendVisible ? (
                   <MapLegend
+                     ogeExecutingNepHorizon={activeOgeExecutingNepHorizon}
                      showCompressorSites={hasCompressorSites}
                      showOgeExecutingOperatorHighlight={highlightOgeExecutingOperator}
-                     onHide={() => setHiddenLegendKey(legendKey)}
+                     onHide={showsInternalPlanning ? undefined : () => setHiddenLegendKey(legendKey)}
                   />
                ) : null}
             </>

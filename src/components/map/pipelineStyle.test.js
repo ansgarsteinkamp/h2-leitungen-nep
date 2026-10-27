@@ -259,6 +259,22 @@ describe("getPipelineStyle", () => {
       expect(regular.weight).toBe(3);
    });
 
+   it("highlights planned OGE executing operators up to the selected NEP horizon", () => {
+      const planned = pipeline("Neubau", { ogeIstDurchfuehrenderNetzbetreiber: false, ogeDurchfuehrendAbNep: 2029 });
+
+      const withinHorizon = getPipelineStyle(planned, null, null, {
+         highlightOgeExecutingOperator: true,
+         ogeExecutingNepHorizon: 2029
+      });
+      const beforeHorizon = getPipelineStyle(planned, null, null, {
+         highlightOgeExecutingOperator: true,
+         ogeExecutingNepHorizon: 2027
+      });
+
+      expect(withinHorizon).toMatchObject({ color: OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR, weight: 5.25 });
+      expect(beforeHorizon.weight).toBe(3);
+   });
+
    it("keeps selected and hovered states stronger than OGE executing operator highlighting", () => {
       const selected = getPipelineStyle(
          pipeline("Neubau", { ogeIstDurchfuehrenderNetzbetreiber: true }),

@@ -569,4 +569,49 @@ describe("parseQuelldatenGeoJson pipeline collection", () => {
          )
       ).toThrow(/ibnJahr/);
    });
+
+   it("normalizes the planned OGE executing NEP cycle on lines and compressor measures", () => {
+      const site = {
+         type: "Feature",
+         geometry: { type: "Point", coordinates: [9.1, 53.0] },
+         properties: {
+            id: "verdichterstandort:test",
+            featureTyp: "verdichterstandort",
+            name: "Verdichterstation Test",
+            startnetz: false,
+            netzausbauvorschlag: true,
+            massnahmen: [
+               {
+                  id: "V-A",
+                  name: "Verdichter A",
+                  startnetz: false,
+                  netzausbauvorschlag: true,
+                  ogeDurchfuehrendAbNep: "2031"
+               },
+               { id: "V-B", name: "Verdichter B", startnetz: false, netzausbauvorschlag: true }
+            ]
+         }
+      };
+      const parsed = parsePipeline(
+         collection([
+            feature({ properties: { ...baseProperties, ogeDurchfuehrendAbNep: 2029 } }),
+            feature({ properties: { ...baseProperties, id: "H2-002-01", ogeDurchfuehrendAbNep: "" } }),
+            site
+         ])
+      );
+
+      expect(parsed.features[0].properties.ogeDurchfuehrendAbNep).toBe(2029);
+      expect(parsed.features[1].properties.ogeDurchfuehrendAbNep).toBeNull();
+      expect(parsed.features[2].properties.massnahmen[0].ogeDurchfuehrendAbNep).toBe(2031);
+      expect(parsed.features[2].properties.massnahmen[1]).not.toHaveProperty("ogeDurchfuehrendAbNep");
+   });
+
+   it.each(["NEP 29", "2029,5", 29, 2025, 2028, 2101])(
+      "rejects an invalid planned OGE executing NEP cycle %s",
+      value => {
+         expect(() =>
+            parsePipeline(collection([feature({ properties: { ...baseProperties, ogeDurchfuehrendAbNep: value } })]))
+         ).toThrow("ogeDurchfuehrendAbNep muss ein künftiger NEP-Zyklus als Jahr sein");
+      }
+   );
 });

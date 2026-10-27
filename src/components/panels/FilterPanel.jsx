@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { Euro, Route, Ruler } from "lucide-react";
+import { Check, Euro, Route, Ruler } from "lucide-react";
 
 import { HelpTooltip } from "@/components/ui/help-tooltip";
 import { PipelineLineSymbolStack } from "@/components/ui/pipeline-line-symbol";
@@ -13,13 +13,15 @@ import {
    SelectField
 } from "@/components/panels/filterControls";
 import {
+   ACTIVE_SEGMENT_BUTTON_CLASS,
    FILTER_GROUP_CLASS,
    FILTER_PANEL_CLASS,
    FILTER_SECTION_CLASS,
+   SEGMENT_BUTTON_CLASS,
    createChipSegmentGroup
 } from "@/components/panels/filterStyles";
 import { ALL_VALUE, SCENARIO_FILTER_NETWORK_VIEWS } from "@/lib/domain/constants";
-import { metricCostLabel, metricIntegerLabel, metricLengthLabel } from "@/lib/domain/formatters";
+import { metricCostLabel, metricIntegerLabel, metricLengthLabel, nepCycleLabel } from "@/lib/domain/formatters";
 import { cn } from "@/lib/utils";
 
 const NETWORK_VIEW_DESCRIPTION =
@@ -43,6 +45,9 @@ const OGE_PARTICIPATION_DESCRIPTION =
 const OGE_EXECUTING_OPERATOR_HIGHLIGHT_LABEL = "Hervorheben, wenn OGE durchführender FNB ist";
 const OGE_EXECUTING_OPERATOR_HIGHLIGHT_DESCRIPTION =
    "Darstellung, kein Filter: hebt Leitungen und Verdichterstandorte auf der Karte hervor, bei denen OGE als durchführender Netzbetreiber benannt ist. OGE als Ansprechpartner wird dabei nicht berücksichtigt.";
+const OGE_EXECUTING_NEP_LABEL = "Ab welchem NEP wird OGE durchführender FNB?";
+const OGE_EXECUTING_NEP_DESCRIPTION =
+   "Darstellung, kein Filter: hebt zusätzlich Maßnahmen hervor, bei denen OGE laut interner OGE-Planung bis zum gewählten NEP-Zyklus durchführender FNB wird. Die Auswahl wirkt kumulativ: NEP 29 umfasst auch die Maßnahmen ab NEP 27; ein erneuter Klick auf den gewählten NEP nimmt die Erweiterung zurück. NEP 27 bezeichnet den NEP-Zyklus 2027, nicht das Inbetriebnahmejahr. Die Angabe ist nicht Bestandteil des NEP Gas/Wasserstoff 2025.";
 const METRIC_COUNT_DESCRIPTION =
    "Anzahl der offiziellen NEP-Maßnahmen, die den aktiven Filtern entsprechen. Ein Verdichterstandort bündelt mehrere Einzelmaßnahmen; gezählt werden nur die passenden.";
 const METRIC_LENGTH_DESCRIPTION =
@@ -125,6 +130,39 @@ function SwitchRow({ active, description, label, onChange }) {
    );
 }
 
+// Kumulative Stufenwahl im Look der Filter-Chips: Optisch aktiv sind alle Zyklen bis zum
+// gewählten Horizont, gedrückt ist nur der Horizont selbst; ein erneuter Klick nimmt ihn zurück.
+function OgeExecutingNepSelector({ horizon, onChange, years }) {
+   const labelId = useId();
+
+   return (
+      <div className="ml-4 grid gap-2 border-l-2 border-border/80 pl-3">
+         <FilterLabel description={OGE_EXECUTING_NEP_DESCRIPTION} id={labelId} label={OGE_EXECUTING_NEP_LABEL} />
+         <div aria-labelledby={labelId} className="flex flex-wrap items-start gap-2" role="group">
+            {years.map(year => {
+               const selected = year === horizon;
+               const included = Number.isInteger(horizon) && year <= horizon;
+               const label = nepCycleLabel(year);
+
+               return (
+                  <button
+                     aria-label={`Interne OGE-Planung bis ${label}${included && !selected ? " (enthalten)" : ""}`}
+                     aria-pressed={selected}
+                     className={cn(SEGMENT_BUTTON_CLASS, "w-fit shrink-0", included && ACTIVE_SEGMENT_BUTTON_CLASS)}
+                     key={year}
+                     onClick={() => onChange(selected ? null : year)}
+                     type="button"
+                  >
+                     {included ? <Check aria-hidden="true" className="size-3" /> : null}
+                     <span className="whitespace-nowrap">{label}</span>
+                  </button>
+               );
+            })}
+         </div>
+      </div>
+   );
+}
+
 function isNumericYear(value) {
    return Number.isFinite(Number(value));
 }
@@ -176,10 +214,17 @@ function YearRangeFilter({ filters, options, setYearRange }) {
 function OperatorFilterGroup({
    filters,
    highlightOgeExecutingOperator,
+   ogeExecutingNepHorizon,
    onHighlightOgeExecutingOperatorChange,
+   onOgeExecutingNepHorizonChange,
    options,
    setFilter
 }) {
+   // Ältere Quelldaten ohne interne Planung bieten keine NEP-Auswahl an; ohne aktive
+   // Hervorhebung bliebe die Auswahl wirkungslos und wird daher ausgeblendet.
+   const ogeExecutingNepYears = options.ogeExecutingNepYears ?? [];
+   const showOgeExecutingNepSelector = highlightOgeExecutingOperator && ogeExecutingNepYears.length > 0;
+
    return (
       <section className={cn(FILTER_SECTION_CLASS, "gap-3")} aria-label="Betreiberfilter">
          <SelectField
@@ -202,6 +247,13 @@ function OperatorFilterGroup({
                label={OGE_EXECUTING_OPERATOR_HIGHLIGHT_LABEL}
                onChange={onHighlightOgeExecutingOperatorChange}
             />
+            {showOgeExecutingNepSelector ? (
+               <OgeExecutingNepSelector
+                  horizon={ogeExecutingNepHorizon}
+                  onChange={onOgeExecutingNepHorizonChange}
+                  years={ogeExecutingNepYears}
+               />
+            ) : null}
          </div>
       </section>
    );
@@ -217,7 +269,9 @@ function FilterControls({
    kernnetzIdOptions,
    measureTypeOptions,
    networkViewOptions,
+   ogeExecutingNepHorizon,
    onHighlightOgeExecutingOperatorChange,
+   onOgeExecutingNepHorizonChange,
    options,
    setYearRange,
    scenarioOptions,
@@ -301,7 +355,9 @@ function FilterControls({
          <OperatorFilterGroup
             filters={filters}
             highlightOgeExecutingOperator={highlightOgeExecutingOperator}
+            ogeExecutingNepHorizon={ogeExecutingNepHorizon}
             onHighlightOgeExecutingOperatorChange={onHighlightOgeExecutingOperatorChange}
+            onOgeExecutingNepHorizonChange={onOgeExecutingNepHorizonChange}
             options={options}
             setFilter={setFilter}
          />
@@ -315,7 +371,9 @@ export default function FilterPanel({
    highlightOgeExecutingOperator = false,
    kernnetzIdOptions,
    metrics,
+   ogeExecutingNepHorizon = null,
    onHighlightOgeExecutingOperatorChange = () => {},
+   onOgeExecutingNepHorizonChange = () => {},
    onResetFilters,
    measureTypeOptions,
    networkViewOptions,
@@ -341,7 +399,9 @@ export default function FilterPanel({
             kernnetzIdOptions={kernnetzIdOptions}
             measureTypeOptions={measureTypeOptions}
             networkViewOptions={networkViewOptions}
+            ogeExecutingNepHorizon={ogeExecutingNepHorizon}
             onHighlightOgeExecutingOperatorChange={onHighlightOgeExecutingOperatorChange}
+            onOgeExecutingNepHorizonChange={onOgeExecutingNepHorizonChange}
             options={options}
             scenarioOptions={scenarioOptions}
             setFilter={setFilter}

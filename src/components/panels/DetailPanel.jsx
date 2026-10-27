@@ -8,6 +8,7 @@ import {
    cleanText,
    costLabel,
    listLabel,
+   nepCycleLabel,
    numberLabel,
    pipelineMeta,
    pipelineTitle
@@ -39,6 +40,7 @@ const OPTIONAL_FIELDS = new Set([
    "kostenermittlung",
    "laengeKm",
    "officialIds",
+   "ogeDurchfuehrendAbNep",
    "umstellungOderNeubau",
    "verdichterleistungMw"
 ]);
@@ -87,7 +89,7 @@ const DETAIL_GROUPS = [
    {
       id: "beteiligte",
       title: "Beteiligte",
-      fields: ["durchfuehrendeNetzbetreiber", "ansprechpartner", "ogeBeteiligung"]
+      fields: ["durchfuehrendeNetzbetreiber", "ogeDurchfuehrendAbNep", "ansprechpartner", "ogeBeteiligung"]
    },
    {
       id: "hinweise",
@@ -133,6 +135,7 @@ const NESTED_MEASURE_FIELDS = [
    "kostenermittlung",
    "kernnetzAntragsId",
    "durchfuehrendeNetzbetreiber",
+   "ogeDurchfuehrendAbNep",
    "ansprechpartner",
    "projektstatus",
    "beschreibung",
@@ -177,6 +180,7 @@ function formatValue(key, value) {
    if (key === "verdichterleistungMw") return numberLabel(value, "MW");
    if (key === "anlagenleistungM3h") return numberLabel(value, "m³/h");
    if (key === "kostenMioEur") return costLabel(value);
+   if (key === "ogeDurchfuehrendAbNep") return nepCycleLabel(value);
    return cleanText(value);
 }
 
@@ -382,7 +386,10 @@ function measureSummaryLabel(values) {
       SHORT_NEP_LABELS[values.nepEinordnung] ?? null,
       values.ibnJahr ? `IBN ${values.ibnJahr}` : null,
       isEmptyValue(values.verdichterleistungMw) ? null : numberLabel(values.verdichterleistungMw, "MW"),
-      isEmptyValue(values.kostenMioEur) ? null : costLabel(values.kostenMioEur)
+      isEmptyValue(values.kostenMioEur) ? null : costLabel(values.kostenMioEur),
+      isEmptyValue(values.ogeDurchfuehrendAbNep)
+         ? null
+         : `OGE ab ${nepCycleLabel(values.ogeDurchfuehrendAbNep)} (intern)`
    ]
       .filter(Boolean)
       .join(" · ");

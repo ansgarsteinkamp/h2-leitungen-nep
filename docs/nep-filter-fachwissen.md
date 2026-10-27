@@ -189,6 +189,12 @@ Die App unterscheidet:
 
 Der Begriff "durchführender Netzbetreiber" sollte nicht überdehnt werden. Die spätere NEP-Bestätigung kann Unternehmen unter den gesetzlichen Voraussetzungen zur Umsetzung verpflichten; aus einem UI-Filter oder einer Nennung in den Daten folgt aber nicht automatisch Eigentum, alleinige Investitionspflicht oder alleinige Verantwortung.
 
+### Interne OGE-Planung: OGE durchführend ab NEP
+
+Ab `quelldaten_v5.geojson` tragen einzelne Maßnahmen `ogeDurchfuehrendAbNep`: den NEP-Zyklus als Jahr (2027, 2029, 2031), ab dem OGE laut interner OGE-Planung durchführender FNB wird. Die Angabe ist nicht Bestandteil des NEP; `durchfuehrendeNetzbetreiber`, `ogeIstDurchfuehrenderNetzbetreiber`, der Filter "Nur OGE-Bezug" und die Kennzahlen bleiben davon unberührt. Bei Verdichtern steht der Wert an der Einzelmaßnahme in `massnahmen[]`, nicht am Standort.
+
+In der App erweitert die Auswahl "Ab welchem NEP wird OGE durchführender FNB?" nur die bestehende Hervorhebung und erscheint deshalb nur, wenn diese aktiv ist und die Datei das Feld enthält. Sie wirkt kumulativ: NEP 29 hebt zusätzlich alle Maßnahmen mit Wert 2027 oder 2029 hervor. Wie bei den Filtern zählt jede Einzelmaßnahme für sich: Ein Verdichterstandort wird nur über Einzelmaßnahmen hervorgehoben, die die aktiven Filter erfüllen. Legende und Dateiname des Kartenexports nennen die interne Planung, damit Screenshots nicht als NEP-Stand gelesen werden; solange sie hervorgehoben ist, lässt sich die Legende nicht ausblenden und bleibt auf schmalen Bildschirmen als kompakter Hinweis sichtbar.
+
 ## Datenmarker in diesem Projekt
 
 Die GeoJSON-Daten werden beim Upload normalisiert. Relevante Marker:
@@ -200,6 +206,7 @@ Die GeoJSON-Daten werden beim Upload normalisiert. Relevante Marker:
 - `kernnetzAntragsId`: Referenzschlüssel zur Kernnetz-Zuordnung; Grundlage für den Filter "Teil des Kernnetzes" mit den Optionen "Mit Kernnetz-ID" und "Ohne Kernnetz-ID", aber kein eigener NEP-Status.
 - `ogeBeteiligung`: wird beim Import aus `durchfuehrendeNetzbetreiber` und `ansprechpartner` abgeleitet.
 - `ogeIstDurchfuehrenderNetzbetreiber`: wird beim Import nur aus `durchfuehrendeNetzbetreiber` abgeleitet.
+- `ogeDurchfuehrendAbNep`: optional ab v5; interne OGE-Planung, NEP-Zyklus als Jahr; wird beim Import als künftiger NEP-Zyklus (ungerades Jahr ab 2027) validiert.
 
 Für Plausibilisierungen gilt: Aus Leitungsdaten summierte Investitionen sind nicht direkt mit den offiziellen Gesamtinvestitionen des NEP vergleichbar, weil die offiziellen Gesamtwerte auch Verdichterpositionen enthalten; Längensummen je Szenario eignen sich dagegen gut zum Plausibilisieren gegen die öffentlichen NEP-Tabellen.
 

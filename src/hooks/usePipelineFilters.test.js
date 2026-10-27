@@ -853,4 +853,30 @@ describe("filterPipelines", () => {
       expect(result.current.filters.networkView).toBe("all");
       expect(idsOf(result.current.filteredCollection.features)).toEqual(["startnetz", "nonstandard"]);
    });
+
+   it("offers the planned OGE executing NEP cycles found on lines and compressor measures", () => {
+      const { result } = renderHook(() =>
+         usePipelineFilters(
+            collection([
+               pipeline("A", { ogeDurchfuehrendAbNep: 2029, startnetz: true }),
+               pipeline("B", { ogeDurchfuehrendAbNep: 2027, startnetz: true }),
+               pipeline("C", { startnetz: true }),
+               {
+                  type: "Feature",
+                  geometry: { type: "Point", coordinates: [7, 51] },
+                  properties: {
+                     id: "verdichterstandort:test",
+                     name: "Verdichterstation Test",
+                     featureTyp: "verdichterstandort",
+                     startnetz: true,
+                     netzausbauvorschlag: false,
+                     massnahmen: [compressorMeasure("V1", { startnetz: true, ogeDurchfuehrendAbNep: 2031 })]
+                  }
+               }
+            ])
+         )
+      );
+
+      expect(result.current.options.ogeExecutingNepYears).toEqual([2027, 2029, 2031]);
+   });
 });

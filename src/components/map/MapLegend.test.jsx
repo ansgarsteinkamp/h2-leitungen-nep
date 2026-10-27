@@ -76,4 +76,14 @@ describe("MapLegend", () => {
          screen.getByRole("button", { name: "Legende ausblenden" }).getAttribute(MAP_EXPORT_EXCLUDE_ATTRIBUTE)
       ).toBe("");
    });
+
+   it("names the internal OGE planning horizon in the highlight entry", () => {
+      renderLegend({ ogeExecutingNepHorizon: 2029, showOgeExecutingOperatorHighlight: true });
+
+      const legend = screen.getByRole("complementary", { name: "Kartenlegende" });
+
+      expect(within(legend).getAllByRole("listitem").at(-1).textContent).toBe(
+         "OGE als durchführender FNB: NEP 2025 und interne OGE-Planung bis NEP 29"
+      );
+   });
 });

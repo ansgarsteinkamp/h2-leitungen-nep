@@ -7,6 +7,8 @@ import { MAP_EXPORT_EXCLUDE_PROPS } from "@/components/map/mapExport";
 import { PipelineLineSymbol } from "@/components/ui/pipeline-line-symbol";
 import { OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR, PIPELINE_SYMBOL_COLORS } from "@/components/theme/pipelineTheme";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { nepCycleLabel } from "@/lib/domain/formatters";
+import { cn } from "@/lib/utils";
 
 const participationEntries = [
    { key: "oge", label: "OGE-Bezug" },
@@ -52,8 +54,23 @@ function SiteLegendSymbol({ color }) {
    );
 }
 
-export default function MapLegend({ showCompressorSites = false, showOgeExecutingOperatorHighlight = false, onHide }) {
+// Die NEP-Erweiterung ist interne OGE-Planung; die Legende muss das nennen, weil sie in
+// Screenshots und Kartenexporten der einzige Hinweis auf den Hervorhebungsumfang ist.
+function getOgeExecutingHighlightLegendLabel(ogeExecutingNepHorizon) {
+   if (ogeExecutingNepHorizon === null) return "OGE als durchführender FNB";
+   return `OGE als durchführender FNB: NEP 2025 und interne OGE-Planung bis ${nepCycleLabel(ogeExecutingNepHorizon)}`;
+}
+
+export default function MapLegend({
+   ogeExecutingNepHorizon = null,
+   showCompressorSites = false,
+   showOgeExecutingOperatorHighlight = false,
+   onHide
+}) {
    const legendRef = useRef(null);
+   // Auf schmalen Bildschirmen ist die Legende sonst ausgeblendet; bei interner Planung bleibt
+   // dort kompakt nur der Hervorhebungseintrag stehen.
+   const showsInternalPlanning = showOgeExecutingOperatorHighlight && ogeExecutingNepHorizon !== null;
 
    useEffect(() => {
       if (!legendRef.current) return;
@@ -66,7 +83,10 @@ export default function MapLegend({ showCompressorSites = false, showOgeExecutin
       <aside
          ref={legendRef}
          aria-label="Kartenlegende"
-         className="absolute right-3.5 bottom-3.5 z-500 w-fit max-w-[min(18rem,calc(100%-1.75rem))] rounded-md border border-border bg-[var(--map-legend-background)] px-2.5 py-2 text-[0.55rem] text-muted-foreground backdrop-blur-md max-sm:hidden"
+         className={cn(
+            "absolute right-3.5 bottom-3.5 z-500 w-fit max-w-[min(18rem,calc(100%-1.75rem))] rounded-md border border-border bg-[var(--map-legend-background)] px-2.5 py-2 text-[0.55rem] text-muted-foreground backdrop-blur-md",
+            showsInternalPlanning ? "max-sm:bottom-20" : "max-sm:hidden"
+         )}
       >
          {onHide ? (
             <Tooltip>
@@ -88,23 +108,23 @@ export default function MapLegend({ showCompressorSites = false, showOgeExecutin
          ) : null}
          <ul className="grid gap-1.25">
             {entries.map(entry => (
-               <li key={entry.label} className="inline-flex items-center gap-2">
+               <li key={entry.label} className="inline-flex items-center gap-2 max-sm:hidden">
                   <LegendSymbol color={entry.color} lineType={entry.lineType} />
                   {entry.label}
                </li>
             ))}
             {showCompressorSites
                ? participationEntries.map(participation => (
-                    <li key={`site:${participation.key}`} className="inline-flex items-center gap-2">
+                    <li key={`site:${participation.key}`} className="inline-flex items-center gap-2 max-sm:hidden">
                        <SiteLegendSymbol color={PIPELINE_SYMBOL_COLORS[participation.key]} />
                        {`${participation.label} Verdichter`}
                     </li>
                  ))
                : null}
             {showOgeExecutingOperatorHighlight ? (
-               <li className="mt-1 inline-flex items-center gap-2 border-t border-border/60 pt-1.5">
+               <li className="mt-1 inline-flex items-center gap-2 border-t border-border/60 pt-1.5 max-sm:mt-0 max-sm:border-t-0 max-sm:pt-0">
                   <HighlightLegendSymbol />
-                  OGE als durchführender FNB
+                  {getOgeExecutingHighlightLegendLabel(ogeExecutingNepHorizon)}
                </li>
             ) : null}
          </ul>

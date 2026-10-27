@@ -30,9 +30,26 @@ vi.mock("@/lib/data/geoCollections", () => ({
 }));
 
 vi.mock("@/components/panels/FilterPanel", () => ({
-   default({ highlightOgeExecutingOperator, onHighlightOgeExecutingOperatorChange, setFilter }) {
+   default({
+      highlightOgeExecutingOperator,
+      ogeExecutingNepHorizon,
+      onHighlightOgeExecutingOperatorChange,
+      onOgeExecutingNepHorizonChange,
+      onResetFilters,
+      setFilter
+   }) {
       return (
-         <aside data-highlight={String(highlightOgeExecutingOperator)} data-testid="filter-panel">
+         <aside
+            data-highlight={String(highlightOgeExecutingOperator)}
+            data-oge-executing-nep-horizon={String(ogeExecutingNepHorizon)}
+            data-testid="filter-panel"
+         >
+            <button onClick={() => onOgeExecutingNepHorizonChange(2029)} type="button">
+               NEP 29 wählen
+            </button>
+            <button onClick={onResetFilters} type="button">
+               NEP-Filter zurücksetzen
+            </button>
             <button onClick={() => setFilter("searchTerm", "gibtsnicht")} type="button">
                NEP-Suche einschränken
             </button>
@@ -232,5 +249,21 @@ describe("PipelineWorkspace dataset switching", () => {
 
       expect(screen.getByTestId("marktabfrage-filter-panel")).toBeTruthy();
       expect(screen.getByTestId("inspector-panel").getAttribute("data-selection-id")).toBe("WP1");
+   });
+
+   it("clears OGE highlight and NEP horizon when resetting in NEP mode", () => {
+      renderWorkspace({ countries, pipelineCollection });
+
+      fireEvent.click(screen.getByRole("button", { name: "OGE-Hervorhebung aktivieren" }));
+      fireEvent.click(screen.getByRole("button", { name: "NEP 29 wählen" }));
+
+      const panel = screen.getByTestId("filter-panel");
+      expect(panel.getAttribute("data-highlight")).toBe("true");
+      expect(panel.getAttribute("data-oge-executing-nep-horizon")).toBe("2029");
+
+      fireEvent.click(screen.getByRole("button", { name: "NEP-Filter zurücksetzen" }));
+
+      expect(panel.getAttribute("data-highlight")).toBe("false");
+      expect(panel.getAttribute("data-oge-executing-nep-horizon")).toBe("null");
    });
 });

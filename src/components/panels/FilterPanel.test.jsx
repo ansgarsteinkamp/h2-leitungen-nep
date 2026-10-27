@@ -39,7 +39,9 @@ function renderFilterPanel({
    kernnetzIdOptions = KERNNETZ_ID_OPTIONS,
    measureTypeOptions = MEASURE_TYPE_OPTIONS,
    networkViewOptions = NETWORK_VIEW_OPTIONS,
+   ogeExecutingNepHorizon = null,
    onHighlightOgeExecutingOperatorChange = vi.fn(),
+   onOgeExecutingNepHorizonChange = vi.fn(),
    onResetFilters = vi.fn(),
    options: filterOptions = options,
    scenarioOptions = SCENARIO_OPTIONS,
@@ -54,7 +56,9 @@ function renderFilterPanel({
             kernnetzIdOptions={kernnetzIdOptions}
             measureTypeOptions={measureTypeOptions}
             metrics={metrics}
+            ogeExecutingNepHorizon={ogeExecutingNepHorizon}
             onHighlightOgeExecutingOperatorChange={onHighlightOgeExecutingOperatorChange}
+            onOgeExecutingNepHorizonChange={onOgeExecutingNepHorizonChange}
             onResetFilters={onResetFilters}
             networkViewOptions={networkViewOptions}
             options={filterOptions}
@@ -67,6 +71,7 @@ function renderFilterPanel({
 
    return {
       onHighlightOgeExecutingOperatorChange,
+      onOgeExecutingNepHorizonChange,
       onResetFilters,
       setFilter,
       setYearRange
@@ -164,6 +169,44 @@ describe("FilterPanel", () => {
       fireEvent.click(highlightSwitch);
 
       expect(onHighlightOgeExecutingOperatorChange).toHaveBeenCalledWith(false);
+   });
+
+   describe("planned OGE executing NEP selector", () => {
+      const nepOptions = { ...options, ogeExecutingNepYears: [2027, 2029, 2031] };
+      const nepButton = label => screen.getByRole("button", { name: new RegExp(`^Interne OGE-Planung bis ${label}`) });
+
+      it("stays hidden while the OGE highlight is off or the data has no planning values", () => {
+         renderFilterPanel({ options: nepOptions });
+         expect(screen.queryByText("Ab welchem NEP wird OGE durchführender FNB?")).toBeNull();
+         cleanup();
+
+         renderFilterPanel({ highlightOgeExecutingOperator: true });
+         expect(screen.queryByText("Ab welchem NEP wird OGE durchführender FNB?")).toBeNull();
+      });
+
+      it("marks the horizon as pressed and earlier cycles as included", () => {
+         renderFilterPanel({ highlightOgeExecutingOperator: true, ogeExecutingNepHorizon: 2029, options: nepOptions });
+
+         expect(screen.getByRole("group", { name: "Ab welchem NEP wird OGE durchführender FNB?" })).toBeTruthy();
+         expect(nepButton("NEP 27").getAttribute("aria-label")).toBe("Interne OGE-Planung bis NEP 27 (enthalten)");
+         expect(nepButton("NEP 27").getAttribute("aria-pressed")).toBe("false");
+         expect(nepButton("NEP 29").getAttribute("aria-pressed")).toBe("true");
+         expect(nepButton("NEP 31").getAttribute("aria-pressed")).toBe("false");
+      });
+
+      it("sets a new horizon and clears it when the current horizon is clicked again", () => {
+         const { onOgeExecutingNepHorizonChange } = renderFilterPanel({
+            highlightOgeExecutingOperator: true,
+            ogeExecutingNepHorizon: 2029,
+            options: nepOptions
+         });
+
+         fireEvent.click(nepButton("NEP 31"));
+         fireEvent.click(nepButton("NEP 27"));
+         fireEvent.click(nepButton("NEP 29"));
+
+         expect(onOgeExecutingNepHorizonChange.mock.calls).toEqual([[2031], [2027], [null]]);
+      });
    });
 
    it("uses a compact network view selector for scenario views", () => {

@@ -80,6 +80,7 @@ const bindInertLayer = (_feature, layer) => {
 
 export default function PipelineLayer({
    highlightOgeExecutingOperator = false,
+   ogeExecutingNepHorizon = null,
    onSelectPipeline,
    pipelines,
    presentation = "interactive",
@@ -94,7 +95,7 @@ export default function PipelineLayer({
    const hoveredPipelineIdRef = useRef(null);
    const hoveredHitboxLayerRef = useRef(null);
    const openTooltipLayerRef = useRef(null);
-   const pipelineStyleOptionsRef = useRef({ highlightOgeExecutingOperator });
+   const pipelineStyleOptionsRef = useRef({ highlightOgeExecutingOperator, ogeExecutingNepHorizon });
    const previousPipelinesRef = useRef(pipelines);
    const selectedPipelineIdRef = useRef(selectedPipelineId);
    const pipelineDataKey = useMemo(() => createPipelineDataKey(pipelines), [pipelines]);
@@ -103,7 +104,10 @@ export default function PipelineLayer({
       () => createPipelineSubset(pipelines, feature => !isOgePipeline(feature)),
       [pipelines]
    );
-   const pipelineStyleOptions = useMemo(() => ({ highlightOgeExecutingOperator }), [highlightOgeExecutingOperator]);
+   const pipelineStyleOptions = useMemo(
+      () => ({ highlightOgeExecutingOperator, ogeExecutingNepHorizon }),
+      [highlightOgeExecutingOperator, ogeExecutingNepHorizon]
+   );
    const hitboxPipelineData = useMemo(
       () => createPipelineFeatureCollection(pipelines, sortPipelinesByDisplayPriority(pipelines.features)),
       [pipelines]

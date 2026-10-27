@@ -5,21 +5,17 @@ import {
    getPipelineColor,
    getSelectionHaloColor
 } from "@/components/theme/pipelineTheme";
+import { isOgeExecutingOperatorHighlighted } from "@/lib/domain/pipeline";
 
 const BASE_WEIGHT = 3;
 const HOVER_WEIGHT = 5.75;
 const OGE_EXECUTING_OPERATOR_HIGHLIGHT_WEIGHT = 5.25;
 
-export const getPipelineStyle = (
-   feature,
-   selectedPipelineId,
-   hoveredPipelineId = null,
-   { highlightOgeExecutingOperator = false } = {}
-) => {
+export const getPipelineStyle = (feature, selectedPipelineId, hoveredPipelineId = null, highlightOptions = {}) => {
    const pipelineId = feature.properties.id;
    const selected = pipelineId === selectedPipelineId;
    const hovered = pipelineId === hoveredPipelineId;
-   const highlighted = highlightOgeExecutingOperator && feature.properties.ogeIstDurchfuehrenderNetzbetreiber === true;
+   const highlighted = isOgeExecutingOperatorHighlighted(feature, highlightOptions);
    const baseWeight = highlighted ? OGE_EXECUTING_OPERATOR_HIGHLIGHT_WEIGHT : BASE_WEIGHT;
    const weight = selected ? BASE_WEIGHT + 2.75 : baseWeight;
 

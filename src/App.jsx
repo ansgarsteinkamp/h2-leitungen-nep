@@ -68,7 +68,7 @@ export default function App() {
             accept={PIPELINE_FILE_ACCEPT}
             heading="Interaktive Karte zu NEP 2025 und Marktabfrage 2026"
             isProcessing={isProcessing}
-            label="quelldaten_v4.geojson hier ablegen oder auswählen"
+            label="quelldaten_v5.geojson hier ablegen oder auswählen"
             maxFiles={1}
             maxSize={MAX_UPLOAD_SIZE}
             onFilesAccepted={handleFilesAccepted}

@@ -109,6 +109,30 @@ export function hasOgeExecutingOperator(input) {
       .some(isOgeOperatorName);
 }
 
+// Interne OGE-Planung (nicht Teil des NEP): NEP-Zyklus als Jahr, ab dem OGE durchführender
+// FNB einer Einzelmaßnahme wird.
+export function getOgeExecutingFromNep(input) {
+   const props = input?.properties ?? input ?? {};
+   return Number.isInteger(props.ogeDurchfuehrendAbNep) ? props.ogeDurchfuehrendAbNep : null;
+}
+
+// Der NEP-Horizont wirkt kumulativ und erweitert nur die bestehende Hervorhebung. Wie die Filter
+// zählt jede Einzelmaßnahme für sich: Ein Standort leuchtet nur über sichtbare Maßnahmen.
+export function isOgeExecutingOperatorHighlighted(
+   input,
+   { highlightOgeExecutingOperator = false, isVisibleMeasure = () => true, ogeExecutingNepHorizon = null } = {}
+) {
+   if (!highlightOgeExecutingOperator) return false;
+
+   return getMeasureUnits(input).some(unit => {
+      if (!isVisibleMeasure(unit, input)) return false;
+      if (unit.ogeIstDurchfuehrenderNetzbetreiber === true) return true;
+
+      const fromNep = getOgeExecutingFromNep(unit);
+      return Number.isInteger(ogeExecutingNepHorizon) && fromNep !== null && fromNep <= ogeExecutingNepHorizon;
+   });
+}
+
 export function isStandardFeature(input) {
    const props = input?.properties ?? input ?? {};
    return props.startnetz === true || props.netzausbauvorschlag === true;

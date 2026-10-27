@@ -8,8 +8,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NetworkMap from "./NetworkMap";
 
 vi.mock("@/components/map/MapViewport", () => ({
-   default({ children }) {
-      return <section aria-label="map">{children}</section>;
+   default({ children, exportFilenameTitle }) {
+      return (
+         <section aria-label="map" data-export-title={exportFilenameTitle ?? ""}>
+            {children}
+         </section>
+      );
    }
 }));
 
@@ -32,10 +36,11 @@ vi.mock("@/components/map/CountryLayers", () => ({
 }));
 
 vi.mock("@/components/map/PipelineLayer", () => ({
-   default({ highlightOgeExecutingOperator, presentation = "interactive" }) {
+   default({ highlightOgeExecutingOperator, ogeExecutingNepHorizon = null, presentation = "interactive" }) {
       return (
          <div
             data-highlight-oge-executing-operator={String(highlightOgeExecutingOperator)}
+            data-oge-executing-nep-horizon={String(ogeExecutingNepHorizon)}
             data-presentation={presentation}
             data-testid="pipeline-layer"
          />
@@ -190,5 +195,44 @@ describe("NetworkMap", () => {
       expect(screen.getByText("Orte werden geladen.")).toBeTruthy();
       fireEvent.click(placesButton);
       expect(onMapContentChange).not.toHaveBeenCalled();
+   });
+
+   it("applies the internal OGE planning horizon only together with the OGE highlight", () => {
+      renderNetworkMap({ ogeExecutingNepHorizon: 2029 });
+
+      expect(screen.getByTestId("pipeline-layer").getAttribute("data-oge-executing-nep-horizon")).toBe("null");
+      expect(screen.getByLabelText("map").getAttribute("data-export-title")).toBe("");
+      expect(screen.queryByText(/interne OGE-Planung/)).toBeNull();
+   });
+
+   it("names internal OGE planning in legend and export title and keeps the legend visible", () => {
+      const { rerender } = renderNetworkMap({ highlightOgeExecutingOperator: true });
+
+      fireEvent.click(screen.getByRole("button", { name: "Legende ausblenden" }));
+      expect(screen.queryByRole("complementary", { name: "Kartenlegende" })).toBeNull();
+
+      rerender(
+         <TooltipProvider>
+            <NetworkMap
+               europeContext={collection}
+               filteredPipelines={collection}
+               germany={collection}
+               highlightOgeExecutingOperator
+               ogeExecutingNepHorizon={2029}
+               onSelectPipeline={vi.fn()}
+               resetViewKey={0}
+               searchActive={false}
+               searchBounds={[]}
+               selection={null}
+            />
+         </TooltipProvider>
+      );
+
+      expect(screen.getByTestId("pipeline-layer").getAttribute("data-oge-executing-nep-horizon")).toBe("2029");
+      expect(screen.getByText("OGE als durchführender FNB: NEP 2025 und interne OGE-Planung bis NEP 29")).toBeTruthy();
+      expect(screen.queryByRole("button", { name: "Legende ausblenden" })).toBeNull();
+      expect(screen.getByLabelText("map").getAttribute("data-export-title")).toBe(
+         "Karte der H₂-Maßnahmen inkl. interner OGE-Planung bis NEP 29"
+      );
    });
 });

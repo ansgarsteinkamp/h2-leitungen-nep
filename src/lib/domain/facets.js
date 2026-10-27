@@ -4,6 +4,7 @@ import {
    FEATURE_TYPE_VERDICHTER_AGGREGAT,
    getFeatureTyp,
    getMeasureUnits,
+   getOgeExecutingFromNep,
    getPipelineParticipants,
    getUmstellungOderNeubau
 } from "@/lib/domain/pipeline";
@@ -41,6 +42,7 @@ export function buildFilterOptions(collection) {
    const operators = new Set();
    const years = new Set();
    const featureTypeValues = new Set();
+   const ogeExecutingNepYears = new Set();
 
    collection.features.forEach(feature => {
       featureTypeValues.add(getFeatureTypeFilterValue(feature));
@@ -49,6 +51,8 @@ export function buildFilterOptions(collection) {
          if (nonEmpty(lineType)) lineTypes.add(lineType);
          if (nonEmpty(unit.ibnJahr)) years.add(String(unit.ibnJahr));
          getPipelineParticipants(unit).forEach(value => operators.add(value));
+         const ogeExecutingFromNep = getOgeExecutingFromNep(unit);
+         if (ogeExecutingFromNep !== null) ogeExecutingNepYears.add(ogeExecutingFromNep);
       });
    });
 
@@ -59,6 +63,7 @@ export function buildFilterOptions(collection) {
    return {
       featureTypes: featureTypes.length > 2 ? featureTypes : [],
       lineTypes: [{ value: ALL_VALUE, label: "Alle" }, ...sortedValues(lineTypes).map(option)],
+      ogeExecutingNepYears: sortedYears(ogeExecutingNepYears),
       operators: [{ value: ALL_VALUE, label: "Alle genannten Unternehmen" }, ...sortedValues(operators).map(option)],
       years: sortedYears(years)
    };

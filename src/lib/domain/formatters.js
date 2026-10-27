@@ -30,6 +30,9 @@ export const metricCostLabel = value => {
    return `${COST_FORMAT.format(value)} Mio.`;
 };
 
+// NEP-Zyklen werden fachlich zweistellig benannt: 2029 -> "NEP 29".
+export const nepCycleLabel = year => `NEP ${String(year % 100).padStart(2, "0")}`;
+
 export const cleanText = value => {
    if (value === null || value === undefined || value === "") return "unbekannt";
    return String(value);
