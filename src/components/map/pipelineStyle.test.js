@@ -259,22 +259,6 @@ describe("getPipelineStyle", () => {
       expect(regular.weight).toBe(3);
    });
 
-   it("highlights planned OGE executing operators only for their own selected NEP cycle", () => {
-      const planned = pipeline("Neubau", { ogeIstDurchfuehrenderNetzbetreiber: false, ogeDurchfuehrendAbNep: 2029 });
-
-      const selectedCycle = getPipelineStyle(planned, null, null, {
-         highlightOgeExecutingOperator: true,
-         ogeExecutingNeps: [2029]
-      });
-      const otherCycles = getPipelineStyle(planned, null, null, {
-         highlightOgeExecutingOperator: true,
-         ogeExecutingNeps: [2027, 2031]
-      });
-
-      expect(selectedCycle).toMatchObject({ color: OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR, weight: 5.25 });
-      expect(otherCycles.weight).toBe(3);
-   });
-
    it("keeps selected and hovered states stronger than OGE executing operator highlighting", () => {
       const selected = getPipelineStyle(
          pipeline("Neubau", { ogeIstDurchfuehrenderNetzbetreiber: true }),

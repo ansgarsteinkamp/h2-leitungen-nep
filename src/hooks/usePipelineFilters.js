@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
    ALL_VALUE,
@@ -285,15 +285,14 @@ export function usePipelineFilters(collection) {
       return { items: toResultItems(filteredCollection, hasActiveSearch, query) };
    }, [filteredCollection, hasActiveSearch, query]);
 
-   // Sichtbarkeit einer Einzelmaßnahme: Grundlage der Kennzahlen und der Standort-Hervorhebung.
-   const isVisibleMeasure = useCallback(
-      (unit, feature) => unitMatchesFilters(unit, filters) && unitMatchesSearch(feature, unit, query, hasActiveSearch),
-      [filters, hasActiveSearch, query]
-   );
-
    const metrics = useMemo(
-      () => sumPipelineMetrics(filteredCollection, isVisibleMeasure),
-      [filteredCollection, isVisibleMeasure]
+      () =>
+         sumPipelineMetrics(
+            filteredCollection,
+            (unit, feature) =>
+               unitMatchesFilters(unit, filters) && unitMatchesSearch(feature, unit, query, hasActiveSearch)
+         ),
+      [filteredCollection, filters, hasActiveSearch, query]
    );
 
    // Für den Hinweis im leeren Suchergebnis: Gäbe es in der Netzansicht "Alle Maßnahmen im
@@ -350,7 +349,6 @@ export function usePipelineFilters(collection) {
       filteredCollection,
       filters,
       hasActiveSearch,
-      isVisibleMeasure,
       metrics,
       options,
       resetFilters,

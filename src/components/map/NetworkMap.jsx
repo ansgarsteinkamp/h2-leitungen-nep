@@ -13,8 +13,7 @@ import MapZoomControls from "@/components/map/MapZoomControls";
 import PlaceLayer from "@/components/map/PlaceLayer";
 import PipelineLayer from "@/components/map/PipelineLayer";
 import { DATENSATZ_MARKTABFRAGE, DATENSATZ_NEP } from "@/lib/domain/constants";
-import { ogeExecutingPlanningScopeLabel } from "@/lib/domain/formatters";
-import { EMPTY_OGE_EXECUTING_NEPS, hasLineGeometry, isVerdichterstandortFeature } from "@/lib/domain/pipeline";
+import { hasLineGeometry, isVerdichterstandortFeature } from "@/lib/domain/pipeline";
 
 // Nur echte Verdichterstandorte werden als Punkte gerendert; ein off-contract Point-Feature
 // eines anderen Typs soll nicht stillschweigend als Verdichter erscheinen.
@@ -28,9 +27,7 @@ export default function NetworkMap({
    filteredPipelines,
    germany,
    highlightOgeExecutingOperator = false,
-   isVisibleMeasure,
-   ogeExecutingNepYears = EMPTY_OGE_EXECUTING_NEPS,
-   ogeExecutingNeps = EMPTY_OGE_EXECUTING_NEPS,
+   ogeExecutingNeps,
    mapContent = "pipelines",
    marktabfrageMode = false,
    marktabfrageProjekte = null,
@@ -52,12 +49,7 @@ export default function NetworkMap({
    // andere nicht mit verstecken.
    const [hiddenLegendKey, setHiddenLegendKey] = useState(null);
    const legendKey = `${datensatzKey}:${resetViewKey}`;
-   // Wirksam sind die NEP-Zyklen nur zusammen mit der OGE-Hervorhebung.
-   const activeOgeExecutingNeps = highlightOgeExecutingOperator ? ogeExecutingNeps : EMPTY_OGE_EXECUTING_NEPS;
-   // Solange interne OGE-Planung hervorgehoben ist, bleibt die NEP-Legende sichtbar: Sie ist in
-   // Screenshots und Exporten der einzige Hinweis darauf.
-   const showsInternalPlanning = !marktabfrageMode && activeOgeExecutingNeps.length > 0;
-   const isLegendVisible = showsInternalPlanning || hiddenLegendKey !== legendKey;
+   const isLegendVisible = hiddenLegendKey !== legendKey;
    const showPlaces = mapContent === "places";
    const projekte = marktabfrageProjekte ?? EMPTY_PROJEKTE;
    // Punkt- und Linien-Features werden getrennt gerendert; Features ohne Geometrie erscheinen
@@ -75,13 +67,7 @@ export default function NetworkMap({
 
    return (
       <MapViewport
-         exportFilenameTitle={
-            marktabfrageMode
-               ? "Karte der H₂-Projekte und PtG-Anlagen"
-               : showsInternalPlanning
-                 ? `Karte der H₂-Maßnahmen inkl. interner OGE-Planung ${ogeExecutingPlanningScopeLabel(activeOgeExecutingNeps, ogeExecutingNepYears)}`
-                 : undefined
-         }
+         exportFilenameTitle={marktabfrageMode ? "Karte der H₂-Projekte und PtG-Anlagen" : undefined}
          label={
             marktabfrageMode ? "Interaktive Karte der H₂-Projekte und PtG-Anlagen aus der Marktabfrage 2026" : undefined
          }
@@ -148,15 +134,14 @@ export default function NetworkMap({
                   <>
                      <PipelineLayer
                         highlightOgeExecutingOperator={highlightOgeExecutingOperator}
-                        ogeExecutingNeps={activeOgeExecutingNeps}
+                        ogeExecutingNeps={ogeExecutingNeps}
                         onSelectPipeline={onSelectPipeline}
                         pipelines={linePipelines}
                         selectedPipelineId={selection?.item?.properties?.id}
                      />
                      <CompressorSiteLayer
                         highlightOgeExecutingOperator={highlightOgeExecutingOperator}
-                        isVisibleMeasure={isVisibleMeasure}
-                        ogeExecutingNeps={activeOgeExecutingNeps}
+                        ogeExecutingNeps={ogeExecutingNeps}
                         onSelectSite={onSelectPipeline}
                         selectedSiteId={selection?.item?.properties?.id}
                         sites={compressorSites}
@@ -165,11 +150,10 @@ export default function NetworkMap({
                )}
                {!showPlaces && isLegendVisible ? (
                   <MapLegend
-                     ogeExecutingNepYears={ogeExecutingNepYears}
-                     ogeExecutingNeps={activeOgeExecutingNeps}
+                     ogeExecutingNeps={ogeExecutingNeps}
                      showCompressorSites={hasCompressorSites}
                      showOgeExecutingOperatorHighlight={highlightOgeExecutingOperator}
-                     onHide={showsInternalPlanning ? undefined : () => setHiddenLegendKey(legendKey)}
+                     onHide={() => setHiddenLegendKey(legendKey)}
                   />
                ) : null}
             </>

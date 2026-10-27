@@ -191,9 +191,9 @@ Der Begriff "durchführender Netzbetreiber" sollte nicht überdehnt werden. Die 
 
 ### Interne OGE-Planung: OGE durchführend ab NEP
 
-Ab `quelldaten_v5.geojson` tragen einzelne Maßnahmen `ogeDurchfuehrendAbNep`: den NEP-Zyklus als Jahr (2027, 2029, 2031), ab dem OGE laut interner OGE-Planung durchführender FNB wird. Die Angabe ist nicht Bestandteil des NEP; `durchfuehrendeNetzbetreiber`, `ogeIstDurchfuehrenderNetzbetreiber`, der Filter "Nur OGE-Bezug" und die Kennzahlen bleiben davon unberührt. Bei Verdichtern steht der Wert an der Einzelmaßnahme in `massnahmen[]`, nicht am Standort.
+Ab `quelldaten_v5.geojson` tragen einzelne Maßnahmen `ogeDurchfuehrendAbNep`: den NEP-Zyklus als Jahr (z. B. 2029), ab dem OGE laut interner OGE-Planung durchführender FNB wird. Die Angabe ist nicht Bestandteil des NEP; `durchfuehrendeNetzbetreiber`, `ogeIstDurchfuehrenderNetzbetreiber`, der Filter "Nur OGE-Bezug" und die Kennzahlen bleiben unberührt. Bei Verdichtern steht der Wert an der Einzelmaßnahme in `massnahmen[]`.
 
-In der App erweitert die Auswahl "Ab welchem NEP wird OGE durchführender FNB?" nur die bestehende Hervorhebung und erscheint deshalb nur, wenn diese aktiv ist und die Datei das Feld enthält. Jeder NEP-Zyklus lässt sich einzeln zuschalten: NEP 29 hebt zusätzlich nur die Maßnahmen mit Wert 2029 hervor; den Planungsstand bis NEP 29 zeigen NEP 27 und NEP 29 zusammen. Die heute von OGE durchgeführten Maßnahmen bleiben dabei immer hervorgehoben. Wie bei den Filtern zählt jede Einzelmaßnahme für sich: Ein Verdichterstandort wird nur über Einzelmaßnahmen hervorgehoben, die die aktiven Filter erfüllen. Legende und Dateiname des Kartenexports nennen die interne Planung mit ihrem Umfang ("bis NEP 29" bei lückenloser Auswahl ab dem ersten Zyklus, sonst z. B. "nur für NEP 31 (ohne NEP 27 und NEP 29)"), damit Screenshots nicht als NEP-Stand oder als vollständiger Planungsstand gelesen werden; solange sie hervorgehoben ist, lässt sich die Legende nicht ausblenden und bleibt auf schmalen Bildschirmen als kompakter Hinweis sichtbar.
+In der App erweitern die Chips unter "Ab welchem NEP wird OGE durchführender FNB?" die bestehende Hervorhebung; sie erscheinen nur, wenn diese aktiv ist und die Datei das Feld enthält. Jeder Zyklus wirkt einzeln: NEP 29 hebt zusätzlich nur die Maßnahmen mit Wert 2029 hervor. Ein Verdichterstandort leuchtet, sobald eine seiner Einzelmaßnahmen passt. Die Legende nennt die gewählten Zyklen als interne Planung.
 
 ## Datenmarker in diesem Projekt
 
@@ -206,7 +206,7 @@ Die GeoJSON-Daten werden beim Upload normalisiert. Relevante Marker:
 - `kernnetzAntragsId`: Referenzschlüssel zur Kernnetz-Zuordnung; Grundlage für den Filter "Teil des Kernnetzes" mit den Optionen "Mit Kernnetz-ID" und "Ohne Kernnetz-ID", aber kein eigener NEP-Status.
 - `ogeBeteiligung`: wird beim Import aus `durchfuehrendeNetzbetreiber` und `ansprechpartner` abgeleitet.
 - `ogeIstDurchfuehrenderNetzbetreiber`: wird beim Import nur aus `durchfuehrendeNetzbetreiber` abgeleitet.
-- `ogeDurchfuehrendAbNep`: optional ab v5; interne OGE-Planung, NEP-Zyklus als Jahr; wird beim Import als künftiger NEP-Zyklus (ungerades Jahr ab 2027) validiert.
+- `ogeDurchfuehrendAbNep`: optional ab v5; siehe "Interne OGE-Planung"; wird beim Import als ganzzahliges Jahr validiert.
 
 Für Plausibilisierungen gilt: Aus Leitungsdaten summierte Investitionen sind nicht direkt mit den offiziellen Gesamtinvestitionen des NEP vergleichbar, weil die offiziellen Gesamtwerte auch Verdichterpositionen enthalten; Längensummen je Szenario eignen sich dagegen gut zum Plausibilisieren gegen die öffentlichen NEP-Tabellen.
 

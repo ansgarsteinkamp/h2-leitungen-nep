@@ -197,19 +197,6 @@ describe("FilterPanel", () => {
          expect(nepButton("NEP 31").getAttribute("aria-pressed")).toBe("true");
       });
 
-      it("toggles each cycle independently and keeps the selection sorted", () => {
-         const { onOgeExecutingNepsChange } = renderFilterPanel({
-            highlightOgeExecutingOperator: true,
-            ogeExecutingNeps: [2031],
-            options: nepOptions
-         });
-
-         fireEvent.click(nepButton("NEP 27"));
-         fireEvent.click(nepButton("NEP 31"));
-
-         expect(onOgeExecutingNepsChange.mock.calls).toEqual([[[2027, 2031]], [[]]]);
-      });
-
       it("removes only the clicked cycle and inserts new cycles in order", () => {
          const { onOgeExecutingNepsChange } = renderFilterPanel({
             highlightOgeExecutingOperator: true,

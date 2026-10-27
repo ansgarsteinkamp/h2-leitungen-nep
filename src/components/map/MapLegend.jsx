@@ -7,9 +7,7 @@ import { MAP_EXPORT_EXCLUDE_PROPS } from "@/components/map/mapExport";
 import { PipelineLineSymbol } from "@/components/ui/pipeline-line-symbol";
 import { OGE_EXECUTING_OPERATOR_HIGHLIGHT_COLOR, PIPELINE_SYMBOL_COLORS } from "@/components/theme/pipelineTheme";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ogeExecutingPlanningScopeLabel } from "@/lib/domain/formatters";
-import { EMPTY_OGE_EXECUTING_NEPS } from "@/lib/domain/pipeline";
-import { cn } from "@/lib/utils";
+import { nepCycleLabel } from "@/lib/domain/formatters";
 
 const participationEntries = [
    { key: "oge", label: "OGE-Bezug" },
@@ -54,24 +52,31 @@ function SiteLegendSymbol({ color }) {
    );
 }
 
-// Die NEP-Erweiterung ist interne OGE-Planung; die Legende muss das nennen, weil sie in
-// Screenshots und Kartenexporten der einzige Hinweis auf den Hervorhebungsumfang ist.
-function getOgeExecutingHighlightLegendLabel(ogeExecutingNeps, ogeExecutingNepYears) {
-   if (ogeExecutingNeps.length === 0) return "OGE als durchführender FNB";
-   return `OGE als durchführender FNB: NEP 2025 und interne OGE-Planung ${ogeExecutingPlanningScopeLabel(ogeExecutingNeps, ogeExecutingNepYears)}`;
+// Die NEP-Erweiterung ist interne OGE-Planung und wird deshalb in der Legende genannt. Der Eintrag
+// trägt nicht zur Legendenbreite bei (w-0 min-w-full) und bricht in der Breite der übrigen um.
+function OgeExecutingHighlightLegendEntry({ ogeExecutingNeps }) {
+   return (
+      <li className="mt-1 flex w-0 min-w-full items-start gap-2 border-t border-border/60 pt-1.5">
+         <span className="inline-flex h-[1.5em] shrink-0 items-center">
+            <HighlightLegendSymbol />
+         </span>
+         <span className="grid min-w-0 gap-0.5 leading-[1.5]">
+            <span>OGE als durchführender FNB</span>
+            {ogeExecutingNeps.length > 0 ? (
+               <span>{`inkl. interner Planung ${ogeExecutingNeps.map(nepCycleLabel).join(", ")}`}</span>
+            ) : null}
+         </span>
+      </li>
+   );
 }
 
 export default function MapLegend({
-   ogeExecutingNepYears = EMPTY_OGE_EXECUTING_NEPS,
-   ogeExecutingNeps = EMPTY_OGE_EXECUTING_NEPS,
+   ogeExecutingNeps = [],
    showCompressorSites = false,
    showOgeExecutingOperatorHighlight = false,
    onHide
 }) {
    const legendRef = useRef(null);
-   // Auf schmalen Bildschirmen ist die Legende sonst ausgeblendet; bei interner Planung bleibt
-   // dort kompakt nur der Hervorhebungseintrag stehen.
-   const showsInternalPlanning = showOgeExecutingOperatorHighlight && ogeExecutingNeps.length > 0;
 
    useEffect(() => {
       if (!legendRef.current) return;
@@ -84,10 +89,7 @@ export default function MapLegend({
       <aside
          ref={legendRef}
          aria-label="Kartenlegende"
-         className={cn(
-            "absolute right-3.5 bottom-3.5 z-500 w-fit max-w-[min(18rem,calc(100%-1.75rem))] rounded-md border border-border bg-[var(--map-legend-background)] px-2.5 py-2 text-[0.55rem] text-muted-foreground backdrop-blur-md",
-            showsInternalPlanning ? "max-sm:bottom-20" : "max-sm:hidden"
-         )}
+         className="absolute right-3.5 bottom-3.5 z-500 w-fit max-w-[min(18rem,calc(100%-1.75rem))] rounded-md border border-border bg-[var(--map-legend-background)] px-2.5 py-2 text-[0.55rem] text-muted-foreground backdrop-blur-md max-sm:hidden"
       >
          {onHide ? (
             <Tooltip>
@@ -109,24 +111,21 @@ export default function MapLegend({
          ) : null}
          <ul className="grid gap-1.25">
             {entries.map(entry => (
-               <li key={entry.label} className="inline-flex items-center gap-2 max-sm:hidden">
+               <li key={entry.label} className="inline-flex items-center gap-2">
                   <LegendSymbol color={entry.color} lineType={entry.lineType} />
                   {entry.label}
                </li>
             ))}
             {showCompressorSites
                ? participationEntries.map(participation => (
-                    <li key={`site:${participation.key}`} className="inline-flex items-center gap-2 max-sm:hidden">
+                    <li key={`site:${participation.key}`} className="inline-flex items-center gap-2">
                        <SiteLegendSymbol color={PIPELINE_SYMBOL_COLORS[participation.key]} />
                        {`${participation.label} Verdichter`}
                     </li>
                  ))
                : null}
             {showOgeExecutingOperatorHighlight ? (
-               <li className="mt-1 inline-flex items-center gap-2 border-t border-border/60 pt-1.5 max-sm:mt-0 max-sm:border-t-0 max-sm:pt-0">
-                  <HighlightLegendSymbol />
-                  {getOgeExecutingHighlightLegendLabel(ogeExecutingNeps, ogeExecutingNepYears)}
-               </li>
+               <OgeExecutingHighlightLegendEntry ogeExecutingNeps={ogeExecutingNeps} />
             ) : null}
          </ul>
       </aside>

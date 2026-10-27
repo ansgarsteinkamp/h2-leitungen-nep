@@ -5,7 +5,6 @@ import { pipelineMeta, pipelineTitle } from "@/lib/domain/formatters";
 import { createPipelineDataKey } from "@/components/map/mapDataKey";
 import { getPipelineContextStyle, getPipelineStyle, getSelectionHaloStyle } from "@/components/map/pipelineStyle";
 import { getPipelineParticipationKey } from "@/components/theme/pipelineTheme";
-import { EMPTY_OGE_EXECUTING_NEPS } from "@/lib/domain/pipeline";
 
 const MAP_TOOLTIP_OPTIONS = {
    className: "map-tooltip",
@@ -81,7 +80,7 @@ const bindInertLayer = (_feature, layer) => {
 
 export default function PipelineLayer({
    highlightOgeExecutingOperator = false,
-   ogeExecutingNeps = EMPTY_OGE_EXECUTING_NEPS,
+   ogeExecutingNeps,
    onSelectPipeline,
    pipelines,
    presentation = "interactive",

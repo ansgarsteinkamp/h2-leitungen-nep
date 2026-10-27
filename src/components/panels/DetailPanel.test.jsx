@@ -83,27 +83,4 @@ describe("DetailPanel", () => {
       renderPanel({ selection: makeSelection({ ogeDurchfuehrendAbNep: null }) });
       expect(screen.queryByText("OGE durchführend ab (interne Planung)")).toBeNull();
    });
-
-   it("names the internal OGE planning cycle in the compressor measure card header", () => {
-      renderPanel({
-         selection: {
-            item: {
-               type: "Feature",
-               geometry: { type: "Point", coordinates: [7, 51] },
-               properties: {
-                  id: "verdichterstandort:test",
-                  name: "Verdichterstation Test",
-                  featureTyp: "verdichterstandort",
-                  massnahmen: [
-                     { id: "V1", name: "Verdichter A", netzausbauvorschlag: true, ogeDurchfuehrendAbNep: 2027 },
-                     { id: "V2", name: "Verdichter B", netzausbauvorschlag: true }
-                  ]
-               }
-            }
-         }
-      });
-
-      expect(screen.getByText(/OGE ab NEP 27 \(intern\)/)).toBeTruthy();
-      expect(screen.getAllByText(/OGE ab NEP/)).toHaveLength(1);
-   });
 });

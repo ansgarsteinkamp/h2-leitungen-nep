@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-   getOgeExecutingFromNep,
    getPipelineParticipants,
    hasOgeExecutingOperator,
    hasOgeParticipation,
@@ -86,12 +85,6 @@ describe("pipeline domain helpers", () => {
       ).toEqual(["bayernets GmbH", "Open Grid Europe GmbH", "NaTran Deutschland GmbH", "Gastransport Nord GmbH"]);
    });
 
-   it("reads the planned OGE executing NEP cycle only as an integer year", () => {
-      expect(getOgeExecutingFromNep({ properties: { ogeDurchfuehrendAbNep: 2029 } })).toBe(2029);
-      expect(getOgeExecutingFromNep({ properties: { ogeDurchfuehrendAbNep: "2029" } })).toBeNull();
-      expect(getOgeExecutingFromNep({ properties: {} })).toBeNull();
-   });
-
    describe("isOgeExecutingOperatorHighlighted", () => {
       const current = { properties: { ogeIstDurchfuehrenderNetzbetreiber: true } };
       const fromNep27 = { properties: { ogeIstDurchfuehrenderNetzbetreiber: false, ogeDurchfuehrendAbNep: 2027 } };
@@ -126,30 +119,6 @@ describe("pipeline domain helpers", () => {
          expect(isOgeExecutingOperatorHighlighted(other, nep27And31)).toBe(false);
       });
 
-      it("ignores compressor measures hidden by the active filters", () => {
-         const site = {
-            properties: {
-               featureTyp: "verdichterstandort",
-               massnahmen: [
-                  { id: "V1", ogeIstDurchfuehrenderNetzbetreiber: false },
-                  { id: "V2", ogeIstDurchfuehrenderNetzbetreiber: true, ogeDurchfuehrendAbNep: null },
-                  { id: "V3", ogeIstDurchfuehrenderNetzbetreiber: false, ogeDurchfuehrendAbNep: 2027 }
-               ]
-            }
-         };
-         const options = { highlightOgeExecutingOperator: true, ogeExecutingNeps: [2027] };
-
-         expect(
-            isOgeExecutingOperatorHighlighted(site, { ...options, isVisibleMeasure: unit => unit.id === "V1" })
-         ).toBe(false);
-         expect(
-            isOgeExecutingOperatorHighlighted(site, { ...options, isVisibleMeasure: unit => unit.id === "V2" })
-         ).toBe(true);
-         expect(
-            isOgeExecutingOperatorHighlighted(site, { ...options, isVisibleMeasure: unit => unit.id === "V3" })
-         ).toBe(true);
-      });
-
       it("highlights a compressor site with measures from several cycles for each of these cycles", () => {
          const site = {
             properties: {
@@ -166,24 +135,6 @@ describe("pipeline domain helpers", () => {
          expect(highlighted([2031])).toBe(true);
          expect(highlighted([2027])).toBe(true);
          expect(highlighted([2029])).toBe(false);
-      });
-
-      it("highlights a compressor site when any of its measures is planned for a selected NEP cycle", () => {
-         const site = {
-            properties: {
-               featureTyp: "verdichterstandort",
-               ogeIstDurchfuehrenderNetzbetreiber: false,
-               massnahmen: [{ id: "V1" }, { id: "V2", ogeDurchfuehrendAbNep: 2027 }]
-            }
-         };
-
-         expect(
-            isOgeExecutingOperatorHighlighted(site, {
-               highlightOgeExecutingOperator: true,
-               ogeExecutingNeps: [2027]
-            })
-         ).toBe(true);
-         expect(isOgeExecutingOperatorHighlighted(site, { highlightOgeExecutingOperator: true })).toBe(false);
       });
    });
 });

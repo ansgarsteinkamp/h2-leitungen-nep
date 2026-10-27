@@ -45,8 +45,6 @@ const OPERATOR_LIST_PROPERTIES = ["durchfuehrendeNetzbetreiber", "ansprechpartne
 const ID_LIST_PROPERTIES = ["officialIds", "ids", "kernnetzAntragsIds"];
 const DATE_PROPERTIES = ["inbetriebnahmeBis", "inbetriebnahmeNachKernnetzgenehmigung"];
 const DATE_LIST_PROPERTIES = ["inbetriebnahmeBisWerte", "inbetriebnahmeNachKernnetzgenehmigungWerte"];
-const MIN_NEP_CYCLE_YEAR = 2027;
-const MAX_NEP_CYCLE_YEAR = 2099;
 
 const KNOWN_FEATURE_TYPES = new Set(FEATURE_TYPES);
 const GEOMETRIE_STATUS_VALUES = new Set(["vorhanden", "fehlt", "aggregiert"]);
@@ -226,19 +224,12 @@ function getIsoDateYear(value, label, key) {
    return year;
 }
 
-// NEP-Zyklen laufen zweijährig in ungeraden Jahren; der laufende NEP 2025 ist kein künftiger Zyklus.
 function normalizeNepCycleYear(value, label) {
    if (isBlank(value)) return null;
 
    const year = toNumber(value);
-   if (
-      year === null ||
-      !Number.isInteger(year) ||
-      year % 2 === 0 ||
-      year < MIN_NEP_CYCLE_YEAR ||
-      year > MAX_NEP_CYCLE_YEAR
-   ) {
-      throw new Error(`${label}: ogeDurchfuehrendAbNep muss ein künftiger NEP-Zyklus als Jahr sein (z. B. 2029).`);
+   if (year === null || !Number.isInteger(year)) {
+      throw new Error(`${label}: ogeDurchfuehrendAbNep muss ein ganzzahliges Jahr sein (z. B. 2029).`);
    }
 
    return year;

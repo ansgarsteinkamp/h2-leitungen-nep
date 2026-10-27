@@ -386,10 +386,7 @@ function measureSummaryLabel(values) {
       SHORT_NEP_LABELS[values.nepEinordnung] ?? null,
       values.ibnJahr ? `IBN ${values.ibnJahr}` : null,
       isEmptyValue(values.verdichterleistungMw) ? null : numberLabel(values.verdichterleistungMw, "MW"),
-      isEmptyValue(values.kostenMioEur) ? null : costLabel(values.kostenMioEur),
-      isEmptyValue(values.ogeDurchfuehrendAbNep)
-         ? null
-         : `OGE ab ${nepCycleLabel(values.ogeDurchfuehrendAbNep)} (intern)`
+      isEmptyValue(values.kostenMioEur) ? null : costLabel(values.kostenMioEur)
    ]
       .filter(Boolean)
       .join(" · ");

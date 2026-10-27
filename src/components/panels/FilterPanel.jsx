@@ -21,7 +21,6 @@ import {
 } from "@/components/panels/filterStyles";
 import { ALL_VALUE, SCENARIO_FILTER_NETWORK_VIEWS } from "@/lib/domain/constants";
 import { metricCostLabel, metricIntegerLabel, metricLengthLabel, nepCycleLabel } from "@/lib/domain/formatters";
-import { EMPTY_OGE_EXECUTING_NEPS } from "@/lib/domain/pipeline";
 import { cn } from "@/lib/utils";
 
 const NETWORK_VIEW_DESCRIPTION =
@@ -47,7 +46,7 @@ const OGE_EXECUTING_OPERATOR_HIGHLIGHT_DESCRIPTION =
    "Darstellung, kein Filter: hebt Leitungen und Verdichterstandorte auf der Karte hervor, bei denen OGE als durchführender Netzbetreiber benannt ist. OGE als Ansprechpartner wird dabei nicht berücksichtigt.";
 const OGE_EXECUTING_NEP_LABEL = "Ab welchem NEP wird OGE durchführender FNB?";
 const OGE_EXECUTING_NEP_DESCRIPTION =
-   "Darstellung, kein Filter: hebt zusätzlich Maßnahmen hervor, bei denen OGE laut interner OGE-Planung im gewählten NEP-Zyklus durchführender FNB wird. Jeder Zyklus wirkt einzeln: NEP 29 zeigt nur die Wechsel in NEP 29, nicht die aus NEP 27; für den Planungsstand bis zu einem Zyklus alle früheren mit auswählen. Die heute von OGE durchgeführten Maßnahmen bleiben immer hervorgehoben. NEP 27 bezeichnet den NEP-Zyklus 2027, nicht das Inbetriebnahmejahr. Die Angabe ist nicht Bestandteil des NEP Gas/Wasserstoff 2025.";
+   "Darstellung, kein Filter: hebt zusätzlich Maßnahmen hervor, bei denen OGE laut interner Planung ab dem gewählten NEP-Zyklus durchführender FNB wird. Jeder Zyklus wirkt einzeln. Nicht Bestandteil des NEP Gas/Wasserstoff 2025.";
 const METRIC_COUNT_DESCRIPTION =
    "Anzahl der offiziellen NEP-Maßnahmen, die den aktiven Filtern entsprechen. Ein Verdichterstandort bündelt mehrere Einzelmaßnahmen; gezählt werden nur die passenden.";
 const METRIC_LENGTH_DESCRIPTION =
@@ -364,7 +363,7 @@ export default function FilterPanel({
    highlightOgeExecutingOperator = false,
    kernnetzIdOptions,
    metrics,
-   ogeExecutingNeps = EMPTY_OGE_EXECUTING_NEPS,
+   ogeExecutingNeps = [],
    onHighlightOgeExecutingOperatorChange = () => {},
    onOgeExecutingNepsChange = () => {},
    onResetFilters,

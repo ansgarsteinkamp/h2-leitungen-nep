@@ -11,7 +11,7 @@ import { EMPTY_MARKTABFRAGE_COLLECTION } from "@/lib/data/marktabfrageGeoJson";
 import { DATENSATZ_MARKTABFRAGE, DATENSATZ_NEP } from "@/lib/domain/constants";
 import { loadPlaces } from "@/lib/data/loadPlaces";
 import { projektMeta } from "@/lib/domain/marktabfrageFormatters";
-import { EMPTY_OGE_EXECUTING_NEPS, hasLineGeometry } from "@/lib/domain/pipeline";
+import { hasLineGeometry } from "@/lib/domain/pipeline";
 import { useMarktabfrageFilters } from "@/hooks/useMarktabfrageFilters";
 import { usePipelineFilters } from "@/hooks/usePipelineFilters";
 import { usePipelineSelection } from "@/hooks/usePipelineSelection";
@@ -51,8 +51,8 @@ export default function PipelineWorkspace({
 }) {
    const [datensatz, setDatensatz] = useState(DATENSATZ_NEP);
    const [highlightOgeExecutingOperator, setHighlightOgeExecutingOperator] = useState(false);
-   // Gewählte NEP-Zyklen der internen OGE-Planung (aufsteigend, z. B. [2027, 2031]); leer = nur heutiger Stand.
-   const [ogeExecutingNeps, setOgeExecutingNeps] = useState(EMPTY_OGE_EXECUTING_NEPS);
+   // Gewählte NEP-Zyklen der internen OGE-Planung, z. B. [2027, 2031].
+   const [ogeExecutingNeps, setOgeExecutingNeps] = useState([]);
    const [mapContent, setMapContent] = useState("pipelines");
    const [places, setPlaces] = useState([]);
    const [placesError, setPlacesError] = useState(null);
@@ -139,7 +139,7 @@ export default function PipelineWorkspace({
       // lässt den Zustand des NEP-Modus unangetastet.
       if (!isMarktabfrage) {
          setHighlightOgeExecutingOperator(false);
-         setOgeExecutingNeps(EMPTY_OGE_EXECUTING_NEPS);
+         setOgeExecutingNeps([]);
       }
       setResetViewKey(value => value + 1);
    };
@@ -234,8 +234,6 @@ export default function PipelineWorkspace({
                      filteredPipelines={pipelineFilters.filteredCollection}
                      germany={germany}
                      highlightOgeExecutingOperator={highlightOgeExecutingOperator}
-                     isVisibleMeasure={pipelineFilters.isVisibleMeasure}
-                     ogeExecutingNepYears={pipelineFilters.options.ogeExecutingNepYears}
                      ogeExecutingNeps={ogeExecutingNeps}
                      mapContent={mapContent}
                      marktabfrageMode={isMarktabfrage}

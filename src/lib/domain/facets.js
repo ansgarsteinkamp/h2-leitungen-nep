@@ -4,7 +4,6 @@ import {
    FEATURE_TYPE_VERDICHTER_AGGREGAT,
    getFeatureTyp,
    getMeasureUnits,
-   getOgeExecutingFromNep,
    getPipelineParticipants,
    getUmstellungOderNeubau
 } from "@/lib/domain/pipeline";
@@ -51,8 +50,7 @@ export function buildFilterOptions(collection) {
          if (nonEmpty(lineType)) lineTypes.add(lineType);
          if (nonEmpty(unit.ibnJahr)) years.add(String(unit.ibnJahr));
          getPipelineParticipants(unit).forEach(value => operators.add(value));
-         const ogeExecutingFromNep = getOgeExecutingFromNep(unit);
-         if (ogeExecutingFromNep !== null) ogeExecutingNepYears.add(ogeExecutingFromNep);
+         if (nonEmpty(unit.ogeDurchfuehrendAbNep)) ogeExecutingNepYears.add(unit.ogeDurchfuehrendAbNep);
       });
    });
 

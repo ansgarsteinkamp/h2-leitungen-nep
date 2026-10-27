@@ -109,35 +109,18 @@ export function hasOgeExecutingOperator(input) {
       .some(isOgeOperatorName);
 }
 
-// Interne OGE-Planung (nicht Teil des NEP): NEP-Zyklus als Jahr, ab dem OGE durchführender
-// FNB einer Einzelmaßnahme wird.
-export function getOgeExecutingFromNep(input) {
-   const props = input?.properties ?? input ?? {};
-   return Number.isInteger(props.ogeDurchfuehrendAbNep) ? props.ogeDurchfuehrendAbNep : null;
-}
-
-// Leere Auswahl als stabile Referenz, damit Layer-Styles nicht bei jedem Render neu berechnet werden.
-export const EMPTY_OGE_EXECUTING_NEPS = Object.freeze([]);
-
-// Jeder gewählte NEP-Zyklus wirkt einzeln und erweitert nur die bestehende Hervorhebung. Wie die
-// Filter zählt jede Einzelmaßnahme für sich: Ein Standort leuchtet nur über sichtbare Maßnahmen.
+// Interne OGE-Planung (nicht Teil des NEP): Jeder gewählte NEP-Zyklus erweitert die bestehende
+// Hervorhebung um die Einzelmaßnahmen, bei denen OGE ab diesem Zyklus durchführender FNB wird.
 export function isOgeExecutingOperatorHighlighted(
    input,
-   {
-      highlightOgeExecutingOperator = false,
-      isVisibleMeasure = () => true,
-      ogeExecutingNeps = EMPTY_OGE_EXECUTING_NEPS
-   } = {}
+   { highlightOgeExecutingOperator = false, ogeExecutingNeps = [] } = {}
 ) {
    if (!highlightOgeExecutingOperator) return false;
 
-   return getMeasureUnits(input).some(unit => {
-      if (!isVisibleMeasure(unit, input)) return false;
-      if (unit.ogeIstDurchfuehrenderNetzbetreiber === true) return true;
+   const props = input?.properties ?? input ?? {};
+   if (props.ogeIstDurchfuehrenderNetzbetreiber === true) return true;
 
-      const fromNep = getOgeExecutingFromNep(unit);
-      return fromNep !== null && ogeExecutingNeps.includes(fromNep);
-   });
+   return getMeasureUnits(props).some(unit => ogeExecutingNeps.includes(unit.ogeDurchfuehrendAbNep));
 }
 
 export function isStandardFeature(input) {

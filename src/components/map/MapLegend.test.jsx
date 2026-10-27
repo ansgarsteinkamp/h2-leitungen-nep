@@ -77,29 +77,13 @@ describe("MapLegend", () => {
       ).toBe("");
    });
 
-   it("names the scope of the selected internal OGE planning cycles in the highlight entry", () => {
-      const { rerender } = renderLegend({
-         ogeExecutingNepYears: [2027, 2029, 2031],
-         ogeExecutingNeps: [2027, 2031],
-         showOgeExecutingOperatorHighlight: true
-      });
+   it("names the selected internal OGE planning cycles below the highlight entry", () => {
+      renderLegend({ ogeExecutingNeps: [2027, 2031], showOgeExecutingOperatorHighlight: true });
 
       const legend = screen.getByRole("complementary", { name: "Kartenlegende" });
+      const highlightEntry = within(legend).getAllByRole("listitem").at(-1);
 
-      expect(within(legend).getAllByRole("listitem").at(-1).textContent).toBe(
-         "OGE als durchführender FNB: NEP 2025 und interne OGE-Planung nur für NEP 27 und NEP 31 (ohne NEP 29)"
-      );
-
-      rerender(
-         <TooltipProvider>
-            <MapLegend
-               ogeExecutingNepYears={[2027, 2029, 2031]}
-               ogeExecutingNeps={[2027, 2029]}
-               showOgeExecutingOperatorHighlight
-            />
-         </TooltipProvider>
-      );
-
-      expect(screen.getByText("OGE als durchführender FNB: NEP 2025 und interne OGE-Planung bis NEP 29")).toBeTruthy();
+      expect(within(highlightEntry).getByText("OGE als durchführender FNB")).toBeTruthy();
+      expect(within(highlightEntry).getByText("inkl. interner Planung NEP 27, NEP 31")).toBeTruthy();
    });
 });
